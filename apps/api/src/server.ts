@@ -19,6 +19,7 @@ import { dispatchRoutes } from "./modules/dispatch/dispatch.routes.js";
 import { projectsRoutes } from "./modules/lifecycle/projects.routes.js";
 import { commissioningRoutes } from "./modules/commissioning/commissioning.routes.js";
 import { trialsAndPostCommRoutes } from "./modules/trials/post-comm.routes.js";
+import { analyticsRoutes } from "./modules/analytics/analytics.routes.js";
 
 const logger = createLogger("api-server");
 
@@ -81,6 +82,7 @@ export async function buildServer() {
       await v1.register(projectsRoutes);
       await v1.register(commissioningRoutes);
       await v1.register(trialsAndPostCommRoutes);
+      await v1.register(analyticsRoutes);
     },
     { prefix: "/api/v1" }
   );
