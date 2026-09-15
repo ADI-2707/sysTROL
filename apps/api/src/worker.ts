@@ -3,6 +3,7 @@ import { env } from "@systrol/config";
 import { createLogger } from "@systrol/logger";
 import { redis } from "./common/redis.js";
 import { processApplicationNotification } from "./modules/careers/jobs/notify-application.job.js";
+import { processPOSentNotification } from "./modules/procurement/jobs/po-sent-notification.job.js";
 
 const logger = createLogger("bullmq-worker");
 
@@ -27,6 +28,8 @@ export const emailWorker = new Worker(
     logger.info({ jobId: job.id, name: job.name }, "Processing email notification job");
     if (job.name === "new-application") {
       await processApplicationNotification(job.data);
+    } else if (job.name === "po-sent") {
+      await processPOSentNotification(job.data);
     }
     return { success: true, processedAt: new Date() };
   },
