@@ -15,7 +15,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         case "accent":
           return {
             backgroundColor: "var(--btn-accent-bg)",
-            color: "var(--btn-accent-text)",
+            color: "#ffffff",
             border: "1px solid transparent",
           };
         case "outline":

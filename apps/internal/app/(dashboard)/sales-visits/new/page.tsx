@@ -272,7 +272,7 @@ function SalesVisitForm() {
               padding: "10px 20px",
               borderRadius: "6px",
               backgroundColor: "var(--accent-green)",
-              color: "#0b0f19",
+              color: "#ffffff",
               fontSize: "14px",
               fontWeight: 600,
               cursor: loading ? "not-allowed" : "pointer",

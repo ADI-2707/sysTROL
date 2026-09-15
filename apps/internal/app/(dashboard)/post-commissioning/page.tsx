@@ -109,54 +109,109 @@ export default function PostCommissioningPage() {
         </div>
       </div>
 
-      {/* Navigation tabs */}
-      <div className="flex border-b border-slate-200 dark:border-slate-800 gap-6 text-sm font-semibold">
+      <div
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "4px",
+          backgroundColor: "var(--bg-card)",
+          border: "1px solid var(--border-subtle)",
+          padding: "4px",
+          borderRadius: "10px",
+          boxShadow: "var(--shadow-sm)",
+          width: "fit-content",
+        }}
+      >
         <button
+          type="button"
           onClick={() => setActiveTab("pg-test")}
-          className={`pb-3 flex items-center gap-2 border-b-2 transition ${
-            activeTab === "pg-test"
-              ? "border-[var(--sys-blue-primary)] text-[var(--sys-blue-primary)] dark:border-[var(--sys-green-accent)] dark:text-[var(--sys-green-accent)]"
-              : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-          }`}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            padding: "8px 16px",
+            borderRadius: "7px",
+            fontSize: "13px",
+            fontWeight: activeTab === "pg-test" ? 600 : 500,
+            color: activeTab === "pg-test" ? "var(--text-heading)" : "var(--text-muted)",
+            backgroundColor: activeTab === "pg-test" ? "var(--bg-hover)" : "transparent",
+            border: activeTab === "pg-test" ? "1px solid var(--border-subtle)" : "1px solid transparent",
+            boxShadow: activeTab === "pg-test" ? "var(--shadow-sm)" : "none",
+            cursor: "pointer",
+            transition: "all 0.15s ease",
+          }}
         >
-          <Flame className="h-4 w-4" />
-          PG Test Matrix
+          <Flame size={15} color={activeTab === "pg-test" ? "var(--sys-green-accent)" : "currentColor"} />
+          <span>PG Test Matrix</span>
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveTab("mom")}
-          className={`pb-3 flex items-center gap-2 border-b-2 transition ${
-            activeTab === "mom"
-              ? "border-[var(--sys-blue-primary)] text-[var(--sys-blue-primary)] dark:border-[var(--sys-green-accent)] dark:text-[var(--sys-green-accent)]"
-              : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-          }`}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            padding: "8px 16px",
+            borderRadius: "7px",
+            fontSize: "13px",
+            fontWeight: activeTab === "mom" ? 600 : 500,
+            color: activeTab === "mom" ? "var(--text-heading)" : "var(--text-muted)",
+            backgroundColor: activeTab === "mom" ? "var(--bg-hover)" : "transparent",
+            border: activeTab === "mom" ? "1px solid var(--border-subtle)" : "1px solid transparent",
+            boxShadow: activeTab === "mom" ? "var(--shadow-sm)" : "none",
+            cursor: "pointer",
+            transition: "all 0.15s ease",
+          }}
         >
-          <FileSignature className="h-4 w-4" />
-          Handover MOM
+          <FileSignature size={15} color={activeTab === "mom" ? "var(--sys-green-accent)" : "currentColor"} />
+          <span>Handover MOM</span>
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveTab("finance")}
-          className={`pb-3 flex items-center gap-2 border-b-2 transition ${
-            activeTab === "finance"
-              ? "border-[var(--sys-blue-primary)] text-[var(--sys-blue-primary)] dark:border-[var(--sys-green-accent)] dark:text-[var(--sys-green-accent)]"
-              : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-          }`}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            padding: "8px 16px",
+            borderRadius: "7px",
+            fontSize: "13px",
+            fontWeight: activeTab === "finance" ? 600 : 500,
+            color: activeTab === "finance" ? "var(--text-heading)" : "var(--text-muted)",
+            backgroundColor: activeTab === "finance" ? "var(--bg-hover)" : "transparent",
+            border: activeTab === "finance" ? "1px solid var(--border-subtle)" : "1px solid transparent",
+            boxShadow: activeTab === "finance" ? "var(--shadow-sm)" : "none",
+            cursor: "pointer",
+            transition: "all 0.15s ease",
+          }}
         >
-          <DollarSign className="h-4 w-4" />
-          Invoices & Retention
+          <DollarSign size={15} color={activeTab === "finance" ? "var(--sys-green-accent)" : "currentColor"} />
+          <span>Invoices & Retention</span>
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveTab("amc")}
-          className={`pb-3 flex items-center gap-2 border-b-2 transition ${
-            activeTab === "amc"
-              ? "border-[var(--sys-blue-primary)] text-[var(--sys-blue-primary)] dark:border-[var(--sys-green-accent)] dark:text-[var(--sys-green-accent)]"
-              : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-          }`}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            padding: "8px 16px",
+            borderRadius: "7px",
+            fontSize: "13px",
+            fontWeight: activeTab === "amc" ? 600 : 500,
+            color: activeTab === "amc" ? "var(--text-heading)" : "var(--text-muted)",
+            backgroundColor: activeTab === "amc" ? "var(--bg-hover)" : "transparent",
+            border: activeTab === "amc" ? "1px solid var(--border-subtle)" : "1px solid transparent",
+            boxShadow: activeTab === "amc" ? "var(--shadow-sm)" : "none",
+            cursor: "pointer",
+            transition: "all 0.15s ease",
+          }}
         >
-          <ShieldCheck className="h-4 w-4" />
-          AMC Contract
+          <ShieldCheck size={15} color={activeTab === "amc" ? "var(--sys-green-accent)" : "currentColor"} />
+          <span>AMC Contract</span>
         </button>
       </div>
 

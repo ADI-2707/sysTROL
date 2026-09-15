@@ -101,7 +101,7 @@ export default function BOQEditorPage() {
               padding: "9px 16px",
               borderRadius: "6px",
               backgroundColor: "var(--accent-green)",
-              color: "#0b0f19",
+              color: "#ffffff",
               fontSize: "14px",
               fontWeight: 600,
             }}

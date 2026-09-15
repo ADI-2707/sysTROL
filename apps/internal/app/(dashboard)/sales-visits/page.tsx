@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Plus, Shield, Calendar, MapPin, User, ArrowRight, Camera } from "lucide-react";
+import { Button } from "@/components/ui";
 
 interface SalesVisitItem {
   id: string;
@@ -64,22 +65,10 @@ export default async function SalesVisitsListPage() {
           </p>
         </div>
 
-        <Link
-          href="/sales-visits/new"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "8px",
-            backgroundColor: "var(--accent-green)",
-            color: "#0b0f19",
-            fontWeight: 600,
-            fontSize: "14px",
-            padding: "10px 18px",
-            borderRadius: "6px",
-          }}
-        >
-          <Plus size={16} />
-          <span>Log Site Visit</span>
+        <Link href="/sales-visits/new">
+          <Button variant="accent" icon={<Plus size={16} />}>
+            Log Site Visit
+          </Button>
         </Link>
       </div>
 

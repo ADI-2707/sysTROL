@@ -183,7 +183,7 @@ export default function DesignReviewsPage() {
                   borderRadius: "6px",
                   backgroundColor: "var(--accent-green)",
                   border: "none",
-                  color: "#0b0f19",
+                  color: "#ffffff",
                   fontSize: "13px",
                   fontWeight: 600,
                   cursor: loadingId === rev.id ? "not-allowed" : "pointer",
