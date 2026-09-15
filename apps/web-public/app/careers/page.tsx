@@ -16,10 +16,12 @@ import {
   Award,
   ChevronRight,
   Mail,
-  Send,
 } from "lucide-react";
 import { CountUp } from "@/components/ui/CountUp/CountUp";
+import { Vacancy, vacanciesData } from "@/content/careers";
 import styles from "./Careers.module.css";
+
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "Engineering Careers | sysTROL Industrial Automation & Machinery",
@@ -50,7 +52,34 @@ const PERKS = [
   },
 ];
 
-export default function CareersPage() {
+async function getVacancies(): Promise<Vacancy[]> {
+  try {
+    const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+    const res = await fetch(`${apiUrl}/api/v1/public/jobs`, { next: { revalidate: 300 } });
+    if (!res.ok) return vacanciesData;
+    const data = await res.json();
+    if (!data.jobs || data.jobs.length === 0) return vacanciesData;
+    return data.jobs.map((job: any) => ({
+      id: job.slug || job.id,
+      title: job.title,
+      department: job.department,
+      location: job.location,
+      type: job.employmentType === "FULL_TIME" ? "Full Time" : job.employmentType,
+      experience: `${job.experienceMin}${job.experienceMax ? ` - ${job.experienceMax}` : "+"} Years`,
+      description: job.description,
+      responsibilities: job.responsibilities || [],
+      requirements: job.requirements || [],
+      tags: [job.department, job.employmentType],
+      featured: false,
+    }));
+  } catch {
+    return vacanciesData;
+  }
+}
+
+export default async function CareersPage() {
+  const vacancies = await getVacancies();
+
   return (
     <>
       <Navbar />
@@ -100,7 +129,7 @@ export default function CareersPage() {
               </div>
               <div className={styles.statItem}>
                 <span className={styles.statValue}>
-                  <CountUp value="6" />
+                  <CountUp value={`${vacancies.length}`} />
                 </span>
                 <span className={styles.statLabel}>Active Vacancies</span>
               </div>
@@ -140,7 +169,7 @@ export default function CareersPage() {
               />
             </div>
 
-            <CareerPortal />
+            <CareerPortal initialVacancies={vacancies} />
 
             <div className={styles.talentPoolCard}>
               <div className={styles.talentPoolText}>

@@ -21,7 +21,13 @@ import {
 import { Vacancy, vacanciesData, careerDepartments } from "@/content/careers";
 import styles from "./CareerPortal.module.css";
 
-export const CareerPortal: React.FC = () => {
+interface CareerPortalProps {
+  initialVacancies?: Vacancy[];
+}
+
+export const CareerPortal: React.FC<CareerPortalProps> = ({
+  initialVacancies = vacanciesData,
+}) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [selectedDept, setSelectedDept] = useState("All Roles");
@@ -51,7 +57,7 @@ export const CareerPortal: React.FC = () => {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  const filteredVacancies = vacanciesData.filter((vacancy) => {
+  const filteredVacancies = initialVacancies.filter((vacancy) => {
     const matchesDept =
       selectedDept === "All Roles" || vacancy.department === selectedDept;
 
