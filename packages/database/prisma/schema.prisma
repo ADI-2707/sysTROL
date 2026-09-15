@@ -1,0 +1,512 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum LifecycleStage {
+  ENQUIRY
+  SALES_VISIT
+  PROCUREMENT
+  ENGINEERING
+  MANUFACTURING
+  DISPATCH
+  ERECTION
+  COMMISSIONING
+  COLD_TRIAL
+  HOT_TRIAL
+  PERFORMANCE_GUARANTEE_TEST
+  MOM_AND_HANDOVER
+  PAYMENT
+  AMC
+}
+
+enum EnquirySource {
+  WEB_RFQ
+  EMAIL
+  REFERRAL
+  TRADE_SHOW
+  REPEAT_CLIENT
+}
+
+enum PurchaseOrderStatus {
+  DRAFT
+  SENT_TO_VENDOR
+  ACKNOWLEDGED
+  PARTIALLY_DELIVERED
+  DELIVERED
+  CLOSED
+}
+
+enum InvoiceMilestone {
+  ADVANCE
+  DISPATCH
+  ERECTION
+  COMMISSIONING
+  PERFORMANCE_GUARANTEE
+  RETENTION
+  AMC_RENEWAL
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+}
+
+enum JobPostingStatus {
+  DRAFT
+  PUBLISHED
+  PAUSED
+  CLOSED
+}
+
+enum ApplicationStatus {
+  RECEIVED
+  SHORTLISTED
+  INTERVIEW_SCHEDULED
+  OFFERED
+  REJECTED
+  WITHDRAWN
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  SALES_EXEC
+  PROCUREMENT_MANAGER
+  COMMISSIONING_LEAD
+  FIELD_ENGINEER
+  FINANCE_MANAGER
+  HR_RECRUITER
+  METALLURGY_SPECIALIST
+  CLIENT_AUDITOR
+}
+
+model User {
+  id             String    @id @default(uuid())
+  email          String    @unique
+  name           String
+  role           UserRole
+  hashedPassword String
+  totpSecret     String?
+  totpEnabled    Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  enquiries             Enquiry[]              @relation("EnquiryOwner")
+  salesVisits           SalesVisit[]
+  projectsCreated       Project[]              @relation("ProjectCreatedBy")
+  stageHistoryChanges   ProjectStageHistory[]
+  engineeringReviews    EngineeringDocument[]
+  qcChecks              QCCheck[]
+  stepSignoffs          StepSignoff[]
+  momSignoffs           MinutesOfMeeting[]     @relation("MOMSignedBy")
+  jobPostings           JobPosting[]
+  jobApplicationReviews JobApplication[]       @relation("ApplicationReviewer")
+}
+
+model ClientCompany {
+  id           String    @id @default(uuid())
+  name         String
+  country      String
+  sector       String
+  contactEmail String
+  contactPhone String?
+  projects     Project[]
+  enquiries    Enquiry[]
+}
+
+model Enquiry {
+  id                 String         @id @default(uuid())
+  enquiryCode        String         @unique
+  source             EnquirySource
+  clientId           String?
+  client             ClientCompany? @relation(fields: [clientId], references: [id])
+  prospectName       String?
+  contactEmail       String
+  contactPhone       String?
+  requirement        String
+  estimatedValue     Decimal?       @db.Decimal(14, 2)
+  assignedToId       String?
+  assignedTo         User?          @relation("EnquiryOwner", fields: [assignedToId], references: [id])
+  convertedProjectId String?        @unique
+  convertedProject   Project?       @relation(fields: [convertedProjectId], references: [id])
+  status             String         @default("OPEN")
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  salesVisits        SalesVisit[]
+}
+
+model SalesVisit {
+  id            String   @id @default(uuid())
+  enquiryId     String?
+  enquiry       Enquiry? @relation(fields: [enquiryId], references: [id])
+  projectId     String?
+  project       Project? @relation(fields: [projectId], references: [id])
+  visitedById   String
+  visitedBy     User     @relation(fields: [visitedById], references: [id])
+  visitDate     DateTime
+  plantLocation String
+  scopeNotes    String
+  photoUrls     String[]
+  nextActionAt  DateTime?
+  createdAt     DateTime @default(now())
+}
+
+model Vendor {
+  id             String          @id @default(uuid())
+  name           String
+  country        String
+  category       String
+  ratingScore    Float?
+  purchaseOrders PurchaseOrder[]
+  createdAt      DateTime        @default(now())
+}
+
+model BOQItem {
+  id                String         @id @default(uuid())
+  projectId         String
+  project           Project        @relation(fields: [projectId], references: [id])
+  description       String
+  quantity          Int
+  unit              String
+  estimatedUnitCost Decimal        @db.Decimal(12, 2)
+  purchaseOrderId   String?
+  purchaseOrder     PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id])
+}
+
+model PurchaseOrder {
+  id                   String              @id @default(uuid())
+  poNumber             String              @unique
+  vendorId             String
+  vendor               Vendor              @relation(fields: [vendorId], references: [id])
+  projectId            String
+  project              Project             @relation(fields: [projectId], references: [id])
+  status               PurchaseOrderStatus @default(DRAFT)
+  items                BOQItem[]
+  totalValue           Decimal             @db.Decimal(14, 2)
+  expectedDeliveryDate DateTime?
+  actualDeliveryDate   DateTime?
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+}
+
+model EngineeringDocument {
+  id           String       @id @default(uuid())
+  projectId    String
+  project      Project      @relation(fields: [projectId], references: [id])
+  docType      String
+  title        String
+  revision     Int          @default(1)
+  fileUrl      String
+  reviewStatus String       @default("PENDING")
+  reviewedById String?
+  reviewedBy   User?        @relation(fields: [reviewedById], references: [id])
+  createdAt    DateTime     @default(now())
+}
+
+model ManufacturingBatch {
+  id           String     @id @default(uuid())
+  projectId    String
+  project      Project    @relation(fields: [projectId], references: [id])
+  batchCode    String     @unique
+  panelType    String
+  qcChecks     QCCheck[]
+  fatReportUrl String?
+  fatPassed    Boolean?
+  completedAt  DateTime?
+}
+
+model QCCheck {
+  id            String             @id @default(uuid())
+  batchId       String
+  batch         ManufacturingBatch @relation(fields: [batchId], references: [id])
+  checklistItem String
+  result        String
+  checkedById   String
+  checkedBy     User               @relation(fields: [checkedById], references: [id])
+  checkedAt     DateTime           @default(now())
+}
+
+model Shipment {
+  id            String    @id @default(uuid())
+  projectId     String
+  project       Project   @relation(fields: [projectId], references: [id])
+  trackingRef   String?
+  carrier       String?
+  originCountry String
+  destination   String
+  customsStatus String?
+  podUrl        String?
+  dispatchedAt  DateTime?
+  deliveredAt   DateTime?
+}
+
+model Project {
+  id                   String              @id @default(uuid())
+  projectCode          String              @unique
+  name                 String
+  clientId             String
+  client               ClientCompany       @relation(fields: [clientId], references: [id])
+  plantLocation        String
+  country              String              @default("India")
+  millType             String
+  standCount           Int
+  currentStage         LifecycleStage      @default(ENQUIRY)
+  createdById          String
+  createdBy            User                @relation("ProjectCreatedBy", fields: [createdById], references: [id])
+  startDate            DateTime
+  targetCutoverDate    DateTime
+  actualCutoverDate    DateTime?
+  commissioningReportUrl String?
+  stageHistory         ProjectStageHistory[]
+  enquiry              Enquiry?
+  salesVisits          SalesVisit[]
+  boqItems             BOQItem[]
+  purchaseOrders       PurchaseOrder[]
+  engineeringDocs      EngineeringDocument[]
+  manufacturingBatches ManufacturingBatch[]
+  shipments            Shipment[]
+  steps                CommissioningStep[]
+  trialRecords         TrialRecord[]
+  pgTestResults        PGTestResult[]
+  minutesOfMeetings    MinutesOfMeeting[]
+  invoices             Invoice[]
+  retentionSchedules   RetentionSchedule[]
+  amcContracts         AMCContract[]
+  deployments          SiteDeployment[]
+  auditLogs            AuditLog[]
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+}
+
+model ProjectStageHistory {
+  id          String          @id @default(uuid())
+  projectId   String
+  project     Project         @relation(fields: [projectId], references: [id])
+  fromStage   LifecycleStage?
+  toStage     LifecycleStage
+  changedById String
+  changedBy   User            @relation(fields: [changedById], references: [id])
+  reason      String?
+  isDeviation Boolean         @default(false)
+  changedAt   DateTime        @default(now())
+}
+
+model DeviationRecord {
+  id               String         @id @default(uuid())
+  projectId        String
+  failedStage      LifecycleStage
+  reason           String
+  correctiveAction String
+  raisedById       String
+  resolvedAt       DateTime?
+}
+
+model CommissioningStep {
+  id           String      @id @default(uuid())
+  projectId    String
+  project      Project     @relation(fields: [projectId], references: [id])
+  title        String
+  description  String?
+  stepType     String
+  status       String      @default("PENDING")
+  order        Int
+  dependsOn    String[]
+  assignedToId String?
+  dueDate      DateTime?
+  evidenceUrls String[]
+  signoffs     StepSignoff[] @relation("StepSignoffs")
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+model StepSignoff {
+  id          String             @id @default(uuid())
+  stepId      String?
+  step        CommissioningStep? @relation("StepSignoffs", fields: [stepId], references: [id])
+  trialId     String?
+  trial       TrialRecord?       @relation("TrialSignoffs", fields: [trialId], references: [id])
+  signedById  String
+  signedBy    User               @relation(fields: [signedById], references: [id])
+  role        String
+  signedAt    DateTime           @default(now())
+  comments    String?
+}
+
+model TrialRecord {
+  id           String        @id @default(uuid())
+  projectId    String
+  project      Project       @relation(fields: [projectId], references: [id])
+  trialType    String
+  runDate      DateTime
+  observations String
+  evidenceUrls String[]
+  signoffs     StepSignoff[] @relation("TrialSignoffs")
+}
+
+model PGTestResult {
+  id            String   @id @default(uuid())
+  projectId     String
+  project       Project  @relation(fields: [projectId], references: [id])
+  kpiName       String
+  contractedVal String
+  achievedVal   String
+  passed        Boolean
+  testedAt      DateTime @default(now())
+}
+
+model MinutesOfMeeting {
+  id             String   @id @default(uuid())
+  projectId      String
+  project        Project  @relation(fields: [projectId], references: [id])
+  meetingDate    DateTime
+  attendees      String[]
+  summary        String
+  actionItems    Json?
+  documentUrl    String?
+  signedByClient Boolean  @default(false)
+  signedById     String?
+  signedBy       User?    @relation("MOMSignedBy", fields: [signedById], references: [id])
+}
+
+model Invoice {
+  id            String           @id @default(uuid())
+  invoiceNumber String           @unique
+  projectId     String
+  project       Project          @relation(fields: [projectId], references: [id])
+  milestone     InvoiceMilestone
+  amount        Decimal          @db.Decimal(14, 2)
+  status        InvoiceStatus    @default(DRAFT)
+  dueDate       DateTime
+  payments      Payment[]
+  createdAt     DateTime         @default(now())
+}
+
+model Payment {
+  id         String   @id @default(uuid())
+  invoiceId  String
+  invoice    Invoice  @relation(fields: [invoiceId], references: [id])
+  amountPaid Decimal  @db.Decimal(14, 2)
+  paidAt     DateTime
+  reference  String?
+}
+
+model RetentionSchedule {
+  id          String    @id @default(uuid())
+  projectId   String
+  project     Project   @relation(fields: [projectId], references: [id])
+  percentage  Decimal   @db.Decimal(5, 2)
+  releaseDate DateTime?
+  releasedAt  DateTime?
+}
+
+model AMCContract {
+  id             String     @id @default(uuid())
+  projectId      String
+  project        Project    @relation(fields: [projectId], references: [id])
+  contractCode   String     @unique
+  startDate      DateTime
+  endDate        DateTime
+  visitFrequency String
+  visits         AMCVisit[]
+  renewed        Boolean    @default(false)
+}
+
+model AMCVisit {
+  id            String      @id @default(uuid())
+  amcContractId String
+  amcContract   AMCContract @relation(fields: [amcContractId], references: [id])
+  scheduledDate DateTime
+  completedDate DateTime?
+  engineerId    String?
+  reportUrl     String?
+}
+
+model EmployeeProfile {
+  id          String           @id @default(uuid())
+  userId      String           @unique
+  designation String
+  skills      String[]
+  baseCountry String
+  deployments SiteDeployment[]
+}
+
+model SiteDeployment {
+  id          String          @id @default(uuid())
+  projectId   String
+  project     Project         @relation(fields: [projectId], references: [id])
+  employeeId  String
+  employee    EmployeeProfile @relation(fields: [employeeId], references: [id])
+  country     String
+  city        String
+  startDate   DateTime
+  endDate     DateTime?
+  role        String
+}
+
+model SparesOrder {
+  id                    String    @id @default(uuid())
+  projectId             String
+  partNumber            String
+  description           String
+  quantity              Int
+  unitCost              Decimal   @db.Decimal(12, 2)
+  orderedAt             DateTime  @default(now())
+  expectedStockDuration Int?
+  predictedDepletionDate DateTime?
+}
+
+model JobPosting {
+  id             String           @id @default(uuid())
+  slug           String           @unique
+  title          String
+  department     String
+  location       String
+  employmentType String
+  experienceMin  Int
+  experienceMax  Int?
+  description    String
+  responsibilities String[]
+  requirements   String[]
+  status         JobPostingStatus @default(DRAFT)
+  postedById     String
+  postedBy       User             @relation(fields: [postedById], references: [id])
+  publishedAt    DateTime?
+  closesAt       DateTime?
+  applications   JobApplication[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
+
+model JobApplication {
+  id           String            @id @default(uuid())
+  jobPostingId String
+  jobPosting   JobPosting        @relation(fields: [jobPostingId], references: [id])
+  applicantName String
+  email        String
+  phone        String
+  resumeUrl    String
+  coverNote    String?
+  status       ApplicationStatus @default(RECEIVED)
+  reviewedById String?
+  reviewedBy   User?             @relation("ApplicationReviewer", fields: [reviewedById], references: [id])
+  createdAt    DateTime          @default(now())
+}
+
+model AuditLog {
+  id         String    @id @default(uuid())
+  projectId  String?
+  project    Project?  @relation(fields: [projectId], references: [id])
+  actorId    String
+  action     String
+  entityType String
+  entityId   String
+  diff       Json?
+  createdAt  DateTime  @default(now())
+}

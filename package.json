@@ -1,36 +1,24 @@
 {
-  "name": "systrol-website",
-  "version": "0.1.0",
+  "name": "systrol-monorepo",
+  "version": "2.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "test": "vitest run",
-    "test:watch": "vitest"
-  },
-  "dependencies": {
-    "@hookform/resolvers": "3.10.0",
-    "lucide-react": "0.475.0",
-    "motion": "12.4.7",
-    "next": "15.2.0",
-    "react": "19.0.0",
-    "react-dom": "19.0.0",
-    "react-hook-form": "7.54.2",
-    "zod": "3.24.2"
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "format": "prettier --write \"**/*.{ts,tsx,json,md}\""
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "7.0.1",
-    "@testing-library/react": "16.3.3",
-    "@testing-library/user-event": "14.6.7",
-    "@types/node": "22.13.4",
-    "@types/react": "19.0.8",
-    "@types/react-dom": "19.0.3",
-    "@vitejs/plugin-react": "6.1.1",
-    "jsdom": "30.0.1",
-    "typescript": "5.7.2",
-    "vite-tsconfig-paths": "6.1.1",
-    "vitest": "5.0.0"
+    "@playwright/test": "1.50.1",
+    "@typescript-eslint/eslint-plugin": "8.23.0",
+    "@typescript-eslint/parser": "8.23.0",
+    "eslint": "9.20.0",
+    "husky": "9.1.7",
+    "lint-staged": "15.4.3",
+    "prettier": "3.5.1",
+    "turbo": "2.3.3",
+    "typescript": "5.7.2"
   }
 }
