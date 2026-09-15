@@ -27,6 +27,8 @@ pnpm-debug.log*
 # env files
 .env*.local
 .env
+.env.*
+!.env.example
 
 # vercel
 .vercel
@@ -34,3 +36,25 @@ pnpm-debug.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# turbo
+.turbo/
+
+# apps
+apps/*/node_modules
+apps/*/.next
+apps/*/dist
+apps/*/.turbo
+
+# packages
+packages/*/dist
+packages/*/node_modules
+packages/database/generated
+
+# docker
+docker/data/
+
+# playwright
+e2e/.auth/
+playwright-report/
+test-results/
