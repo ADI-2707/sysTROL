@@ -502,6 +502,7 @@ model JobApplication {
 model AuditLog {
   id         String    @id @default(uuid())
   projectId  String?
+  project    Project?  @relation(fields: [projectId], references: [id])
   actorId    String
   action     String
   entityType String
