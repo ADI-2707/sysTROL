@@ -111,7 +111,7 @@ export default function DashboardLayout({
                     padding: "9px 12px",
                     borderRadius: "6px",
                     color: isActive ? "var(--text-heading)" : "var(--text-body)",
-                    backgroundColor: isActive ? "var(--sys-blue-subtle)" : "transparent",
+                    backgroundColor: isActive ? "var(--bg-nav-active)" : "transparent",
                     borderLeft: isActive ? "3px solid var(--sys-green-accent)" : "3px solid transparent",
                     fontSize: "13.5px",
                     fontWeight: isActive ? 600 : 500,

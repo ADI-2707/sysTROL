@@ -16,6 +16,7 @@
   --bg-sidebar: #ffffff;
   --bg-header: #ffffff;
   --bg-hover: #f1f5f9;
+  --bg-nav-active: rgba(22, 55, 91, 0.08);
 
   --border-subtle: #e2e8f0;
   --border-focus: #1f7a4d;
@@ -54,48 +55,49 @@
 }
 
 [data-theme="dark"] {
-  --sys-blue-primary: #235284;
-  --sys-blue-hover: #1b4169;
-  --sys-blue-subtle: rgba(35, 82, 132, 0.22);
-  --sys-blue-border: rgba(35, 82, 132, 0.4);
+  --sys-blue-primary: #235d9b;
+  --sys-blue-hover: #1c4b7d;
+  --sys-blue-subtle: rgba(35, 93, 155, 0.18);
+  --sys-blue-border: rgba(35, 93, 155, 0.4);
 
-  --sys-green-accent: #228b57;
-  --sys-green-hover: #1f7a4d;
-  --sys-green-subtle: rgba(34, 139, 87, 0.2);
-  --sys-green-border: rgba(34, 139, 87, 0.4);
+  --sys-green-accent: #1f7a4d;
+  --sys-green-hover: #26935d;
+  --sys-green-subtle: rgba(31, 122, 77, 0.18);
+  --sys-green-border: rgba(31, 122, 77, 0.4);
 
-  --bg-canvas: #0d111a;
-  --bg-surface: #131926;
-  --bg-card: #151c2c;
-  --bg-sidebar: #0f141f;
-  --bg-header: #0f141f;
-  --bg-hover: #1c2538;
+  --bg-canvas: #09090b;
+  --bg-surface: #101014;
+  --bg-card: #141418;
+  --bg-sidebar: #060608;
+  --bg-header: #060608;
+  --bg-hover: #1b1b20;
+  --bg-nav-active: #17171c;
 
-  --border-subtle: #1e293b;
-  --border-focus: #228b57;
+  --border-subtle: #232328;
+  --border-focus: #1f7a4d;
 
-  --text-heading: #f8fafc;
-  --text-body: #cbd5e1;
-  --text-muted: #94a3b8;
+  --text-heading: #f4f4f7;
+  --text-body: #d1d1d6;
+  --text-muted: #85858f;
 
-  --btn-primary-bg: #235284;
-  --btn-primary-hover: #1b4169;
+  --btn-primary-bg: #235d9b;
+  --btn-primary-hover: #1c4b7d;
   --btn-primary-text: #ffffff;
 
-  --btn-accent-bg: #228b57;
-  --btn-accent-hover: #1f7a4d;
+  --btn-accent-bg: #1f7a4d;
+  --btn-accent-hover: #26935d;
   --btn-accent-text: #ffffff;
 
-  --tooltip-bg: #151c2c;
-  --tooltip-text: #f8fafc;
-  --tooltip-border: #235284;
+  --tooltip-bg: #141418;
+  --tooltip-text: #f4f4f7;
+  --tooltip-border: #235d9b;
 
-  --highlight-bg: rgba(34, 139, 87, 0.2);
+  --highlight-bg: rgba(31, 122, 77, 0.18);
   --highlight-text: #34d399;
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.7);
 
   --bg-primary: var(--bg-canvas);
   --bg-secondary: var(--bg-sidebar);
