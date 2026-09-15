@@ -13,6 +13,16 @@ export interface ShipmentDto {
   deliveredAt: string | null;
 }
 
+export const CreateShipmentSchema = z.object({
+  projectId: z.string().uuid(),
+  trackingRef: z.string().optional(),
+  carrier: z.string().optional(),
+  originCountry: z.string().min(2).default("India"),
+  destination: z.string().min(2),
+  customsStatus: z.string().optional(),
+  dispatchedAt: z.string().optional(),
+});
+
 export const UpdateShipmentSchema = z.object({
   trackingRef: z.string().optional(),
   carrier: z.string().optional(),
@@ -20,4 +30,5 @@ export const UpdateShipmentSchema = z.object({
   dispatchedAt: z.string().datetime().optional(),
 });
 
+export type CreateShipmentDto = z.infer<typeof CreateShipmentSchema>;
 export type UpdateShipmentDto = z.infer<typeof UpdateShipmentSchema>;
