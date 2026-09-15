@@ -16,8 +16,8 @@ import {
   BarChart3,
   Shield,
   ExternalLink,
+  ChevronRight,
   PanelLeftClose,
-  PanelLeftOpen,
 } from "lucide-react";
 import { ThemeToggle } from "../theme-toggle";
 
@@ -46,6 +46,7 @@ function NavLink({
     >
       <Link
         href={item.href}
+        title={isCollapsed ? item.label : undefined}
         style={{
           display: "flex",
           alignItems: "center",
@@ -78,19 +79,19 @@ function NavLink({
         <div
           style={{
             position: "absolute",
-            left: "calc(100% + 10px)",
+            left: "calc(100% + 12px)",
             top: "50%",
             transform: "translateY(-50%)",
             backgroundColor: "var(--tooltip-bg)",
             color: "var(--tooltip-text)",
             border: "1px solid var(--tooltip-border)",
-            padding: "5px 10px",
+            padding: "6px 12px",
             borderRadius: "6px",
             fontSize: "12px",
             fontWeight: 600,
             whiteSpace: "nowrap",
             boxShadow: "var(--shadow-lg)",
-            zIndex: 9999,
+            zIndex: 999999,
             pointerEvents: "none",
           }}
         >
@@ -124,6 +125,15 @@ export default function DashboardLayout({
     });
   };
 
+  const isItemActive = (href: string) => {
+    if (pathname === href) return true;
+    if (href === "/careers-admin/postings" && pathname.startsWith("/careers-admin/postings/new")) return false;
+    if (href === "/enquiries" && pathname.startsWith("/enquiries/new")) return false;
+    if (href === "/sales-visits" && pathname.startsWith("/sales-visits/new")) return false;
+    if (href !== "/" && pathname.startsWith(href + "/")) return true;
+    return false;
+  };
+
   const navItems: NavItemConfig[] = [
     { label: "Job Postings", href: "/careers-admin/postings", icon: <Briefcase size={18} /> },
     { label: "New Posting", href: "/careers-admin/postings/new", icon: <FileText size={18} /> },
@@ -151,72 +161,134 @@ export default function DashboardLayout({
           flexDirection: "column",
           flexShrink: 0,
           transition: "width 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+          overflow: "visible",
+          position: "relative",
+          zIndex: 40,
         }}
       >
         <div
           style={{
             height: "58px",
             boxSizing: "border-box",
-            padding: isCollapsed ? "0 14px" : "0 16px 0 20px",
+            padding: isCollapsed ? "0 10px" : "0 16px 0 20px",
             borderBottom: "1px solid var(--border-subtle)",
             display: "flex",
             alignItems: "center",
             justifyContent: isCollapsed ? "center" : "space-between",
+            gap: "6px",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div
-              style={{
-                width: "32px",
-                height: "32px",
-                borderRadius: "8px",
-                backgroundColor: "var(--sys-blue-primary)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: 900,
-                color: "#ffffff",
-                fontSize: "13px",
-                letterSpacing: "-0.5px",
-                boxShadow: "var(--shadow-sm)",
-                flexShrink: 0,
-              }}
-            >
-              sT
+          {isCollapsed ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+              <button
+                type="button"
+                onClick={toggleSidebar}
+                title="Click logo to expand sidebar"
+                style={{
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "8px",
+                  backgroundColor: "var(--sys-blue-primary)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: 900,
+                  color: "#ffffff",
+                  fontSize: "13px",
+                  letterSpacing: "-0.5px",
+                  boxShadow: "var(--shadow-sm)",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                sT
+              </button>
+              <button
+                type="button"
+                onClick={toggleSidebar}
+                title="Expand sidebar"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "transparent",
+                  border: "none",
+                  color: "var(--text-muted)",
+                  padding: "4px",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                }}
+              >
+                <ChevronRight size={14} />
+              </button>
             </div>
-            {!isCollapsed && (
-              <div>
-                <div style={{ fontSize: "15px", letterSpacing: "0.2px" }}>
-                  <span style={{ fontWeight: 800, color: "var(--sys-blue-primary)" }}>sys</span>
-                  <span style={{ fontWeight: 800, color: "var(--sys-green-accent)" }}>TROL</span>
+          ) : (
+            <>
+              <div
+                onClick={toggleSidebar}
+                title="sysTROL Enterprise Console"
+                style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}
+              >
+                <div
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "8px",
+                    backgroundColor: "var(--sys-blue-primary)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontWeight: 900,
+                    color: "#ffffff",
+                    fontSize: "13px",
+                    letterSpacing: "-0.5px",
+                    boxShadow: "var(--shadow-sm)",
+                    flexShrink: 0,
+                  }}
+                >
+                  sT
                 </div>
-                <div style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                  Enterprise L2
+                <div>
+                  <div style={{ fontSize: "15px", letterSpacing: "0.2px" }}>
+                    <span style={{ fontWeight: 800, color: "var(--sys-blue-primary)" }}>sys</span>
+                    <span style={{ fontWeight: 800, color: "var(--sys-green-accent)" }}>TROL</span>
+                  </div>
+                  <div style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                    Enterprise L2
+                  </div>
                 </div>
               </div>
-            )}
-          </div>
 
-          <button
-            type="button"
-            onClick={toggleSidebar}
-            title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: "transparent",
-              border: "none",
-              color: "var(--text-muted)",
-              padding: "6px",
-              borderRadius: "6px",
-            }}
-          >
-            {isCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
-          </button>
+              <button
+                type="button"
+                onClick={toggleSidebar}
+                title="Collapse sidebar"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "transparent",
+                  border: "none",
+                  color: "var(--text-muted)",
+                  padding: "6px",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                }}
+              >
+                <PanelLeftClose size={16} />
+              </button>
+            </>
+          )}
         </div>
 
-        <nav style={{ flex: 1, padding: isCollapsed ? "16px 8px" : "16px 12px", overflowY: "auto" }}>
+        <nav
+          style={{
+            flex: 1,
+            padding: isCollapsed ? "16px 8px" : "16px 12px",
+            overflowX: "visible",
+            overflowY: isCollapsed ? "visible" : "auto",
+          }}
+        >
           {!isCollapsed && (
             <div
               style={{
@@ -232,17 +304,14 @@ export default function DashboardLayout({
             </div>
           )}
           <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-            {navItems.map((item) => {
-              const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
-              return (
-                <NavLink
-                  key={item.href}
-                  item={item}
-                  isActive={isActive}
-                  isCollapsed={isCollapsed}
-                />
-              );
-            })}
+            {navItems.map((item) => (
+              <NavLink
+                key={item.href}
+                item={item}
+                isActive={isItemActive(item.href)}
+                isCollapsed={isCollapsed}
+              />
+            ))}
           </div>
         </nav>
 
@@ -263,7 +332,9 @@ export default function DashboardLayout({
                   fontSize: "11px",
                   fontWeight: 700,
                   fontFamily: "var(--font-mono)",
+                  cursor: "pointer",
                 }}
+                onClick={toggleSidebar}
               >
                 SA
               </div>
