@@ -127,6 +127,46 @@ importers:
         specifier: 5.7.2
         version: 5.7.2
 
+  apps/internal:
+    dependencies:
+      '@hookform/resolvers':
+        specifier: 3.10.0
+        version: 3.10.0(react-hook-form@7.54.2(react@19.0.0))
+      '@systrol/types':
+        specifier: workspace:*
+        version: link:../../packages/types
+      lucide-react:
+        specifier: 0.475.0
+        version: 0.475.0(react@19.0.0)
+      next:
+        specifier: 15.2.0
+        version: 15.2.0(@playwright/test@1.50.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      react:
+        specifier: 19.0.0
+        version: 19.0.0
+      react-dom:
+        specifier: 19.0.0
+        version: 19.0.0(react@19.0.0)
+      react-hook-form:
+        specifier: 7.54.2
+        version: 7.54.2(react@19.0.0)
+      zod:
+        specifier: 3.24.2
+        version: 3.24.2
+    devDependencies:
+      '@types/node':
+        specifier: 22.13.4
+        version: 22.13.4
+      '@types/react':
+        specifier: 19.0.8
+        version: 19.0.8
+      '@types/react-dom':
+        specifier: 19.0.3
+        version: 19.0.3(@types/react@19.0.8)
+      typescript:
+        specifier: 5.7.2
+        version: 5.7.2
+
   apps/web-public:
     dependencies:
       '@hookform/resolvers':
