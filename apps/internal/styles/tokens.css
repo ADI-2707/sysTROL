@@ -1,0 +1,107 @@
+:root,
+[data-theme="light"] {
+  --sys-blue-primary: #16375b;
+  --sys-blue-hover: #112b48;
+  --sys-blue-subtle: rgba(22, 55, 91, 0.08);
+  --sys-blue-border: rgba(22, 55, 91, 0.2);
+
+  --sys-green-accent: #1f7a4d;
+  --sys-green-hover: #166339;
+  --sys-green-subtle: rgba(31, 122, 77, 0.12);
+  --sys-green-border: rgba(31, 122, 77, 0.25);
+
+  --bg-canvas: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --bg-sidebar: #ffffff;
+  --bg-header: #ffffff;
+  --bg-hover: #f1f5f9;
+
+  --border-subtle: #e2e8f0;
+  --border-focus: #1f7a4d;
+
+  --text-heading: #0f172a;
+  --text-body: #334155;
+  --text-muted: #64748b;
+
+  --btn-primary-bg: #16375b;
+  --btn-primary-hover: #112b48;
+  --btn-primary-text: #ffffff;
+
+  --btn-accent-bg: #1f7a4d;
+  --btn-accent-hover: #166339;
+  --btn-accent-text: #ffffff;
+
+  --tooltip-bg: #0f172a;
+  --tooltip-text: #ffffff;
+  --tooltip-border: #16375b;
+
+  --highlight-bg: rgba(31, 122, 77, 0.12);
+  --highlight-text: #1f7a4d;
+
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.04);
+
+  --bg-primary: var(--bg-canvas);
+  --bg-secondary: var(--bg-sidebar);
+  --border-color: var(--border-subtle);
+  --text-primary: var(--text-heading);
+  --text-secondary: var(--text-body);
+  --accent-green: var(--sys-green-accent);
+  --accent-blue: var(--sys-blue-primary);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+[data-theme="dark"] {
+  --sys-blue-primary: #235284;
+  --sys-blue-hover: #1b4169;
+  --sys-blue-subtle: rgba(35, 82, 132, 0.22);
+  --sys-blue-border: rgba(35, 82, 132, 0.4);
+
+  --sys-green-accent: #228b57;
+  --sys-green-hover: #1f7a4d;
+  --sys-green-subtle: rgba(34, 139, 87, 0.2);
+  --sys-green-border: rgba(34, 139, 87, 0.4);
+
+  --bg-canvas: #0d111a;
+  --bg-surface: #131926;
+  --bg-card: #151c2c;
+  --bg-sidebar: #0f141f;
+  --bg-header: #0f141f;
+  --bg-hover: #1c2538;
+
+  --border-subtle: #1e293b;
+  --border-focus: #228b57;
+
+  --text-heading: #f8fafc;
+  --text-body: #cbd5e1;
+  --text-muted: #94a3b8;
+
+  --btn-primary-bg: #235284;
+  --btn-primary-hover: #1b4169;
+  --btn-primary-text: #ffffff;
+
+  --btn-accent-bg: #228b57;
+  --btn-accent-hover: #1f7a4d;
+  --btn-accent-text: #ffffff;
+
+  --tooltip-bg: #151c2c;
+  --tooltip-text: #f8fafc;
+  --tooltip-border: #235284;
+
+  --highlight-bg: rgba(34, 139, 87, 0.2);
+  --highlight-text: #34d399;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.5);
+
+  --bg-primary: var(--bg-canvas);
+  --bg-secondary: var(--bg-sidebar);
+  --border-color: var(--border-subtle);
+  --text-primary: var(--text-heading);
+  --text-secondary: var(--text-body);
+  --accent-green: var(--sys-green-accent);
+  --accent-blue: var(--sys-blue-primary);
+}
