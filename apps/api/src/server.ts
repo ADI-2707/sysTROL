@@ -12,6 +12,7 @@ import { authRoutes } from "./modules/auth/auth.routes.js";
 import { careersRoutes } from "./modules/careers/careers.routes.js";
 import { enquiriesRoutes } from "./modules/enquiries/enquiries.routes.js";
 import { salesVisitsRoutes } from "./modules/sales-visits/sales-visits.routes.js";
+import { procurementRoutes } from "./modules/procurement/procurement.routes.js";
 
 const logger = createLogger("api-server");
 
@@ -67,6 +68,7 @@ export async function buildServer() {
       await v1.register(careersRoutes);
       await v1.register(enquiriesRoutes);
       await v1.register(salesVisitsRoutes);
+      await v1.register(procurementRoutes);
     },
     { prefix: "/api/v1" }
   );
