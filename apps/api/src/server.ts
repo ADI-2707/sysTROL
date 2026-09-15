@@ -17,6 +17,7 @@ import { engineeringRoutes } from "./modules/engineering/engineering.routes.js";
 import { manufacturingRoutes } from "./modules/manufacturing/manufacturing.routes.js";
 import { dispatchRoutes } from "./modules/dispatch/dispatch.routes.js";
 import { projectsRoutes } from "./modules/lifecycle/projects.routes.js";
+import { commissioningRoutes } from "./modules/commissioning/commissioning.routes.js";
 
 const logger = createLogger("api-server");
 
@@ -77,6 +78,7 @@ export async function buildServer() {
       await v1.register(manufacturingRoutes);
       await v1.register(dispatchRoutes);
       await v1.register(projectsRoutes);
+      await v1.register(commissioningRoutes);
     },
     { prefix: "/api/v1" }
   );
