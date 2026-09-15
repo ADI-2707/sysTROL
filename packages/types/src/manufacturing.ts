@@ -19,6 +19,16 @@ export interface QCCheckDto {
   checkedAt: string;
 }
 
+export const CreateManufacturingBatchSchema = z.object({
+  projectId: z.string().uuid(),
+  panelType: z.string().min(2),
+});
+
+export const CompleteFATSchema = z.object({
+  fatPassed: z.boolean(),
+  fatReportUrl: z.string().optional(),
+});
+
 export const BulkQCSchema = z.object({
   checks: z
     .array(
@@ -30,4 +40,6 @@ export const BulkQCSchema = z.object({
     .min(1),
 });
 
+export type CreateManufacturingBatchDto = z.infer<typeof CreateManufacturingBatchSchema>;
+export type CompleteFATDto = z.infer<typeof CompleteFATSchema>;
 export type BulkQCDto = z.infer<typeof BulkQCSchema>;
