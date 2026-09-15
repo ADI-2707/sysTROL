@@ -1,4 +1,4 @@
-﻿-- CreateEnum
+-- CreateEnum
 CREATE TYPE "LifecycleStage" AS ENUM ('ENQUIRY', 'SALES_VISIT', 'PROCUREMENT', 'ENGINEERING', 'MANUFACTURING', 'DISPATCH', 'ERECTION', 'COMMISSIONING', 'COLD_TRIAL', 'HOT_TRIAL', 'PERFORMANCE_GUARANTEE_TEST', 'MOM_AND_HANDOVER', 'PAYMENT', 'AMC');
 
 -- CreateEnum
@@ -603,4 +603,3 @@ ALTER TABLE "JobApplication" ADD CONSTRAINT "JobApplication_reviewedById_fkey" F
 
 -- AddForeignKey
 ALTER TABLE "AuditLog" ADD CONSTRAINT "AuditLog_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
