@@ -14,6 +14,7 @@ import {
   Cpu,
 } from "lucide-react";
 import { StepStatus, StepType } from "@systrol/types";
+import { Button, KpiCard } from "@/components/ui";
 
 interface Step {
   id: string;
@@ -127,48 +128,41 @@ export default function CommissioningDAGPage() {
             <Radio className="h-3.5 w-3.5 animate-pulse text-emerald-500" />
             <span>PLC Telemetry Connected (Port 8080)</span>
           </div>
-          <button className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg text-sm font-medium transition shadow-sm">
-            <Plus className="h-4 w-4" />
+          <Button variant="accent" icon={<Plus size={16} />}>
             Add DAG Step
-          </button>
+          </Button>
         </div>
       </div>
 
-      {/* Live Mill Telemetry Strip */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm">
-          <span className="text-xs text-slate-500 font-medium uppercase flex items-center gap-1.5">
-            <Cpu className="h-3.5 w-3.5 text-cyan-500" />
-            Stand 1 Motor RPM
-          </span>
-          <p className="text-2xl font-mono font-bold text-slate-900 dark:text-white mt-1">
-            {liveTelemetry.standSpeedRpm} <span className="text-xs font-normal text-slate-400">rpm</span>
-          </p>
-        </div>
-
-        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm">
-          <span className="text-xs text-slate-500 font-medium uppercase">Motor Shaft Torque</span>
-          <p className="text-2xl font-mono font-bold text-slate-900 dark:text-white mt-1">
-            {liveTelemetry.motorTorqueNm} <span className="text-xs font-normal text-slate-400">N·m</span>
-          </p>
-        </div>
-
-        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm">
-          <span className="text-xs text-slate-500 font-medium uppercase">Closed Loop Latency</span>
-          <p className="text-2xl font-mono font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-            {liveTelemetry.loopResponseMs} <span className="text-xs font-normal text-slate-400">ms</span>
-          </p>
-        </div>
-
-        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm">
-          <span className="text-xs text-slate-500 font-medium uppercase flex items-center gap-1.5">
-            <TrendingUp className="h-3.5 w-3.5 text-indigo-500" />
-            Critical Path Duration
-          </span>
-          <p className="text-2xl font-mono font-bold text-indigo-600 dark:text-indigo-400 mt-1">
-            112 <span className="text-xs font-normal text-slate-400">hours</span>
-          </p>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <KpiCard
+          title="Stand 1 Motor RPM"
+          value={liveTelemetry.standSpeedRpm}
+          unit="rpm"
+          highlight="blue"
+          icon={<Cpu size={18} />}
+        />
+        <KpiCard
+          title="Motor Shaft Torque"
+          value={liveTelemetry.motorTorqueNm}
+          unit="N·m"
+          highlight="neutral"
+          icon={<Network size={18} />}
+        />
+        <KpiCard
+          title="Closed Loop Latency"
+          value={liveTelemetry.loopResponseMs}
+          unit="ms"
+          highlight="green"
+          icon={<Radio size={18} />}
+        />
+        <KpiCard
+          title="Critical Path Duration"
+          value="112"
+          unit="hours"
+          highlight="blue"
+          icon={<TrendingUp size={18} />}
+        />
       </div>
 
       {/* DAG Visual Canvas & Nodes */}

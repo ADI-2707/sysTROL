@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Hammer, CheckCircle2, AlertTriangle, ShieldCheck, Plus, RefreshCw, FileText } from "lucide-react";
+import { Hammer, CheckCircle2, AlertTriangle, ShieldCheck, Plus, RefreshCw, FileText, Clock, Layers } from "lucide-react";
+import { Button, KpiCard } from "@/components/ui";
 
 interface Batch {
   id: string;
@@ -86,35 +87,36 @@ export default function BatchesPage() {
             Track workshop assembly line progression, panel fabrication stages, and Factory Acceptance Testing (FAT).
           </p>
         </div>
-        <button className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-medium transition shadow-sm">
-          <Plus className="h-4 w-4" />
+        <Button variant="primary" icon={<Plus size={16} />}>
           Create Assembly Batch
-        </button>
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm">
-          <span className="text-xs text-slate-500 font-medium uppercase">Active Batches</span>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{batches.length}</p>
-        </div>
-        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm">
-          <span className="text-xs text-slate-500 font-medium uppercase">FAT Cleared</span>
-          <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-            {batches.filter((b) => b.fatPassed).length}
-          </p>
-        </div>
-        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm">
-          <span className="text-xs text-slate-500 font-medium uppercase">FAT In Progress / Pending</span>
-          <p className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">
-            {batches.filter((b) => !b.fatPassed).length}
-          </p>
-        </div>
-        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm">
-          <span className="text-xs text-slate-500 font-medium uppercase">Total QC Checks Logged</span>
-          <p className="text-2xl font-bold text-cyan-600 dark:text-cyan-400 mt-1">
-            {batches.reduce((acc, b) => acc + (b.qcChecks?.length || 0), 0)}
-          </p>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <KpiCard
+          title="Active Batches"
+          value={batches.length}
+          highlight="neutral"
+          icon={<Layers size={18} />}
+        />
+        <KpiCard
+          title="FAT Cleared"
+          value={batches.filter((b) => b.fatPassed).length}
+          highlight="green"
+          icon={<CheckCircle2 size={18} />}
+        />
+        <KpiCard
+          title="FAT In Progress"
+          value={batches.filter((b) => !b.fatPassed).length}
+          highlight="amber"
+          icon={<Clock size={18} />}
+        />
+        <KpiCard
+          title="Total QC Checks"
+          value={batches.reduce((acc, b) => acc + (b.qcChecks?.length || 0), 0)}
+          highlight="blue"
+          icon={<ShieldCheck size={18} />}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -229,9 +231,9 @@ export default function BatchesPage() {
                     <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-800 dark:text-amber-300">
                       Pending customer witness and final insulation high-pot signoff.
                     </div>
-                    <button className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition">
+                    <Button variant="accent" size="sm" style={{ width: "100%" }}>
                       Sign-off & Pass FAT
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>

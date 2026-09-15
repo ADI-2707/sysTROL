@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import {
   Flame,
   FileSignature,
@@ -11,7 +12,9 @@ import {
   FileText,
   Calendar,
   Plus,
+  ArrowRight,
 } from "lucide-react";
+import { Button } from "@/components/ui";
 
 interface PGResult {
   id: string;
@@ -112,7 +115,7 @@ export default function PostCommissioningPage() {
           onClick={() => setActiveTab("pg-test")}
           className={`pb-3 flex items-center gap-2 border-b-2 transition ${
             activeTab === "pg-test"
-              ? "border-rose-500 text-rose-600 dark:text-rose-400"
+              ? "border-[var(--sys-blue-primary)] text-[var(--sys-blue-primary)] dark:border-[var(--sys-green-accent)] dark:text-[var(--sys-green-accent)]"
               : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
           }`}
         >
@@ -124,7 +127,7 @@ export default function PostCommissioningPage() {
           onClick={() => setActiveTab("mom")}
           className={`pb-3 flex items-center gap-2 border-b-2 transition ${
             activeTab === "mom"
-              ? "border-rose-500 text-rose-600 dark:text-rose-400"
+              ? "border-[var(--sys-blue-primary)] text-[var(--sys-blue-primary)] dark:border-[var(--sys-green-accent)] dark:text-[var(--sys-green-accent)]"
               : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
           }`}
         >
@@ -136,7 +139,7 @@ export default function PostCommissioningPage() {
           onClick={() => setActiveTab("finance")}
           className={`pb-3 flex items-center gap-2 border-b-2 transition ${
             activeTab === "finance"
-              ? "border-rose-500 text-rose-600 dark:text-rose-400"
+              ? "border-[var(--sys-blue-primary)] text-[var(--sys-blue-primary)] dark:border-[var(--sys-green-accent)] dark:text-[var(--sys-green-accent)]"
               : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
           }`}
         >
@@ -148,7 +151,7 @@ export default function PostCommissioningPage() {
           onClick={() => setActiveTab("amc")}
           className={`pb-3 flex items-center gap-2 border-b-2 transition ${
             activeTab === "amc"
-              ? "border-rose-500 text-rose-600 dark:text-rose-400"
+              ? "border-[var(--sys-blue-primary)] text-[var(--sys-blue-primary)] dark:border-[var(--sys-green-accent)] dark:text-[var(--sys-green-accent)]"
               : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
           }`}
         >
@@ -161,10 +164,9 @@ export default function PostCommissioningPage() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-bold text-slate-900 dark:text-white">Performance Guarantee Key Performance Indicators</h3>
-            <button className="inline-flex items-center gap-2 px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-semibold hover:bg-rose-700">
-              <Plus className="h-3.5 w-3.5" />
+            <Button variant="primary" size="sm" icon={<Plus size={14} />}>
               Log Trial Run KPI
-            </button>
+            </Button>
           </div>
 
           <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
@@ -234,6 +236,17 @@ export default function PostCommissioningPage() {
 
       {activeTab === "finance" && (
         <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+            <div>
+              <h4 className="font-semibold text-slate-900 dark:text-white">Dedicated Finance & Retention Module</h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400">View complete bank guarantees, retention maturity schedules, and milestone cashflow in the dedicated finance dashboard.</p>
+            </div>
+            <Link href="/finance">
+              <Button variant="accent" size="sm" icon={<ArrowRight size={14} />}>
+                Go to Finance
+              </Button>
+            </Link>
+          </div>
           <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
             <div className="p-4 border-b border-slate-200 dark:border-slate-800 font-medium text-slate-900 dark:text-white flex items-center justify-between">
               <span>Contractual Milestone Billing</span>

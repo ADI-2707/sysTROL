@@ -13,6 +13,8 @@ import {
   Calendar,
 } from "lucide-react";
 
+import { KpiCard } from "@/components/ui";
+
 export default function AnalyticsDashboardPage() {
   const [selectedMillType, setSelectedMillType] = useState<string>("ALL");
 
@@ -43,51 +45,35 @@ export default function AnalyticsDashboardPage() {
         </div>
       </div>
 
-      {/* KPI Overview Strip */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm">
-          <span className="text-xs text-slate-500 font-medium uppercase flex items-center justify-between">
-            <span>Avg. Commissioning Lead Time</span>
-            <Clock className="h-4 w-4 text-indigo-500" />
-          </span>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">21.4 Days</p>
-          <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 mt-1">
-            <TrendingUp className="h-3 w-3" /> 14% faster than industry benchmark
-          </span>
-        </div>
-
-        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm">
-          <span className="text-xs text-slate-500 font-medium uppercase flex items-center justify-between">
-            <span>Enquiry-to-PO Win Rate</span>
-            <ArrowUpRight className="h-4 w-4 text-emerald-500" />
-          </span>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">42.8%</p>
-          <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 mt-1">
-            Highest in flat steel modernization
-          </span>
-        </div>
-
-        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm">
-          <span className="text-xs text-slate-500 font-medium uppercase flex items-center justify-between">
-            <span>Total Receivables</span>
-            <DollarSign className="h-4 w-4 text-blue-500" />
-          </span>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">₹ 24.8M</p>
-          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-1">
-            92% within current 30-day bucket
-          </span>
-        </div>
-
-        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm">
-          <span className="text-xs text-slate-500 font-medium uppercase flex items-center justify-between">
-            <span>Active AMC Fleet</span>
-            <ShieldCheck className="h-4 w-4 text-amber-500" />
-          </span>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">18 Plants</p>
-          <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-1">
-            2 renewals approaching &lt; 60 days
-          </span>
-        </div>
+        <KpiCard
+          title="Avg. Commissioning Lead Time"
+          value="21.4 Days"
+          icon={<Clock className="h-4 w-4" />}
+          trend={{ value: "14% faster than benchmark", isPositive: true }}
+          highlight="blue"
+        />
+        <KpiCard
+          title="Enquiry-to-PO Win Rate"
+          value="42.8%"
+          icon={<ArrowUpRight className="h-4 w-4" />}
+          trend={{ value: "Highest in flat steel", isPositive: true }}
+          highlight="green"
+        />
+        <KpiCard
+          title="Total Receivables"
+          value="₹ 24.8M"
+          icon={<DollarSign className="h-4 w-4" />}
+          subtitle="92% within 30-day bucket"
+          highlight="neutral"
+        />
+        <KpiCard
+          title="Active AMC Fleet"
+          value="18 Plants"
+          icon={<ShieldCheck className="h-4 w-4" />}
+          subtitle="2 renewals < 60 days"
+          highlight="amber"
+        />
       </div>
 
       {/* Analytics Visual Grids */}

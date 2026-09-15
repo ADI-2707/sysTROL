@@ -14,6 +14,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { LifecycleStage, STAGE_ORDER } from "@systrol/types";
+import { Button } from "@/components/ui";
 
 interface Project {
   id: string;
@@ -82,17 +83,19 @@ export default function LifecyclePage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button
+          <Button
+            variant="danger"
+            icon={<RotateCcw size={15} />}
             onClick={() => setDeviationModal(true)}
-            className="inline-flex items-center gap-2 px-3.5 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/50 rounded-lg text-sm font-medium transition"
           >
-            <RotateCcw className="h-4 w-4" />
             Stage Deviation (Rollback)
-          </button>
-          <button className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition shadow-sm">
-            <span>Advance Next Stage</span>
-            <ArrowRight className="h-4 w-4" />
-          </button>
+          </Button>
+          <Button
+            variant="primary"
+            icon={<ArrowRight size={15} />}
+          >
+            Advance Next Stage
+          </Button>
         </div>
       </div>
 
@@ -329,18 +332,12 @@ export default function LifecyclePage() {
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-2">
-              <button
-                onClick={() => setDeviationModal(false)}
-                className="px-4 py-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 text-sm font-medium"
-              >
+              <Button variant="ghost" onClick={() => setDeviationModal(false)}>
                 Cancel
-              </button>
-              <button
-                onClick={() => setDeviationModal(false)}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-sm font-semibold transition shadow-sm"
-              >
+              </Button>
+              <Button variant="danger" onClick={() => setDeviationModal(false)}>
                 Confirm & Record Deviation
-              </button>
+              </Button>
             </div>
           </div>
         </div>

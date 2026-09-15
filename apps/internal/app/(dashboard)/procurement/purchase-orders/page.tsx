@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Plus, ShoppingBag, Truck, CheckCircle2, Clock, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui";
 
 interface POItem {
   id: string;
@@ -87,18 +88,10 @@ export default async function PurchaseOrdersListPage() {
         </div>
 
         <div style={{ display: "flex", gap: "10px" }}>
-          <Link
-            href="/procurement/boq"
-            style={{
-              padding: "10px 16px",
-              borderRadius: "6px",
-              backgroundColor: "var(--accent-green)",
-              color: "#0b0f19",
-              fontSize: "14px",
-              fontWeight: 600,
-            }}
-          >
-            Create PO from BOQ
+          <Link href="/procurement/boq">
+            <Button variant="accent" icon={<Plus size={16} />}>
+              Create PO from BOQ
+            </Button>
           </Link>
         </div>
       </div>
@@ -172,22 +165,10 @@ export default async function PurchaseOrdersListPage() {
                     {po.expectedDeliveryDate ? new Date(po.expectedDeliveryDate).toLocaleDateString() : "Pending"}
                   </td>
                   <td style={{ padding: "16px 20px", textAlign: "right" }}>
-                    <Link
-                      href={`/procurement/purchase-orders/${po.id}`}
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "4px",
-                        padding: "6px 12px",
-                        borderRadius: "4px",
-                        backgroundColor: "var(--bg-card)",
-                        border: "1px solid var(--border-color)",
-                        fontSize: "12px",
-                        color: "var(--text-primary)",
-                      }}
-                    >
-                      <span>Manage</span>
-                      <ArrowRight size={13} />
+                    <Link href={`/procurement/purchase-orders/${po.id}`}>
+                      <Button variant="outline" size="sm" icon={<ArrowRight size={13} />}>
+                        Manage
+                      </Button>
                     </Link>
                   </td>
                 </tr>
