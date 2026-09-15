@@ -1,0 +1,22 @@
+# syntax=docker/dockerfile:1
+FROM node:20-alpine AS base
+WORKDIR /app
+RUN npm install -g pnpm@10.29.3
+
+FROM base AS builder
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY packages/ packages/
+COPY apps/internal/ apps/internal/
+RUN pnpm install --frozen-lockfile
+RUN pnpm --filter @systrol/internal build
+
+FROM base AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=builder /app/apps/internal/.next/standalone ./
+COPY --from=builder /app/apps/internal/.next/static ./apps/internal/.next/static
+COPY --from=builder /app/apps/internal/public ./apps/internal/public
+
+EXPOSE 3001
+ENV PORT=3001
+CMD ["node", "apps/internal/server.js"]
