@@ -13,6 +13,7 @@ import { careersRoutes } from "./modules/careers/careers.routes.js";
 import { enquiriesRoutes } from "./modules/enquiries/enquiries.routes.js";
 import { salesVisitsRoutes } from "./modules/sales-visits/sales-visits.routes.js";
 import { procurementRoutes } from "./modules/procurement/procurement.routes.js";
+import { engineeringRoutes } from "./modules/engineering/engineering.routes.js";
 
 const logger = createLogger("api-server");
 
@@ -69,6 +70,7 @@ export async function buildServer() {
       await v1.register(enquiriesRoutes);
       await v1.register(salesVisitsRoutes);
       await v1.register(procurementRoutes);
+      await v1.register(engineeringRoutes);
     },
     { prefix: "/api/v1" }
   );
