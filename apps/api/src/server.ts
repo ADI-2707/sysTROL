@@ -9,6 +9,7 @@ import { createLogger } from "@systrol/logger";
 import { jwtPlugin } from "./common/auth/jwt.plugin.js";
 import { auditPlugin } from "./common/audit/audit.interceptor.js";
 import { authRoutes } from "./modules/auth/auth.routes.js";
+import { careersRoutes } from "./modules/careers/careers.routes.js";
 
 const logger = createLogger("api-server");
 
@@ -61,6 +62,7 @@ export async function buildServer() {
   await server.register(
     async (v1) => {
       await v1.register(authRoutes);
+      await v1.register(careersRoutes);
     },
     { prefix: "/api/v1" }
   );
