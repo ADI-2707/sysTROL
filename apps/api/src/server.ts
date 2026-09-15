@@ -10,6 +10,8 @@ import { jwtPlugin } from "./common/auth/jwt.plugin.js";
 import { auditPlugin } from "./common/audit/audit.interceptor.js";
 import { authRoutes } from "./modules/auth/auth.routes.js";
 import { careersRoutes } from "./modules/careers/careers.routes.js";
+import { enquiriesRoutes } from "./modules/enquiries/enquiries.routes.js";
+import { salesVisitsRoutes } from "./modules/sales-visits/sales-visits.routes.js";
 
 const logger = createLogger("api-server");
 
@@ -63,6 +65,8 @@ export async function buildServer() {
     async (v1) => {
       await v1.register(authRoutes);
       await v1.register(careersRoutes);
+      await v1.register(enquiriesRoutes);
+      await v1.register(salesVisitsRoutes);
     },
     { prefix: "/api/v1" }
   );

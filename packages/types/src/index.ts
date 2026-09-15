@@ -10,3 +10,4 @@ export * from "./trials";
 export * from "./finance";
 export * from "./amc";
 export * from "./analytics";
+export * from "./enquiries";
