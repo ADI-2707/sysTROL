@@ -55,5 +55,14 @@ export const CreatePurchaseOrderSchema = z.object({
   itemIds: z.array(z.string().uuid()).min(1),
 });
 
+export const CreateBOQItemSchema = z.object({
+  description: z.string().min(2),
+  quantity: z.number().int().positive(),
+  unit: z.string().min(1),
+  estimatedUnitCost: z.number().positive(),
+  purchaseOrderId: z.string().uuid().optional(),
+});
+
 export type CreateVendorDto = z.infer<typeof CreateVendorSchema>;
 export type CreatePurchaseOrderDto = z.infer<typeof CreatePurchaseOrderSchema>;
+export type CreateBOQItemDto = z.infer<typeof CreateBOQItemSchema>;
