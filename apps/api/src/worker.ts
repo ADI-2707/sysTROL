@@ -2,6 +2,7 @@ import { Worker, Job } from "bullmq";
 import { env } from "@systrol/config";
 import { createLogger } from "@systrol/logger";
 import { redis } from "./common/redis.js";
+import { processApplicationNotification } from "./modules/careers/jobs/notify-application.job.js";
 
 const logger = createLogger("bullmq-worker");
 
@@ -24,7 +25,9 @@ export const emailWorker = new Worker(
   "email-notifications",
   async (job: Job) => {
     logger.info({ jobId: job.id, name: job.name }, "Processing email notification job");
-    // Handlers will be registered by modules
+    if (job.name === "new-application") {
+      await processApplicationNotification(job.data);
+    }
     return { success: true, processedAt: new Date() };
   },
   { connection }
