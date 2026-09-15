@@ -13,6 +13,7 @@ import {
   Shield,
   ExternalLink,
 } from "lucide-react";
+import { ThemeToggle } from "../theme-toggle";
 
 export default function DashboardLayout({
   children,
@@ -136,6 +137,7 @@ export default function DashboardLayout({
             Rolling Mill Lifecycle & Automation System • v2.0
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <ThemeToggle />
             <span
               style={{
                 display: "inline-flex",
