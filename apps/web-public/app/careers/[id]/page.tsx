@@ -8,7 +8,7 @@ import { Container } from "@/components/layout/Container/Container";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { Button } from "@/components/ui/Button/Button";
 import { CTASection } from "@/components/sections/CTASection/CTASection";
-import { vacanciesData, getVacancyById } from "@/content/careers";
+import { vacanciesData, getVacancyById, Vacancy } from "@/content/careers";
 import { JobApplicationForm } from "./JobApplicationForm";
 import {
   ArrowLeft,
@@ -26,6 +26,36 @@ import {
 } from "lucide-react";
 import styles from "./JobDetails.module.css";
 
+export const revalidate = 300;
+
+async function fetchJob(id: string): Promise<Vacancy | undefined> {
+  try {
+    const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+    const res = await fetch(`${apiUrl}/api/v1/public/jobs/${id}`, { next: { revalidate: 300 } });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.job) {
+        const job = data.job;
+        return {
+          id: job.slug || job.id,
+          title: job.title,
+          department: job.department,
+          location: job.location,
+          type: job.employmentType === "FULL_TIME" ? "Full Time" : job.employmentType,
+          experience: `${job.experienceMin}${job.experienceMax ? ` - ${job.experienceMax}` : "+"} Years`,
+          description: job.description,
+          responsibilities: job.responsibilities || [],
+          requirements: job.requirements || [],
+          skills: job.requirements ? job.requirements.slice(0, 4) : [job.department],
+        };
+      }
+    }
+  } catch {
+    // API not reachable at build time, fall back
+  }
+  return getVacancyById(id);
+}
+
 export async function generateStaticParams() {
   return vacanciesData.map((vacancy) => ({
     id: vacancy.id,
@@ -38,7 +68,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const vacancy = getVacancyById(id);
+  const vacancy = await fetchJob(id);
   if (!vacancy) return { title: "Position Not Found" };
 
   return {
@@ -53,7 +83,7 @@ export default async function JobDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const vacancy = getVacancyById(id);
+  const vacancy = await fetchJob(id);
 
   if (!vacancy) {
     notFound();
