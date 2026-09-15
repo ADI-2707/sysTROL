@@ -108,7 +108,7 @@ export default async function DocumentsRegisterPage() {
               padding: "10px 16px",
               borderRadius: "6px",
               backgroundColor: "var(--accent-green)",
-              color: "#0b0f19",
+              color: "#ffffff",
               fontSize: "14px",
               fontWeight: 600,
             }}

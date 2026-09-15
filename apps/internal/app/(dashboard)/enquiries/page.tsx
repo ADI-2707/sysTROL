@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Plus, Activity, ExternalLink, CheckCircle2, XCircle, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui";
 
 interface EnquiryItem {
   id: string;
@@ -81,22 +82,10 @@ export default async function EnquiriesListPage() {
           </p>
         </div>
 
-        <Link
-          href="/enquiries/new"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "8px",
-            backgroundColor: "var(--accent-green)",
-            color: "#0b0f19",
-            fontWeight: 600,
-            fontSize: "14px",
-            padding: "10px 18px",
-            borderRadius: "6px",
-          }}
-        >
-          <Plus size={16} />
-          <span>New Enquiry</span>
+        <Link href="/enquiries/new">
+          <Button variant="accent" icon={<Plus size={16} />}>
+            New Enquiry
+          </Button>
         </Link>
       </div>
 
@@ -175,22 +164,10 @@ export default async function EnquiriesListPage() {
                     {enq.assignedTo?.name || "Unassigned"}
                   </td>
                   <td style={{ padding: "16px 20px", textAlign: "right" }}>
-                    <Link
-                      href={`/enquiries/${enq.id}`}
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "4px",
-                        padding: "6px 12px",
-                        borderRadius: "4px",
-                        backgroundColor: "var(--bg-card)",
-                        border: "1px solid var(--border-color)",
-                        fontSize: "12px",
-                        color: "var(--text-primary)",
-                      }}
-                    >
-                      <span>Manage</span>
-                      <ArrowRight size={13} />
+                    <Link href={`/enquiries/${enq.id}`}>
+                      <Button variant="outline" size="sm" icon={<ArrowRight size={13} />}>
+                        Manage
+                      </Button>
                     </Link>
                   </td>
                 </tr>

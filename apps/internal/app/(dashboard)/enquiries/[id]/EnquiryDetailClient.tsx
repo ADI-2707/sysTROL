@@ -191,7 +191,7 @@ export function EnquiryDetailClient({ enquiry }: EnquiryDetailProps) {
                     borderRadius: "6px",
                     backgroundColor: "var(--accent-green)",
                     border: "none",
-                    color: "#0b0f19",
+                    color: "#ffffff",
                     fontSize: "13px",
                     fontWeight: 600,
                     cursor: "pointer",
@@ -497,7 +497,7 @@ export function EnquiryDetailClient({ enquiry }: EnquiryDetailProps) {
                     borderRadius: "4px",
                     backgroundColor: "var(--accent-green)",
                     border: "none",
-                    color: "#0b0f19",
+                    color: "#ffffff",
                     fontWeight: 600,
                     cursor: loading ? "not-allowed" : "pointer",
                   }}

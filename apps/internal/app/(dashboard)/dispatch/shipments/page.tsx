@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Truck, PackageCheck, MapPin, CheckCircle2, Clock, UploadCloud, Plus } from "lucide-react";
+import { Button, KpiCard } from "@/components/ui";
 
 interface Shipment {
   id: string;
@@ -72,35 +73,36 @@ export default function ShipmentsPage() {
             Control outbound panel logistics, carrier tracking, customs documentation, and signed Proof-of-Delivery (POD).
           </p>
         </div>
-        <button className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition shadow-sm">
-          <Plus className="h-4 w-4" />
+        <Button variant="primary" icon={<Plus size={16} />}>
           Create Consignment
-        </button>
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm">
-          <span className="text-xs text-slate-500 font-medium uppercase">Active Shipments</span>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{shipments.length}</p>
-        </div>
-        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm">
-          <span className="text-xs text-slate-500 font-medium uppercase">In Transit</span>
-          <p className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">
-            {shipments.filter((s) => s.status === "IN_TRANSIT" || s.status === "DISPATCHED").length}
-          </p>
-        </div>
-        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm">
-          <span className="text-xs text-slate-500 font-medium uppercase">Delivered & POD Verified</span>
-          <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-            {shipments.filter((s) => s.status === "DELIVERED").length}
-          </p>
-        </div>
-        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm">
-          <span className="text-xs text-slate-500 font-medium uppercase">Export Consignments</span>
-          <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">
-            {shipments.filter((s) => s.isExport).length}
-          </p>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <KpiCard
+          title="Active Shipments"
+          value={shipments.length}
+          highlight="blue"
+          icon={<Truck size={18} />}
+        />
+        <KpiCard
+          title="In Transit"
+          value={shipments.filter((s) => s.status === "IN_TRANSIT" || s.status === "DISPATCHED").length}
+          highlight="amber"
+          icon={<Clock size={18} />}
+        />
+        <KpiCard
+          title="Delivered & POD Verified"
+          value={shipments.filter((s) => s.status === "DELIVERED").length}
+          highlight="green"
+          icon={<CheckCircle2 size={18} />}
+        />
+        <KpiCard
+          title="Export Consignments"
+          value={shipments.filter((s) => s.isExport).length}
+          highlight="neutral"
+          icon={<PackageCheck size={18} />}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -195,10 +197,9 @@ export default function ShipmentsPage() {
                     <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs text-slate-500">
                       Consignment is currently en route. Upload signed gate receipt when offloaded at plant.
                     </div>
-                    <button className="w-full flex items-center justify-center gap-2 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition">
-                      <UploadCloud className="h-4 w-4" />
+                    <Button variant="primary" size="sm" icon={<UploadCloud size={16} />} style={{ width: "100%" }}>
                       Upload Signed POD
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>

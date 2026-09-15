@@ -102,7 +102,7 @@ export default async function PostingsListPage() {
             alignItems: "center",
             gap: "8px",
             backgroundColor: "var(--accent-green)",
-            color: "#0b0f19",
+            color: "#ffffff",
             fontWeight: 600,
             fontSize: "14px",
             padding: "10px 18px",

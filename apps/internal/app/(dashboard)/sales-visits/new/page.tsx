@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Save, Plus } from "lucide-react";
 
-export default function NewSalesVisitPage() {
+function SalesVisitForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const defaultEnquiryId = searchParams.get("enquiryId") || "";
@@ -272,7 +272,7 @@ export default function NewSalesVisitPage() {
               padding: "10px 20px",
               borderRadius: "6px",
               backgroundColor: "var(--accent-green)",
-              color: "#0b0f19",
+              color: "#ffffff",
               fontSize: "14px",
               fontWeight: 600,
               cursor: loading ? "not-allowed" : "pointer",
@@ -285,5 +285,13 @@ export default function NewSalesVisitPage() {
         </div>
       </form>
     </div>
+  );
+}
+
+export default function NewSalesVisitPage() {
+  return (
+    <React.Suspense fallback={<div>Loading...</div>}>
+      <SalesVisitForm />
+    </React.Suspense>
   );
 }

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { ThemeProvider } from "./theme-provider";
+import { TopProgressBar } from "./top-progress-bar";
 
 export const metadata: Metadata = {
   title: "sysTROL Internal Management Console",
@@ -12,8 +14,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <body>
+        <TopProgressBar />
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }
