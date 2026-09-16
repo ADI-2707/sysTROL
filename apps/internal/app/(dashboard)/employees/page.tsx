@@ -1,26 +1,30 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Users,
   Search,
   Plus,
-  Briefcase,
   Phone,
-  Mail,
-  MapPin,
-  CheckCircle2,
-  Building,
   Filter,
-  UserCheck,
   Shield,
-  Layers,
+  ShieldAlert,
+  Lock,
 } from "lucide-react";
-import { INITIAL_COMPANY_EMPLOYEES, getProjects } from "@/lib/projects-data";
+import { useAuth } from "@/lib/auth-context";
+import {
+  EmployeeTeam,
+  TEAM_OPTIONS,
+  TEAM_LABELS,
+  canAccessPage,
+  isSeededSuperAdmin,
+} from "@/lib/permissions";
 
-interface ExtendedEmployee {
+export interface ExtendedEmployee {
   id: string;
   name: string;
+  team: EmployeeTeam;
   designation: string;
   department: string;
   phone: string;
@@ -33,6 +37,7 @@ const INITIAL_EXTENDED: ExtendedEmployee[] = [
   {
     id: "emp-1",
     name: "Vikram Sengupta",
+    team: "COMMISSIONING",
     designation: "Chief Commissioning Director",
     department: "Field Commissioning",
     phone: "+91 98310 11223",
@@ -43,6 +48,7 @@ const INITIAL_EXTENDED: ExtendedEmployee[] = [
   {
     id: "emp-2",
     name: "Ananya Deshmukh",
+    team: "COMMISSIONING",
     designation: "Principal Drives & Automation Lead",
     department: "Electrical & Drives",
     phone: "+91 98450 33445",
@@ -53,6 +59,7 @@ const INITIAL_EXTENDED: ExtendedEmployee[] = [
   {
     id: "emp-3",
     name: "Rahul Mukherjee",
+    team: "COMMISSIONING",
     designation: "Senior Automation Specialist",
     department: "Industrial Automation & PLC",
     phone: "+91 98200 55667",
@@ -63,7 +70,8 @@ const INITIAL_EXTENDED: ExtendedEmployee[] = [
   {
     id: "emp-4",
     name: "Rajeshwar Rao",
-    designation: "Chief Metallurgy Consultant",
+    team: "LEADERSHIP",
+    designation: "Executive Metallurgy Director",
     department: "Metallurgy & Process",
     phone: "+91 94440 77889",
     email: "rajeshwar.r@systrol.com",
@@ -73,6 +81,7 @@ const INITIAL_EXTENDED: ExtendedEmployee[] = [
   {
     id: "emp-5",
     name: "Pooja Hegde",
+    team: "COMMISSIONING",
     designation: "Field Instrumentation Engineer",
     department: "Field Commissioning",
     phone: "+91 98860 99001",
@@ -83,6 +92,7 @@ const INITIAL_EXTENDED: ExtendedEmployee[] = [
   {
     id: "emp-6",
     name: "Karan Johar Sharma",
+    team: "COMMISSIONING",
     designation: "Mechanical Erection Supervisor",
     department: "Erection & Civil",
     phone: "+91 97110 22334",
@@ -93,6 +103,7 @@ const INITIAL_EXTENDED: ExtendedEmployee[] = [
   {
     id: "emp-7",
     name: "Sunil Pillai",
+    team: "COMMISSIONING",
     designation: "Senior Hydraulic Systems Engineer",
     department: "Hydraulics & Mechanics",
     phone: "+91 94470 44556",
@@ -103,8 +114,9 @@ const INITIAL_EXTENDED: ExtendedEmployee[] = [
   {
     id: "emp-8",
     name: "Deepak Choudhury",
-    designation: "Site Quality & Safety Auditor",
-    department: "Quality & Safety",
+    team: "HR_ACCOUNTS",
+    designation: "Quality & HR Compliance Specialist",
+    department: "HR & Compliance",
     phone: "+91 98300 66778",
     email: "deepak.c@systrol.com",
     status: "AVAILABLE",
@@ -113,6 +125,7 @@ const INITIAL_EXTENDED: ExtendedEmployee[] = [
   {
     id: "emp-9",
     name: "Meera Krishnan",
+    team: "COMMISSIONING",
     designation: "Lead SCADA & HMI Developer",
     department: "Industrial Automation & PLC",
     phone: "+91 98400 12345",
@@ -123,35 +136,47 @@ const INITIAL_EXTENDED: ExtendedEmployee[] = [
   {
     id: "emp-10",
     name: "Abhishek Nambiar",
-    designation: "Turnkey Project Procurement Manager",
-    department: "Procurement & Contracts",
+    team: "SALES",
+    designation: "Turnkey Project Sales & Procurement Manager",
+    department: "Sales & Contracts",
     phone: "+91 98190 67890",
     email: "abhishek.n@systrol.com",
     status: "IN_OFFICE",
-    assignedProjectName: "Vendor Supply Operations",
+    assignedProjectName: "Client Relations & Sales",
   },
 ];
 
-const EMP_STORAGE_KEY = "systrol_employees_v1";
+const EMP_STORAGE_KEY = "systrol_employees_v2";
 
 export default function EmployeeManagementPage() {
+  const { user } = useAuth();
   const [employees, setEmployees] = useState<ExtendedEmployee[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterTeam, setFilterTeam] = useState<string>("ALL");
   const [filterDept, setFilterDept] = useState("ALL");
   const [showAddModal, setShowAddModal] = useState(false);
 
   const [newName, setNewName] = useState("");
+  const [newTeam, setNewTeam] = useState<EmployeeTeam>("COMMISSIONING");
   const [newDesignation, setNewDesignation] = useState("");
   const [newDepartment, setNewDepartment] = useState("Field Commissioning");
   const [newPhone, setNewPhone] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [newStatus, setNewStatus] = useState<"ON_SITE" | "IN_OFFICE" | "AVAILABLE">("AVAILABLE");
 
+  const isAuthorized = canAccessPage(user?.team, "/employees");
+  const canCreate = isSeededSuperAdmin(user);
+
   useEffect(() => {
     try {
       const stored = localStorage.getItem(EMP_STORAGE_KEY);
       if (stored) {
-        setEmployees(JSON.parse(stored));
+        const parsed: ExtendedEmployee[] = JSON.parse(stored);
+        const validated = parsed.map((item) => ({
+          ...item,
+          team: item.team || "COMMISSIONING",
+        }));
+        setEmployees(validated);
       } else {
         setEmployees(INITIAL_EXTENDED);
         localStorage.setItem(EMP_STORAGE_KEY, JSON.stringify(INITIAL_EXTENDED));
@@ -170,11 +195,13 @@ export default function EmployeeManagementPage() {
 
   const handleAddEmployee = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canCreate) return;
     if (!newName.trim() || !newDesignation.trim()) return;
 
     const newEmp: ExtendedEmployee = {
       id: `emp-custom-${Date.now()}`,
       name: newName.trim(),
+      team: newTeam,
       designation: newDesignation.trim(),
       department: newDepartment,
       phone: newPhone.trim() || "+91 98000 00000",
@@ -188,26 +215,91 @@ export default function EmployeeManagementPage() {
 
     setShowAddModal(false);
     setNewName("");
+    setNewTeam("COMMISSIONING");
     setNewDesignation("");
     setNewPhone("");
     setNewEmail("");
   };
 
+  if (!isAuthorized) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "400px",
+          textAlign: "center",
+          padding: "32px",
+          backgroundColor: "var(--bg-card)",
+          borderRadius: "12px",
+          border: "1px solid var(--border-subtle)",
+          maxWidth: "520px",
+          margin: "40px auto 0 auto",
+        }}
+      >
+        <div
+          style={{
+            width: "52px",
+            height: "52px",
+            borderRadius: "12px",
+            backgroundColor: "rgba(239, 68, 68, 0.1)",
+            color: "#ef4444",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: "16px",
+          }}
+        >
+          <ShieldAlert size={28} />
+        </div>
+        <h2 style={{ fontSize: "19px", fontWeight: 700, color: "var(--text-heading)", margin: "0 0 8px 0" }}>
+          Access Restricted
+        </h2>
+        <p style={{ fontSize: "13.5px", color: "var(--text-muted)", maxWidth: "400px", margin: "0 0 20px 0", lineHeight: 1.5 }}>
+          Your assigned team ({user?.team ? TEAM_LABELS[user.team] : "Standard"}) is not authorized to access Employee Management.
+        </p>
+        <Link
+          href="/dashboard"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            padding: "8px 18px",
+            borderRadius: "7px",
+            backgroundColor: "var(--sys-blue-primary)",
+            color: "#ffffff",
+            fontSize: "13px",
+            fontWeight: 600,
+            textDecoration: "none",
+          }}
+        >
+          Return to Dashboard
+        </Link>
+      </div>
+    );
+  }
+
   const totalEmployees = employees.length;
   const onSiteCount = employees.filter((e) => e.status === "ON_SITE").length;
-  const officeCount = employees.filter((e) => e.status === "IN_OFFICE").length;
-  const availableCount = employees.filter((e) => e.status === "AVAILABLE").length;
+  const commTeamCount = employees.filter((e) => e.team === "COMMISSIONING").length;
+  const salesAndHrCount = employees.filter((e) => e.team === "SALES" || e.team === "HR_ACCOUNTS").length;
 
   const departments = ["ALL", ...Array.from(new Set(employees.map((e) => e.department)))];
 
   const filtered = employees.filter((emp) => {
+    const matchesTeam = filterTeam === "ALL" || emp.team === filterTeam;
+    if (!matchesTeam) return false;
     const matchesDept = filterDept === "ALL" || emp.department === filterDept;
     if (!matchesDept) return false;
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
+    const teamLabel = TEAM_LABELS[emp.team] || "";
     return (
       emp.name.toLowerCase().includes(q) ||
       emp.designation.toLowerCase().includes(q) ||
+      teamLabel.toLowerCase().includes(q) ||
       emp.department.toLowerCase().includes(q) ||
       emp.email.toLowerCase().includes(q)
     );
@@ -232,31 +324,52 @@ export default function EmployeeManagementPage() {
             Employee Management
           </h1>
           <p style={{ fontSize: "14px", color: "var(--text-muted)", marginTop: "4px", marginBottom: 0 }}>
-            Official corporate directory with staff names, designations, and site deployment tracking.
+            Official corporate directory with staff teams, typed designations, and site deployment tracking.
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setShowAddModal(true)}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "9px 16px",
-            borderRadius: "8px",
-            backgroundColor: "var(--sys-blue-primary)",
-            color: "#ffffff",
-            border: "none",
-            fontSize: "13.5px",
-            fontWeight: 600,
-            cursor: "pointer",
-            boxShadow: "var(--shadow-sm)",
-          }}
-        >
-          <Plus size={16} />
-          <span>Add Employee</span>
-        </button>
+        {canCreate ? (
+          <button
+            type="button"
+            onClick={() => setShowAddModal(true)}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "9px 16px",
+              borderRadius: "8px",
+              backgroundColor: "var(--sys-blue-primary)",
+              color: "#ffffff",
+              border: "none",
+              fontSize: "13.5px",
+              fontWeight: 600,
+              cursor: "pointer",
+              boxShadow: "var(--shadow-sm)",
+            }}
+          >
+            <Plus size={16} />
+            <span>Add Employee</span>
+          </button>
+        ) : (
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "7px",
+              padding: "8px 14px",
+              borderRadius: "8px",
+              backgroundColor: "var(--bg-card)",
+              border: "1px solid var(--border-subtle)",
+              color: "var(--text-muted)",
+              fontSize: "12.5px",
+              fontWeight: 500,
+            }}
+            title="Only Seeded Super Admin can register new employees"
+          >
+            <Lock size={14} color="var(--sys-blue-primary)" />
+            <span>Creation Locked to Seeded Super Admin</span>
+          </div>
+        )}
       </div>
 
       <div
@@ -307,10 +420,10 @@ export default function EmployeeManagementPage() {
           }}
         >
           <div style={{ fontSize: "12px", color: "var(--sys-blue-primary)", textTransform: "uppercase", fontWeight: 600 }}>
-            Office / Engineering Center
+            Commissioning Team
           </div>
           <div style={{ fontSize: "24px", fontWeight: 700, color: "var(--sys-blue-primary)", marginTop: "4px" }}>
-            {officeCount}
+            {commTeamCount}
           </div>
         </div>
 
@@ -323,10 +436,10 @@ export default function EmployeeManagementPage() {
           }}
         >
           <div style={{ fontSize: "12px", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 600 }}>
-            Available / Standby
+            Sales & HR / Accounts
           </div>
           <div style={{ fontSize: "24px", fontWeight: 700, color: "var(--text-heading)", marginTop: "4px" }}>
-            {availableCount}
+            {salesAndHrCount}
           </div>
         </div>
       </div>
@@ -344,7 +457,7 @@ export default function EmployeeManagementPage() {
           border: "1px solid var(--border-subtle)",
         }}
       >
-        <div style={{ position: "relative", minWidth: "280px", flex: 1 }}>
+        <div style={{ position: "relative", minWidth: "260px", flex: 1 }}>
           <span
             style={{
               position: "absolute",
@@ -361,7 +474,7 @@ export default function EmployeeManagementPage() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by employee name, designation, department..."
+            placeholder="Search name, typed designation, team, department..."
             style={{
               width: "100%",
               boxSizing: "border-box",
@@ -376,28 +489,55 @@ export default function EmployeeManagementPage() {
           />
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <Filter size={15} color="var(--text-muted)" />
-          <select
-            value={filterDept}
-            onChange={(e) => setFilterDept(e.target.value)}
-            style={{
-              padding: "7px 12px",
-              borderRadius: "6px",
-              border: "1px solid var(--border-subtle)",
-              backgroundColor: "var(--bg-canvas)",
-              color: "var(--text-heading)",
-              fontSize: "13px",
-              outline: "none",
-              cursor: "pointer",
-            }}
-          >
-            {departments.map((dept) => (
-              <option key={dept} value={dept}>
-                {dept === "ALL" ? "All Departments" : dept}
-              </option>
-            ))}
-          </select>
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: 600 }}>Team:</span>
+            <select
+              value={filterTeam}
+              onChange={(e) => setFilterTeam(e.target.value)}
+              style={{
+                padding: "7px 12px",
+                borderRadius: "6px",
+                border: "1px solid var(--border-subtle)",
+                backgroundColor: "var(--bg-canvas)",
+                color: "var(--text-heading)",
+                fontSize: "13px",
+                outline: "none",
+                cursor: "pointer",
+              }}
+            >
+              <option value="ALL">All Teams</option>
+              {TEAM_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <Filter size={14} color="var(--text-muted)" />
+            <select
+              value={filterDept}
+              onChange={(e) => setFilterDept(e.target.value)}
+              style={{
+                padding: "7px 12px",
+                borderRadius: "6px",
+                border: "1px solid var(--border-subtle)",
+                backgroundColor: "var(--bg-canvas)",
+                color: "var(--text-heading)",
+                fontSize: "13px",
+                outline: "none",
+                cursor: "pointer",
+              }}
+            >
+              {departments.map((dept) => (
+                <option key={dept} value={dept}>
+                  {dept === "ALL" ? "All Departments" : dept}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -424,7 +564,8 @@ export default function EmployeeManagementPage() {
                 }}
               >
                 <th style={{ padding: "14px 20px" }}>Employee Name</th>
-                <th style={{ padding: "14px 20px" }}>Designation</th>
+                <th style={{ padding: "14px 20px" }}>Assigned Team</th>
+                <th style={{ padding: "14px 20px" }}>Typed Designation</th>
                 <th style={{ padding: "14px 20px" }}>Department</th>
                 <th style={{ padding: "14px 20px" }}>Current Assignment</th>
                 <th style={{ padding: "14px 20px" }}>Status</th>
@@ -472,7 +613,46 @@ export default function EmployeeManagementPage() {
                     </td>
 
                     <td style={{ padding: "14px 20px" }}>
-                      <div style={{ fontWeight: 600, color: "var(--text-body)" }}>{emp.designation}</div>
+                      <span
+                        style={{
+                          fontSize: "11.5px",
+                          fontWeight: 700,
+                          padding: "3px 9px",
+                          borderRadius: "6px",
+                          backgroundColor:
+                            emp.team === "LEADERSHIP"
+                              ? "rgba(168, 85, 247, 0.12)"
+                              : emp.team === "COMMISSIONING"
+                              ? "var(--sys-blue-subtle)"
+                              : emp.team === "HR_ACCOUNTS"
+                              ? "var(--sys-green-subtle)"
+                              : "rgba(245, 158, 11, 0.12)",
+                          color:
+                            emp.team === "LEADERSHIP"
+                              ? "#a855f7"
+                              : emp.team === "COMMISSIONING"
+                              ? "var(--sys-blue-primary)"
+                              : emp.team === "HR_ACCOUNTS"
+                              ? "var(--sys-green-accent)"
+                              : "#f59e0b",
+                          border: `1px solid ${
+                            emp.team === "LEADERSHIP"
+                              ? "rgba(168, 85, 247, 0.3)"
+                              : emp.team === "COMMISSIONING"
+                              ? "var(--sys-blue-border)"
+                              : emp.team === "HR_ACCOUNTS"
+                              ? "var(--sys-green-border)"
+                              : "rgba(245, 158, 11, 0.3)"
+                          }`,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {TEAM_LABELS[emp.team] || emp.team}
+                      </span>
+                    </td>
+
+                    <td style={{ padding: "14px 20px" }}>
+                      <div style={{ fontWeight: 600, color: "var(--text-heading)" }}>{emp.designation}</div>
                     </td>
 
                     <td style={{ padding: "14px 20px", color: "var(--text-muted)" }}>
@@ -527,16 +707,17 @@ export default function EmployeeManagementPage() {
         </div>
       </div>
 
-      {showAddModal && (
+      {showAddModal && canCreate && (
         <div
           style={{
             position: "fixed",
             inset: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            backgroundColor: "rgba(0, 0, 0, 0.55)",
+            backdropFilter: "blur(4px)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            zIndex: 1000,
+            zIndex: 9999,
             padding: "16px",
           }}
           onClick={() => setShowAddModal(false)}
@@ -544,18 +725,21 @@ export default function EmployeeManagementPage() {
           <div
             style={{
               width: "100%",
-              maxWidth: "480px",
+              maxWidth: "520px",
               backgroundColor: "var(--bg-card)",
-              borderRadius: "12px",
+              borderRadius: "14px",
               border: "1px solid var(--border-subtle)",
               padding: "24px",
               boxShadow: "var(--shadow-lg)",
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 style={{ fontSize: "18px", fontWeight: 700, color: "var(--text-heading)", margin: "0 0 16px 0" }}>
-              Add Company Employee
-            </h2>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
+              <Shield size={20} color="var(--sys-blue-primary)" />
+              <h2 style={{ fontSize: "18px", fontWeight: 700, color: "var(--text-heading)", margin: 0 }}>
+                Register Employee (Seeded Super Admin)
+              </h2>
+            </div>
 
             <form onSubmit={handleAddEmployee} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
               <div>
@@ -583,13 +767,40 @@ export default function EmployeeManagementPage() {
 
               <div>
                 <label style={{ display: "block", fontSize: "13px", fontWeight: 600, marginBottom: "4px", color: "var(--text-heading)" }}>
-                  Corporate Designation
+                  Assigned Team (Permission Level)
+                </label>
+                <select
+                  value={newTeam}
+                  onChange={(e) => setNewTeam(e.target.value as EmployeeTeam)}
+                  required
+                  style={{
+                    width: "100%",
+                    boxSizing: "border-box",
+                    padding: "8px 12px",
+                    borderRadius: "6px",
+                    border: "1px solid var(--border-subtle)",
+                    backgroundColor: "var(--bg-canvas)",
+                    color: "var(--text-heading)",
+                    fontSize: "13.5px",
+                  }}
+                >
+                  {TEAM_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "13px", fontWeight: 600, marginBottom: "4px", color: "var(--text-heading)" }}>
+                  Corporate Designation (Typed Identification)
                 </label>
                 <input
                   type="text"
                   value={newDesignation}
                   onChange={(e) => setNewDesignation(e.target.value)}
-                  placeholder="e.g. Senior Rolling Mill Commissioning Lead"
+                  placeholder="e.g. Commissioning Engineer, System Engineer, Director, HR Assistant"
                   required
                   style={{
                     width: "100%",
@@ -628,8 +839,8 @@ export default function EmployeeManagementPage() {
                   <option value="Metallurgy & Process">Metallurgy & Process</option>
                   <option value="Hydraulics & Mechanics">Hydraulics & Mechanics</option>
                   <option value="Erection & Civil">Erection & Civil</option>
-                  <option value="Quality & Safety">Quality & Safety</option>
-                  <option value="Procurement & Contracts">Procurement & Contracts</option>
+                  <option value="HR & Compliance">HR & Compliance</option>
+                  <option value="Sales & Contracts">Sales & Contracts</option>
                 </select>
               </div>
 
