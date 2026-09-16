@@ -88,6 +88,8 @@ apps/internal/
 | Project Management | `/projects` | Two-tab system (Ongoing and Commissioned) displaying project cards with client name, line name, and location |
 | Project Detail & Lifecycle | `/projects/[id]` | 12 predefined sequential lifecycle steps, step marking (Pending/In Progress/Completed), dynamic intermediate step insertion, on-site staff roster |
 | Employee Management | `/employees` | Complete corporate directory with employee names, designations, departments, contact numbers, and plant deployment status |
+| Media CMS | `/media` | Cloud-backed media library with drag-and-drop upload, client-side pre-flight checks (format, size <=5MB, 1200x800 resolution), and instant copy-to-clipboard CDN URLs |
+| Careers & Jobs | `/careers-admin/postings` | Job posting management, publishing/pausing openings, candidate application review, and real-time synchronization with the public careers platform |
 | Analytics | `/analytics` | Dwell duration per stage, end-to-end conversion funnel, aging enquiries/procurement telemetry matrix, and 12-month AMC revenue projection |
 | Settings | `/settings` | Profile summary, designation, role verification, and self-service password change |
 | Authentication | `/login` | Enterprise login screen with brand logo, credential authentication, and demo quick-switch |

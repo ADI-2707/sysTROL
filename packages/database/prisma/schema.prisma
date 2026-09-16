@@ -108,6 +108,7 @@ model User {
   momSignoffs           MinutesOfMeeting[]     @relation("MOMSignedBy")
   jobPostings           JobPosting[]
   jobApplicationReviews JobApplication[]       @relation("ApplicationReviewer")
+  mediaAssets           MediaAsset[]
 }
 
 model ClientCompany {
@@ -281,6 +282,7 @@ model Project {
   amcContracts         AMCContract[]
   deployments          SiteDeployment[]
   auditLogs            AuditLog[]
+  mediaAssets          MediaAsset[]
   createdAt            DateTime            @default(now())
   updatedAt            DateTime            @updatedAt
 }
@@ -509,4 +511,36 @@ model AuditLog {
   entityId   String
   diff       Json?
   createdAt  DateTime  @default(now())
+}
+
+enum MediaCategory {
+  GALLERY
+  PROJECTS
+  PRODUCTS
+  FACILITIES
+  BRANDING
+}
+
+model MediaAsset {
+  id           String        @id @default(uuid())
+  title        String
+  altText      String?
+  caption      String?
+  category     MediaCategory @default(GALLERY)
+  tags         String[]      @default([])
+  fileUrl      String
+  s3Key        String        @unique
+  mimeType     String
+  sizeBytes    Int
+  width        Int?
+  height       Int?
+  uploadedById String?
+  uploadedBy   User?         @relation(fields: [uploadedById], references: [id])
+  projectId    String?
+  project      Project?      @relation(fields: [projectId], references: [id])
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([category])
+  @@index([createdAt])
 }

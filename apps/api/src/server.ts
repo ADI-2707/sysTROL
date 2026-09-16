@@ -20,6 +20,7 @@ import { projectsRoutes } from "./modules/lifecycle/projects.routes.js";
 import { commissioningRoutes } from "./modules/commissioning/commissioning.routes.js";
 import { trialsAndPostCommRoutes } from "./modules/trials/post-comm.routes.js";
 import { analyticsRoutes } from "./modules/analytics/analytics.routes.js";
+import { mediaRoutes } from "./modules/media/media.routes.js";
 
 const logger = createLogger("api-server");
 
@@ -28,9 +29,16 @@ export async function buildServer() {
     logger: false,
   });
 
-  // 1. CORS
   await server.register(cors, {
-    origin: [env.PUBLIC_APP_URL, env.INTERNAL_APP_URL, "http://localhost:3000", "http://localhost:3001"],
+    origin: [
+      env.PUBLIC_APP_URL,
+      env.INTERNAL_APP_URL,
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "https://systrol.vercel.app",
+      "https://systrolops.vercel.app",
+      /\.vercel\.app$/,
+    ],
     credentials: true,
   });
 
@@ -94,6 +102,7 @@ export async function buildServer() {
       await v1.register(commissioningRoutes);
       await v1.register(trialsAndPostCommRoutes);
       await v1.register(analyticsRoutes);
+      await v1.register(mediaRoutes);
     },
     { prefix: "/api/v1" }
   );
