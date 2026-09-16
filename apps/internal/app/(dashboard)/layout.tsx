@@ -333,6 +333,9 @@ export default function DashboardLayout({
               >
                 <LogOut size={15} />
               </button>
+              <div style={{ fontSize: "8.5px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", textAlign: "center" }}>
+                {process.env.NEXT_PUBLIC_APP_VERSION || "v0.1.0"}
+              </div>
             </div>
           ) : (
             <>
@@ -433,6 +436,13 @@ export default function DashboardLayout({
                 />
                 <span>Log Out</span>
               </button>
+
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "2px 4px 0 4px" }}>
+                <span style={{ fontSize: "10px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", letterSpacing: "0.5px" }}>
+                  PORTAL {process.env.NEXT_PUBLIC_APP_VERSION || "v0.1.0"}
+                </span>
+                <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#10b981", display: "inline-block" }} />
+              </div>
             </>
           )}
         </div>

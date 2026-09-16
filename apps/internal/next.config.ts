@@ -1,4 +1,7 @@
 import type { NextConfig } from "next";
+import fs from "node:fs";
+
+const pkg = JSON.parse(fs.readFileSync(new URL("./package.json", import.meta.url), "utf-8"));
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -14,6 +17,7 @@ const nextConfig: NextConfig = {
   env: {
     API_URL: process.env.API_URL || "http://localhost:4000",
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000",
+    NEXT_PUBLIC_APP_VERSION: `v${pkg.version}`,
   },
 };
 
