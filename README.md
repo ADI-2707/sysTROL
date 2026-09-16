@@ -42,7 +42,7 @@ sysTrol/
 ### Applications (`apps/`)
 
 - [apps/api](file:///c:/Users/hp/OneDrive/Desktop/sysTrol/apps/api): Node.js and Fastify backend application with BullMQ asynchronous job processing, Redis caching/queues, MinIO/S3 document management, JWT authentication with TOTP 2FA, and domain modules covering the industrial lifecycle.
-- [apps/internal](file:///c:/Users/hp/OneDrive/Desktop/sysTrol/apps/internal): Next.js 15 App Router internal management portal. Includes responsive dual-theme system (dark mode neutral black and light mode), collapsible icon-rail navigation with tooltips, top progress bar, standardized Button, Badge, and KpiCard components, and dedicated dashboards for all operational departments.
+- [apps/internal](file:///c:/Users/hp/OneDrive/Desktop/sysTrol/apps/internal): Next.js 15 App Router internal operations portal. Features an enterprise authentication landing page, streamlined 5-page sidebar navigation (Dashboard, Project Management, Employee Management, Analytics, Settings), an interactive animated official sysTROL logo (collapsing into a unified circular emblem and expanding to full brand typography), an Ongoing & Commissioned two-tab project card view, a 12-step sequential lifecycle engine with intermediate step insertion and on-site staff roster, employee directory with designations, and self-service password management.
 - [apps/web-public](file:///c:/Users/hp/OneDrive/Desktop/sysTrol/apps/web-public): Next.js 15 App Router public-facing web platform. Features cinematic branding, Motion animations, L2 automation interactive commissioning stepper, machinery and spares catalog, filtered projects directory, careers portal, visual showcase gallery, and RFQ contact forms.
 
 ### Shared Packages (`packages/`)

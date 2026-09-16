@@ -177,6 +177,9 @@ export const Footer: React.FC = () => {
             reserved.
           </div>
           <div className={styles.legalLinks}>
+            <span style={{ fontSize: "11px", color: "var(--color-ink-500)", fontFamily: "monospace" }}>
+              {process.env.NEXT_PUBLIC_APP_VERSION || "v0.1.0"}
+            </span>
             <Link href="/contact" className={styles.legalLink}>
               Enquiry
             </Link>

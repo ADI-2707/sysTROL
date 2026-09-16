@@ -18,6 +18,10 @@ declare module "@fastify/jwt" {
 declare module "fastify" {
   interface FastifyInstance {
     verifyJWT: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
+    authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
+    authorize: (
+      allowedRoles: string[]
+    ) => (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
     issueTokens: (
       userId: string,
       role: UserRole,
@@ -45,20 +49,46 @@ async function jwtPluginAsync(fastify: FastifyInstance) {
     },
   });
 
-  fastify.decorate(
-    "verifyJWT",
-    async function (request: FastifyRequest, reply: FastifyReply): Promise<void> {
-      try {
-        await request.jwtVerify();
-      } catch (err) {
+  const verifyAuth = async function (
+    request: FastifyRequest,
+    reply: FastifyReply
+  ): Promise<void> {
+    try {
+      await request.jwtVerify();
+    } catch (err) {
+      reply.status(401).send({
+        statusCode: 401,
+        error: "Unauthorized",
+        message: "Missing, invalid, or expired authentication token",
+      });
+    }
+  };
+
+  fastify.decorate("verifyJWT", verifyAuth);
+  fastify.decorate("authenticate", verifyAuth);
+
+  fastify.decorate("authorize", function (allowedRoles: string[]) {
+    return async function (request: FastifyRequest, reply: FastifyReply): Promise<void> {
+      const user = request.user;
+      if (!user) {
         reply.status(401).send({
           statusCode: 401,
           error: "Unauthorized",
-          message: "Missing, invalid, or expired authentication token",
+          message: "Authentication required before role check",
         });
+        return;
       }
-    }
-  );
+
+      if (!allowedRoles.includes(user.role as string) && (user.role as string) !== "SUPER_ADMIN" && (user.role as string) !== "ADMIN") {
+        reply.status(403).send({
+          statusCode: 403,
+          error: "Forbidden",
+          message: `User role '${user.role}' does not have sufficient permissions for this resource`,
+        });
+        return;
+      }
+    };
+  });
 
   fastify.decorate(
     "issueTokens",

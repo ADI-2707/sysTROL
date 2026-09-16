@@ -101,12 +101,25 @@ export function PostingEditor({ initialData, isEdit = false }: PostingEditorProp
         ? `${apiUrl}/api/v1/admin/jobs/${initialData?.id}`
         : `${apiUrl}/api/v1/admin/jobs`;
 
+      const session = typeof window !== "undefined" ? localStorage.getItem("systrol_user_session") : null;
+      let token: string | undefined;
+      try {
+        if (session) {
+          token = JSON.parse(session).token;
+        }
+      } catch {}
+
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const method = isEdit ? "PATCH" : "POST";
       const res = await fetch(url, {
         method,
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify(payload),
       });
 

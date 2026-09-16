@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "./theme-provider";
 import { TopProgressBar } from "./top-progress-bar";
+import { AuthProvider } from "../lib/auth-context";
 
 export const metadata: Metadata = {
   title: "sysTROL Internal Management Console",
@@ -17,7 +18,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body>
         <TopProgressBar />
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

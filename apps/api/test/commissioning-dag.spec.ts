@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { DAGEngine, DAGNode } from "../src/modules/commissioning/dag.engine.js";
 import { CommissioningService } from "../src/modules/commissioning/commissioning.service.js";
 import { prisma } from "@systrol/database";
+import { CreateStepSchema, SignoffSchema, StepType } from "@systrol/types";
 
 vi.mock("@systrol/database", () => {
   const mPrisma = {
@@ -24,9 +25,36 @@ vi.mock("@systrol/database", () => {
   return { prisma: mPrisma };
 });
 
-describe("Phase 11: Commissioning DAG Engine", () => {
+describe("Commissioning Module & DAG Engine Tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  describe("Commissioning Payload Validation", () => {
+    it("validates correct CreateStepSchema payload", () => {
+      const validPayload = {
+        title: "Cold Loop Calibration Test",
+        description: "Verify feedback from resolver encoder on stand 1",
+        stepType: StepType.LOOP_TUNING,
+        dependsOn: ["11111111-1111-1111-1111-111111111111"],
+      };
+      const result = CreateStepSchema.safeParse(validPayload);
+      expect(result.success).toBe(true);
+    });
+
+    it("rejects CreateStepSchema payload with short title or invalid stepType", () => {
+      const invalidPayload = {
+        title: "AB",
+        stepType: "INVALID_STEP_TYPE",
+      };
+      const result = CreateStepSchema.safeParse(invalidPayload);
+      expect(result.success).toBe(false);
+    });
+
+    it("validates SignoffSchema payload", () => {
+      expect(SignoffSchema.safeParse({ comments: "Approved on site" }).success).toBe(true);
+      expect(SignoffSchema.safeParse({}).success).toBe(true);
+    });
   });
 
   describe("DAGEngine", () => {

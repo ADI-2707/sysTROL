@@ -16,10 +16,14 @@ The Internal application is an operational portal designed for field engineers, 
   - Light Mode: Clean high-contrast surfaces (`#FFFFFF`, `#F8FAFC`, `#F1F5F9`) with slate borders (`#E2E8F0`).
   - Theme toggling persists via `theme-provider.tsx` and `theme-toggle.tsx` in the dashboard header.
 - Navigation Shell:
-  - Collapsible icon-rail sidebar matching top header height.
-  - Hover tooltip popovers for collapsed rail navigation.
+  - Streamlined 5-Item Navigation: Dashboard, Project Management, Employee Management, Analytics, Settings.
+  - Interactive Official sysTROL Logo: In collapsed state, the left mark (gear & globe) and right mark (bulb & connecting nodes) meet side-by-side to form a unified circular emblem without overlapping. Clicking it smoothly expands the sidebar and reveals the full brand name (`sysTROL`) and tagline (`Engineering Redefined`).
   - Active route synchronization with deep parent-child path matching.
   - Top progress bar (`top-progress-bar.tsx`) with brand green accent rendering during route transitions.
+- Authentication & Security:
+  - Dedicated enterprise landing page (`/login`) with session management.
+  - Protected dashboard routes with automatic redirection for unauthenticated visitors.
+  - Settings page with password change capability, session telemetry, and role designation display.
 
 ---
 
@@ -28,86 +32,74 @@ The Internal application is an operational portal designed for field engineers, 
 ```
 apps/internal/
 ├── app/
-│   ├── (dashboard)/                  # Authenticated ERP dashboard layout and routes
+│   ├── (dashboard)/
+│   │   ├── dashboard/                # Central operations dashboard with KPI telemetry and charts
+│   │   ├── projects/                 # Project management with Ongoing & Commissioned cards
+│   │   │   └── [id]/                 # 12-step lifecycle tracker, sub-step insertion & on-site roster
+│   │   ├── employees/                # Employee management directory with designations & site status
 │   │   ├── analytics/                # Telemetry matrix, dwell times, aging, AMC forecasts
-│   │   ├── careers-admin/            # Job postings and candidate management
-│   │   ├── commissioning/            # Commissioning DAG engine step verification
-│   │   ├── dispatch/                 # Logistics, packing manifests, gate passes
-│   │   ├── engineering/              # Drawings vault, BOQ revisions, design reviews
-│   │   ├── enquiries/                # Technical RFQ qualification and quotation review
-│   │   ├── finance/                  # Milestone invoices, retention money, AMC contracts
-│   │   ├── lifecycle/                # Global project lifecycle milestone progression
-│   │   ├── manufacturing/            # Production batches and FAT stage sign-offs
-│   │   ├── post-commissioning/       # Trials, PG test telemetry, MOM customer handovers
-│   │   ├── procurement/              # Purchase orders, vendor tracking, line items
-│   │   ├── projects/                 # Project index mapped to lifecycle state
-│   │   ├── sales-visits/             # Client mill visit logs and GPS check-ins
-│   │   ├── trials/                   # Post-commissioning route alias
-│   │   └── layout.tsx                # Dashboard shell with sidebar rail and header
+│   │   ├── settings/                 # Account profile, password change, theme preferences
+│   │   └── layout.tsx                # Dashboard shell with 5-item sidebar and animated official logo
+│   ├── login/                        # Dedicated enterprise login page
 │   ├── globals.css                   # Core layout reset, table styling, and spacing rules
-│   ├── layout.tsx                    # Root HTML layout and font configurations
-│   ├── page.tsx                      # Root redirect to /lifecycle dashboard
+│   ├── layout.tsx                    # Root HTML layout and AuthProvider
+│   ├── page.tsx                      # Root landing page routing to /login or /dashboard
 │   ├── theme-provider.tsx            # Context provider managing dark/light modes
 │   ├── theme-toggle.tsx              # Header button component to switch theme
 │   └── top-progress-bar.tsx          # Top route transition progress indicator
 ├── components/
+│   ├── brand/
+│   │   └── SysTrolLogo.tsx           # Official animated sysTROL logo (circular collapsed / full expanded)
 │   └── ui/                           # Reusable standardized UI components
-│       ├── badge.tsx                 # Status pill badge (default, success, warning, etc.)
-│       ├── button.tsx                # Action button (default green with white text, outline, etc.)
+│       ├── badge.tsx                 # Status pill badge
+│       ├── button.tsx                # Action button
 │       ├── kpi-card.tsx              # Metric KPI card with trend indicators
 │       └── index.ts                  # Component barrel export
+├── lib/
+│   ├── auth-context.tsx              # Authentication session context and credentials store
+│   └── projects-data.ts              # Lifecycle stages, on-site personnel models and persistence
+├── public/
+│   └── images/                       # Official sysTROL logo vectors and assets
 ├── styles/
 │   ├── tokens.css                    # Canonical CSS custom properties for color, space, radius
 │   └── utilities.css                 # Token-mapped flex, grid, border, and spacing utility classes
-├── tsconfig.json                     # TypeScript compiler configuration
+├── tsconfig.json
 └── package.json
 ```
 
 ---
 
-## Standardized UI Components
-
-The application standardizes core interactive elements in `components/ui`:
-
-### Button (`components/ui/button.tsx`)
-- Supports multiple variants:
-  - `default`: sysTROL signature green (`#1F7A4D`) with white text and hover state.
-  - `outline`: Bordered button with subtle background hover.
-  - `ghost`: Transparent button with subtle text highlight on hover.
-  - `secondary`: Neutral slate button for secondary actions.
-  - `destructive`: Crimson danger button for critical deletions or cancellations.
-- Sizes: `default`, `sm`, `lg`, `icon`.
-
-### Badge (`components/ui/badge.tsx`)
-- Standardized status badges for project and document states.
-- Variants: `default`, `secondary`, `outline`, `success`, `warning`, `destructive`, `info`.
-
-### KpiCard (`components/ui/kpi-card.tsx`)
-- High-visibility statistical cards displaying key metrics.
-- Includes support for:
-  - Metric title and large primary value readout.
-  - Trend badges (positive/negative/neutral percentage changes).
-  - Comparative subtitle or description.
-  - Lucide icon integration with theme-adaptive background containers.
-
----
-
-## Operational Modules
+## Core Operational Modules
 
 | Module | Route | Key Capabilities |
 |---|---|---|
-| Executive Analytics | `/analytics` | Dwell duration per stage, end-to-end conversion funnel, aging enquiries/procurement telemetry matrix, and 12-month AMC revenue projection |
-| Sales Visits | `/sales-visits` | Mill visit records, client contact persons, discussion logs, and action items |
-| Technical Enquiries | `/enquiries` | Inbound RFQ analysis, feasibility review, scope definition, and quotation status |
-| Project Lifecycle | `/lifecycle` | Global milestone progression from enquiry to project sign-off |
-| Engineering & BOQ | `/engineering` | Engineering document vault, technical schematics, and multi-revision BOQ management |
-| Procurement | `/procurement` | Purchase orders (POs), supplier delivery schedules, and receipt verification |
-| Manufacturing | `/manufacturing` | Production batch tracking, component fabrication, wiring checks, and FAT records |
-| Dispatch & Logistics | `/dispatch` | Consignment manifests, transporter details, packing lists, and site gate passes |
-| Commissioning DAG | `/commissioning` | Directed Acyclic Graph step resolution, prerequisites, and engineer sign-offs |
-| Post-Commissioning | `/post-commissioning` | Hot/cold trial logs, PG tests, customer MOM signoffs, and warranty tracking |
-| Finance & Retention | `/finance` | Milestone invoices, retention money ledger, bank guarantees, and AMC contracts |
-| Careers Admin | `/careers-admin` | Active job posting management and job applicant tracking |
+| Dashboard | `/dashboard` | Executive KPI readout, lifecycle stage distribution, monthly project delivery pace, recent telemetry feed |
+| Project Management | `/projects` | Two-tab system (Ongoing and Commissioned) displaying project cards with client name, line name, and location |
+| Project Detail & Lifecycle | `/projects/[id]` | 12 predefined sequential lifecycle steps, step marking (Pending/In Progress/Completed), dynamic intermediate step insertion, on-site staff roster |
+| Employee Management | `/employees` | Complete corporate directory with employee names, designations, departments, contact numbers, and plant deployment status |
+| Analytics | `/analytics` | Dwell duration per stage, end-to-end conversion funnel, aging enquiries/procurement telemetry matrix, and 12-month AMC revenue projection |
+| Settings | `/settings` | Profile summary, designation, role verification, and self-service password change |
+| Authentication | `/login` | Enterprise login screen with brand logo, credential authentication, and demo quick-switch |
+
+---
+
+## 12-Step Project Lifecycle
+
+Each rolling mill project tracks progress across the predefined sequential phases:
+1. Enquiry
+2. Sales visit
+3. Procurement
+4. Engineering phase
+5. Material / Manufacturing
+6. Dispatch
+7. Erection and commissioning
+8. Cold trial / Hot trial
+9. Performance and guarantee testing (PG test)
+10. MOM (Minutes of Meeting)
+11. Payment
+12. AMC (Annual Maintenance)
+
+Users can mark each predefined step, update timestamps and signoffs, insert custom intermediate sub-steps between predefined steps, and deploy or relieve on-site personnel.
 
 ---
 

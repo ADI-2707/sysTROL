@@ -3,6 +3,13 @@ import { prisma } from "@systrol/database";
 import { ManufacturingBatchService } from "../src/modules/manufacturing/batch.service.js";
 import { QCService } from "../src/modules/manufacturing/qc.service.js";
 import { ShipmentService } from "../src/modules/dispatch/shipment.service.js";
+import {
+  CreateManufacturingBatchSchema,
+  CompleteFATSchema,
+  BulkQCSchema,
+  CreateShipmentSchema,
+  UpdateShipmentSchema,
+} from "@systrol/types";
 
 vi.mock("@systrol/database", () => {
   const mPrisma = {
@@ -32,9 +39,75 @@ vi.mock("@systrol/database", () => {
   return { prisma: mPrisma };
 });
 
-describe("Phase 9: Manufacturing & Dispatch Module", () => {
+describe("Manufacturing & Dispatch Module Unit & Payload Tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  describe("Manufacturing & Dispatch Payload Validation", () => {
+    it("validates correct CreateManufacturingBatchSchema payload", () => {
+      const validPayload = {
+        projectId: "11111111-1111-1111-1111-111111111111",
+        panelType: "Main Drive Automation Panel",
+      };
+      const result = CreateManufacturingBatchSchema.safeParse(validPayload);
+      expect(result.success).toBe(true);
+    });
+
+    it("rejects CreateManufacturingBatchSchema with non-uuid projectId or short panelType", () => {
+      const invalidPayload = {
+        projectId: "invalid-uuid",
+        panelType: "P",
+      };
+      const result = CreateManufacturingBatchSchema.safeParse(invalidPayload);
+      expect(result.success).toBe(false);
+    });
+
+    it("validates CompleteFATSchema payload", () => {
+      expect(CompleteFATSchema.safeParse({ fatPassed: true }).success).toBe(true);
+      expect(CompleteFATSchema.safeParse({ fatPassed: "true" }).success).toBe(false);
+    });
+
+    it("validates BulkQCSchema checklist payload", () => {
+      const validPayload = {
+        checks: [
+          { checklistItem: "Wiring insulation check", result: "PASS" as const },
+          { checklistItem: "PLC loop test", result: "FAIL" as const },
+        ],
+      };
+      expect(BulkQCSchema.safeParse(validPayload).success).toBe(true);
+      expect(BulkQCSchema.safeParse({ checks: [] }).success).toBe(false);
+    });
+
+    it("validates CreateShipmentSchema payload", () => {
+      const validPayload = {
+        projectId: "22222222-2222-2222-2222-222222222222",
+        destination: "Toranagallu JSW Plant Site",
+      };
+      const result = CreateShipmentSchema.safeParse(validPayload);
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.originCountry).toBe("India");
+      }
+    });
+
+    it("rejects CreateShipmentSchema with short destination", () => {
+      const invalidPayload = {
+        projectId: "22222222-2222-2222-2222-222222222222",
+        destination: "A",
+      };
+      const result = CreateShipmentSchema.safeParse(invalidPayload);
+      expect(result.success).toBe(false);
+    });
+
+    it("validates UpdateShipmentSchema payload", () => {
+      const validPayload = {
+        trackingRef: "TRK-987654",
+        carrier: "Blue Dart Aviation",
+        customsStatus: "CLEARED",
+      };
+      expect(UpdateShipmentSchema.safeParse(validPayload).success).toBe(true);
+    });
   });
 
   describe("ManufacturingBatchService", () => {
