@@ -19,6 +19,17 @@ async function main() {
     },
   });
 
+  await prisma.user.upsert({
+    where: { email: "admin@systrol.com" },
+    update: {},
+    create: {
+      email: "admin@systrol.com",
+      name: "Rajiv Malhotra",
+      role: UserRole.SUPER_ADMIN,
+      hashedPassword: hashPassword("admin123"),
+    },
+  });
+
   const hr = await prisma.user.upsert({
     where: { email: "hr@systrol.in" },
     update: {},
