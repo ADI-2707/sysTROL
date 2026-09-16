@@ -11,3 +11,4 @@ export * from "./finance.js";
 export * from "./amc.js";
 export * from "./analytics.js";
 export * from "./enquiries.js";
+export * from "./media.js";
