@@ -271,6 +271,9 @@ export default function DashboardLayout({
             padding: isCollapsed ? "14px 8px" : "14px 16px",
             borderTop: "1px solid var(--border-subtle)",
             backgroundColor: "var(--bg-card)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "12px",
           }}
         >
           {isCollapsed ? (
@@ -298,68 +301,97 @@ export default function DashboardLayout({
               <button
                 type="button"
                 onClick={logout}
-                title="Log Out"
+                title="Log Out of sysTROL"
                 style={{
-                  background: "transparent",
-                  border: "none",
-                  color: "var(--text-muted)",
-                  padding: "6px",
-                  borderRadius: "6px",
+                  width: "36px",
+                  height: "36px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: "8px",
+                  backgroundColor: "rgba(239, 68, 68, 0.08)",
+                  border: "1px solid rgba(239, 68, 68, 0.25)",
+                  color: "#ef4444",
                   cursor: "pointer",
+                  transition: "all 0.15s ease",
                 }}
               >
                 <LogOut size={16} />
               </button>
             </div>
           ) : (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
-              <div style={{ minWidth: 0, flex: 1 }}>
+            <>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <div
                   style={{
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    color: "var(--text-heading)",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
+                    width: "34px",
+                    height: "34px",
+                    borderRadius: "50%",
+                    backgroundColor: "var(--sys-blue-subtle)",
+                    color: "var(--sys-blue-primary)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    border: "1px solid var(--sys-blue-border)",
+                    flexShrink: 0,
                   }}
                 >
-                  {user?.name || "System Operator"}
+                  {user?.name ? user.name.slice(0, 2).toUpperCase() : "ST"}
                 </div>
-                <div
-                  style={{
-                    fontSize: "11px",
-                    color: "var(--sys-green-accent)",
-                    fontFamily: "var(--font-mono)",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {user?.designation || user?.role || "Field Specialist"}
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div
+                    style={{
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      color: "var(--text-heading)",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {user?.name || "System Operator"}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "11px",
+                      color: "var(--sys-green-accent)",
+                      fontFamily: "var(--font-mono)",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {user?.designation || user?.role || "Field Specialist"}
+                  </div>
                 </div>
               </div>
 
               <button
                 type="button"
                 onClick={logout}
-                title="Log Out"
                 style={{
-                  background: "transparent",
-                  border: "none",
-                  color: "var(--text-muted)",
-                  padding: "6px",
-                  borderRadius: "6px",
-                  cursor: "pointer",
+                  width: "100%",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  transition: "color 0.15s ease",
+                  gap: "8px",
+                  padding: "8px 12px",
+                  borderRadius: "6px",
+                  backgroundColor: "rgba(239, 68, 68, 0.08)",
+                  border: "1px solid rgba(239, 68, 68, 0.25)",
+                  color: "#ef4444",
+                  fontSize: "12.5px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "background-color 0.15s ease",
                 }}
               >
-                <LogOut size={16} />
+                <LogOut size={15} />
+                <span>Log Out</span>
               </button>
-            </div>
+            </>
           )}
         </div>
       </aside>
