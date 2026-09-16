@@ -110,6 +110,7 @@ export default function DashboardLayout({
   const router = useRouter();
   const { user, isAuthenticated, isLoading, logout } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [logoutHovered, setLogoutHovered] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("systrol_sidebar_collapsed");
@@ -306,6 +307,8 @@ export default function DashboardLayout({
               <button
                 type="button"
                 onClick={logout}
+                onMouseEnter={() => setLogoutHovered(true)}
+                onMouseLeave={() => setLogoutHovered(false)}
                 title="Log Out of sysTROL"
                 style={{
                   width: "32px",
@@ -314,11 +317,13 @@ export default function DashboardLayout({
                   alignItems: "center",
                   justifyContent: "center",
                   borderRadius: "6px",
-                  backgroundColor: "rgba(239, 68, 68, 0.08)",
-                  border: "1px solid rgba(239, 68, 68, 0.25)",
-                  color: "#ef4444",
+                  backgroundColor: logoutHovered ? "#ef4444" : "rgba(239, 68, 68, 0.08)",
+                  border: logoutHovered ? "1px solid #dc2626" : "1px solid rgba(239, 68, 68, 0.25)",
+                  color: logoutHovered ? "#ffffff" : "#ef4444",
+                  boxShadow: logoutHovered ? "0 4px 12px rgba(239, 68, 68, 0.35)" : "none",
+                  transform: logoutHovered ? "scale(1.06)" : "scale(1)",
                   cursor: "pointer",
-                  transition: "all 0.15s ease",
+                  transition: "all 0.18s cubic-bezier(0.4, 0, 0.2, 1)",
                 }}
               >
                 <LogOut size={15} />
@@ -376,6 +381,8 @@ export default function DashboardLayout({
               <button
                 type="button"
                 onClick={logout}
+                onMouseEnter={() => setLogoutHovered(true)}
+                onMouseLeave={() => setLogoutHovered(false)}
                 style={{
                   width: "100%",
                   display: "flex",
@@ -384,16 +391,24 @@ export default function DashboardLayout({
                   gap: "6px",
                   padding: "6px 10px",
                   borderRadius: "6px",
-                  backgroundColor: "rgba(239, 68, 68, 0.08)",
-                  border: "1px solid rgba(239, 68, 68, 0.25)",
-                  color: "#ef4444",
+                  backgroundColor: logoutHovered ? "#ef4444" : "rgba(239, 68, 68, 0.08)",
+                  border: logoutHovered ? "1px solid #dc2626" : "1px solid rgba(239, 68, 68, 0.25)",
+                  color: logoutHovered ? "#ffffff" : "#ef4444",
+                  boxShadow: logoutHovered ? "0 4px 14px rgba(239, 68, 68, 0.35)" : "none",
+                  transform: logoutHovered ? "translateY(-1px)" : "translateY(0)",
                   fontSize: "12px",
                   fontWeight: 600,
                   cursor: "pointer",
-                  transition: "background-color 0.15s ease",
+                  transition: "all 0.18s cubic-bezier(0.4, 0, 0.2, 1)",
                 }}
               >
-                <LogOut size={14} />
+                <LogOut
+                  size={14}
+                  style={{
+                    transform: logoutHovered ? "translateX(-1px)" : "none",
+                    transition: "transform 0.18s ease",
+                  }}
+                />
                 <span>Log Out</span>
               </button>
             </>
