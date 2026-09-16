@@ -2,6 +2,12 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { TrialsAndMOMService } from "../src/modules/trials/trials-mom.service.js";
 import { FinanceAndAMCService } from "../src/modules/finance/finance-amc.service.js";
 import { prisma } from "@systrol/database";
+import {
+  CreatePGTestSchema,
+  CreateInvoiceSchema,
+  InvoiceMilestone,
+  InvoiceStatus,
+} from "@systrol/types";
 
 vi.mock("@systrol/database", () => {
   const mPrisma = {
@@ -49,9 +55,54 @@ vi.mock("@systrol/database", () => {
   return { prisma: mPrisma };
 });
 
-describe("Phase 12: Trials, MOM, Finance & AMC", () => {
+describe("Trials, MOM, Finance & AMC Module Unit & Payload Tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  describe("Payload Validation", () => {
+    it("validates correct CreatePGTestSchema payload", () => {
+      const validPayload = {
+        results: [
+          {
+            kpiName: "Strip Thickness Deviation",
+            contractedVal: "±0.025 mm",
+            achievedVal: "±0.018 mm",
+            passed: true,
+          },
+        ],
+      };
+      const result = CreatePGTestSchema.safeParse(validPayload);
+      expect(result.success).toBe(true);
+    });
+
+    it("rejects CreatePGTestSchema payload with empty results array", () => {
+      const invalidPayload = { results: [] };
+      const result = CreatePGTestSchema.safeParse(invalidPayload);
+      expect(result.success).toBe(false);
+    });
+
+    it("validates correct CreateInvoiceSchema payload", () => {
+      const validPayload = {
+        projectId: "11111111-1111-1111-1111-111111111111",
+        milestone: InvoiceMilestone.COMMISSIONING,
+        amount: "1500000.00",
+        dueDate: "2026-08-15T00:00:00.000Z",
+      };
+      const result = CreateInvoiceSchema.safeParse(validPayload);
+      expect(result.success).toBe(true);
+    });
+
+    it("rejects CreateInvoiceSchema payload with invalid amount format or milestone", () => {
+      const invalidPayload = {
+        projectId: "11111111-1111-1111-1111-111111111111",
+        milestone: "INVALID_STAGE",
+        amount: "invalid-amount",
+        dueDate: "2026-08-15T00:00:00.000Z",
+      };
+      const result = CreateInvoiceSchema.safeParse(invalidPayload);
+      expect(result.success).toBe(false);
+    });
   });
 
   describe("TrialsAndMOMService", () => {
@@ -100,25 +151,28 @@ describe("Phase 12: Trials, MOM, Finance & AMC", () => {
         summary: "Handover signed",
       } as any);
 
+      const mom = await TrialsAndMOMService.createMOM("prj-1", {
+        meetingDate: "2026-04-01T10:00:00Z",
+        attendees: ["John Doe", "Jane Smith"],
+        summary: "Handover signed",
+      });
+
+      expect(mom.id).toBe("mom-1");
+      expect(prisma.minutesOfMeeting.create).toHaveBeenCalled();
+
       vi.mocked(prisma.minutesOfMeeting.update).mockResolvedValue({
         id: "mom-1",
         signedByClient: true,
       } as any);
 
-      await TrialsAndMOMService.createMOM("prj-1", {
-        meetingDate: "2026-04-01T10:00:00Z",
-        attendees: ["Preet", "Client VP"],
-        summary: "Handover signed",
-      });
-
-      const signed = await TrialsAndMOMService.signMOM("mom-1", "user-client");
+      const signed = await TrialsAndMOMService.signMOM("mom-1", "user-lead-1");
       expect(signed.signedByClient).toBe(true);
       expect(prisma.minutesOfMeeting.update).toHaveBeenCalled();
     });
   });
 
   describe("FinanceAndAMCService", () => {
-    it("creates a milestone invoice with sequence number", async () => {
+    it("creates milestone invoice with sequential format", async () => {
       vi.mocked(prisma.project.findUnique).mockResolvedValue({
         id: "prj-1",
         projectCode: "PRJ-2026-001",
@@ -128,44 +182,44 @@ describe("Phase 12: Trials, MOM, Finance & AMC", () => {
       vi.mocked(prisma.invoice.create).mockResolvedValue({
         id: "inv-1",
         invoiceNumber: "INV-PRJ-2026-001-01",
+        amount: "50000",
       } as any);
 
-      const res = await FinanceAndAMCService.createInvoice({
-        projectId: "prj-1",
-        milestone: "ADVANCE" as any,
-        amount: "1850000.00",
-        dueDate: "2026-01-30T00:00:00Z",
+      const inv = await FinanceAndAMCService.createInvoice("prj-1", {
+        milestone: "COMMISSIONING" as any,
+        amount: "50000",
+        dueDate: "2026-05-01T00:00:00Z",
       });
 
-      expect(res.invoiceNumber).toBe("INV-PRJ-2026-001-01");
+      expect(inv.invoiceNumber).toBe("INV-PRJ-2026-001-01");
       expect(prisma.invoice.create).toHaveBeenCalled();
     });
 
-    it("records payment and marks invoice PAID if fully settled", async () => {
+    it("records payment and marks invoice PAID if full amount is cleared", async () => {
       vi.mocked(prisma.invoice.findUnique).mockResolvedValue({
         id: "inv-1",
-        amount: "1000",
-        payments: [{ amountPaid: "500" }],
+        amount: "10000",
+        payments: [{ amountPaid: "5000" }],
       } as any);
 
       vi.mocked(prisma.payment.create).mockResolvedValue({
         id: "pay-1",
-        amountPaid: "500",
+        amountPaid: "5000",
       } as any);
 
       await FinanceAndAMCService.recordPayment("inv-1", {
-        amountPaid: "500",
-        reference: "NEFT-889102",
+        amountPaid: "5000",
+        paidAt: "2026-04-15T00:00:00Z",
       });
 
       expect(prisma.payment.create).toHaveBeenCalled();
       expect(prisma.invoice.update).toHaveBeenCalledWith({
         where: { id: "inv-1" },
-        data: { status: "PAID" },
+        data: { status: InvoiceStatus.PAID },
       });
     });
 
-    it("creates an AMC contract with contract code", async () => {
+    it("initiates AMC contract with code and start/end dates", async () => {
       vi.mocked(prisma.project.findUnique).mockResolvedValue({
         id: "prj-1",
         projectCode: "PRJ-2026-001",
@@ -176,13 +230,13 @@ describe("Phase 12: Trials, MOM, Finance & AMC", () => {
         contractCode: "AMC-PRJ-2026-001",
       } as any);
 
-      const res = await FinanceAndAMCService.createAMCContract("prj-1", {
+      const amc = await FinanceAndAMCService.createAMCContract("prj-1", {
         startDate: "2026-05-01T00:00:00Z",
-        endDate: "2027-04-30T00:00:00Z",
+        endDate: "2027-05-01T00:00:00Z",
         visitFrequency: "QUARTERLY",
       });
 
-      expect(res.contractCode).toBe("AMC-PRJ-2026-001");
+      expect(amc.contractCode).toBe("AMC-PRJ-2026-001");
       expect(prisma.aMCContract.create).toHaveBeenCalled();
     });
   });
