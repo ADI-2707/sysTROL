@@ -2,15 +2,18 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { EmployeeTeam } from "./permissions";
 
 export interface AuthUser {
   id: string;
   email: string;
   name: string;
   role: string;
+  team: EmployeeTeam;
   designation: string;
   baseLocation?: string;
   token?: string;
+  isSeededSuperAdmin?: boolean;
 }
 
 interface AuthContextType {
@@ -30,30 +33,75 @@ const DEFAULT_USERS: Record<string, { pass: string; user: AuthUser }> = {
       email: "admin@systrol.com",
       name: "Rajiv Malhotra",
       role: "SUPER_ADMIN",
+      team: "LEADERSHIP",
       designation: "Chief Technical Officer & VP",
       baseLocation: "Kolkata, India",
+      isSeededSuperAdmin: true,
     },
   },
-  "lead@systrol.com": {
-    pass: "lead123",
+  "director@systrol.com": {
+    pass: "dir123",
     user: {
-      id: "usr-lead-02",
-      email: "lead@systrol.com",
+      id: "usr-dir-02",
+      email: "director@systrol.com",
+      name: "Dr. Alok Sen",
+      role: "DIRECTOR",
+      team: "LEADERSHIP",
+      designation: "Managing Director",
+      baseLocation: "HQ - Kolkata",
+      isSeededSuperAdmin: false,
+    },
+  },
+  "commissioning@systrol.com": {
+    pass: "comm123",
+    user: {
+      id: "usr-comm-03",
+      email: "commissioning@systrol.com",
       name: "Siddharth Verma",
       role: "COMMISSIONING_LEAD",
-      designation: "Lead Commissioning & Drives Engineer",
+      team: "COMMISSIONING",
+      designation: "Commissioning Engineer",
       baseLocation: "Hazira, Gujarat",
+      isSeededSuperAdmin: false,
     },
   },
-  "engineer@systrol.com": {
-    pass: "eng123",
+  "system.eng@systrol.com": {
+    pass: "sys123",
     user: {
-      id: "usr-eng-03",
-      email: "engineer@systrol.com",
+      id: "usr-sys-04",
+      email: "system.eng@systrol.com",
       name: "Pooja Hegde",
-      role: "FIELD_ENGINEER",
-      designation: "Automation & PLC Specialist",
+      role: "SYSTEM_ENGINEER",
+      team: "COMMISSIONING",
+      designation: "System Engineer",
       baseLocation: "Kalinganagar, Odisha",
+      isSeededSuperAdmin: false,
+    },
+  },
+  "hr@systrol.com": {
+    pass: "hr123",
+    user: {
+      id: "usr-hr-05",
+      email: "hr@systrol.com",
+      name: "Meenakshi Sundaram",
+      role: "HR_ACCOUNTS",
+      team: "HR_ACCOUNTS",
+      designation: "HR & Accounts Assistant",
+      baseLocation: "HQ - Kolkata",
+      isSeededSuperAdmin: false,
+    },
+  },
+  "sales@systrol.com": {
+    pass: "sales123",
+    user: {
+      id: "usr-sales-06",
+      email: "sales@systrol.com",
+      name: "Rohan Kapoor",
+      role: "SALES_EXEC",
+      team: "SALES",
+      designation: "Sales Manager",
+      baseLocation: "Mumbai, India",
+      isSeededSuperAdmin: false,
     },
   },
 };
@@ -80,7 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     const normalizedEmail = email.trim().toLowerCase();
-    
+
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
       const controller = new AbortController();
@@ -102,8 +150,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: data.user?.email || normalizedEmail,
           name: data.user?.name || normalizedEmail.split("@")[0],
           role: data.user?.role || "SUPER_ADMIN",
+          team: normalizedEmail === "admin@systrol.com" ? "LEADERSHIP" : "LEADERSHIP",
           designation: "Enterprise Operator",
           token: data.accessToken,
+          isSeededSuperAdmin: normalizedEmail === "admin@systrol.com",
         };
         setUser(authedUser);
         localStorage.setItem("systrol_user_session", JSON.stringify(authedUser));
@@ -124,13 +174,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     if (password === "systrol2026" || password === "admin123") {
+      const isSuper = normalizedEmail === "admin@systrol.com";
       const guestUser: AuthUser = {
-        id: `usr-${Date.now()}`,
+        id: isSuper ? "usr-admin-01" : `usr-${Date.now()}`,
         email: normalizedEmail,
         name: normalizedEmail.split("@")[0].replace(".", " ").toUpperCase(),
-        role: "SUPER_ADMIN",
-        designation: "Executive Director",
-        baseLocation: "HQ - Jamshedpur",
+        role: isSuper ? "SUPER_ADMIN" : "OPERATOR",
+        team: isSuper ? "LEADERSHIP" : "LEADERSHIP",
+        designation: isSuper ? "Chief Technical Officer & VP" : "Executive Director",
+        baseLocation: "HQ - Kolkata",
+        isSeededSuperAdmin: isSuper,
       };
       setUser(guestUser);
       localStorage.setItem("systrol_user_session", JSON.stringify(guestUser));

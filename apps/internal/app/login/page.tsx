@@ -330,11 +330,11 @@ export default function LoginPage() {
                   cursor: "pointer",
                 }}
               >
-                CTO (Admin)
+                Super Admin (Leadership)
               </button>
               <button
                 type="button"
-                onClick={() => handleQuickFill("lead@systrol.com", "lead123")}
+                onClick={() => handleQuickFill("director@systrol.com", "dir123")}
                 style={{
                   fontSize: "12px",
                   padding: "5px 10px",
@@ -345,11 +345,11 @@ export default function LoginPage() {
                   cursor: "pointer",
                 }}
               >
-                Lead Engineer
+                Director (Leadership)
               </button>
               <button
                 type="button"
-                onClick={() => handleQuickFill("engineer@systrol.com", "eng123")}
+                onClick={() => handleQuickFill("commissioning@systrol.com", "comm123")}
                 style={{
                   fontSize: "12px",
                   padding: "5px 10px",
@@ -360,7 +360,52 @@ export default function LoginPage() {
                   cursor: "pointer",
                 }}
               >
-                Field Engineer
+                Commissioning Eng
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickFill("system.eng@systrol.com", "sys123")}
+                style={{
+                  fontSize: "12px",
+                  padding: "5px 10px",
+                  borderRadius: "6px",
+                  backgroundColor: "var(--bg-hover)",
+                  border: "1px solid var(--border-subtle)",
+                  color: "var(--text-body)",
+                  cursor: "pointer",
+                }}
+              >
+                System Eng
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickFill("hr@systrol.com", "hr123")}
+                style={{
+                  fontSize: "12px",
+                  padding: "5px 10px",
+                  borderRadius: "6px",
+                  backgroundColor: "var(--bg-hover)",
+                  border: "1px solid var(--border-subtle)",
+                  color: "var(--text-body)",
+                  cursor: "pointer",
+                }}
+              >
+                HR/Accounts
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickFill("sales@systrol.com", "sales123")}
+                style={{
+                  fontSize: "12px",
+                  padding: "5px 10px",
+                  borderRadius: "6px",
+                  backgroundColor: "var(--bg-hover)",
+                  border: "1px solid var(--border-subtle)",
+                  color: "var(--text-body)",
+                  cursor: "pointer",
+                }}
+              >
+                Sales Team
               </button>
             </div>
           </div>
