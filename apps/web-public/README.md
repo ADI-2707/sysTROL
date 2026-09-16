@@ -8,7 +8,7 @@ Built with Next.js 15.5.25 (App Router), React 19, TypeScript, Motion animations
 
 ## Live Production Deployment
 
-- **Public URL**: [https://sys-trol-web-public-nu.vercel.app](https://sys-trol-web-public-nu.vercel.app)
+- **Public URL**: [https://systrol.vercel.app](https://systrol.vercel.app)
 - **Hosting Platform**: Vercel
 - **Root Directory**: `apps/web-public`
 - **Framework Preset**: Next.js

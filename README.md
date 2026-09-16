@@ -10,8 +10,8 @@ The platform comprises the public corporate website, an internal operations and 
 
 | Service | Environment | Provider | URL / Endpoint |
 |---|---|---|---|
-| **Public Corporate Platform** | Production | Vercel | [sys-trol-web-public-nu.vercel.app](https://sys-trol-web-public-nu.vercel.app) |
-| **Internal Operations & ERP Portal** | Production | Vercel | [sys-trol-internal](https://sys-trol-internal.vercel.app) |
+| **Public Corporate Platform** | Production | Vercel | [systrol.vercel.app](https://systrol.vercel.app) |
+| **Internal Operations & ERP Portal** | Production | Vercel | [systrolops.vercel.app](https://systrolops.vercel.app) |
 | **Backend REST API** | Production | Render | [systrol-api.onrender.com](https://systrol-api.onrender.com) |
 | **Serverless Database** | Production | Neon PostgreSQL | AWS `ap-southeast-1` (Singapore) |
 | **Distributed Cache & Queue** | Production | Upstash Redis | Serverless Redis with TLS |

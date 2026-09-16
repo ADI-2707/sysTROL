@@ -8,6 +8,7 @@ Built with Next.js 15.5.25 (App Router), React 19, TypeScript, and a custom desi
 
 ## Live Production Deployment
 
+- **Portal URL**: [https://systrolops.vercel.app](https://systrolops.vercel.app)
 - **Hosting Platform**: Vercel
 - **Root Directory**: `apps/internal`
 - **Framework Preset**: Next.js
