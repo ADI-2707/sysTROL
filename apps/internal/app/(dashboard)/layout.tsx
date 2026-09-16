@@ -48,13 +48,13 @@ function NavLink({
           display: "flex",
           alignItems: "center",
           justifyContent: isCollapsed ? "center" : "flex-start",
-          gap: "14px",
-          padding: isCollapsed ? "11px 0" : "10px 14px",
-          borderRadius: "8px",
+          gap: "10px",
+          padding: isCollapsed ? "7px 0" : "7px 10px",
+          borderRadius: "7px",
           color: isActive ? "var(--text-heading)" : "var(--text-body)",
           backgroundColor: isActive ? "var(--bg-nav-active)" : hovered ? "var(--bg-hover)" : "transparent",
           borderLeft: isCollapsed ? "none" : isActive ? "3px solid var(--sys-green-accent)" : "3px solid transparent",
-          fontSize: "14px",
+          fontSize: "13px",
           fontWeight: isActive ? 600 : 500,
           transition: "all 0.18s ease",
         }}
@@ -84,9 +84,9 @@ function NavLink({
             backgroundColor: "var(--tooltip-bg)",
             color: "var(--tooltip-text)",
             border: "1px solid var(--tooltip-border)",
-            padding: "6px 14px",
+            padding: "5px 12px",
             borderRadius: "6px",
-            fontSize: "12.5px",
+            fontSize: "12px",
             fontWeight: 600,
             whiteSpace: "nowrap",
             boxShadow: "var(--shadow-lg)",
@@ -139,11 +139,11 @@ export default function DashboardLayout({
   };
 
   const navItems: NavItemConfig[] = [
-    { label: "Dashboard", href: "/dashboard", icon: <LayoutDashboard size={19} /> },
-    { label: "Project Management", href: "/projects", icon: <Briefcase size={19} /> },
-    { label: "Employee Management", href: "/employees", icon: <Users size={19} /> },
-    { label: "Analytics", href: "/analytics", icon: <BarChart3 size={19} /> },
-    { label: "Settings", href: "/settings", icon: <Settings size={19} /> },
+    { label: "Dashboard", href: "/dashboard", icon: <LayoutDashboard size={17} /> },
+    { label: "Project Management", href: "/projects", icon: <Briefcase size={17} /> },
+    { label: "Employee Management", href: "/employees", icon: <Users size={17} /> },
+    { label: "Analytics", href: "/analytics", icon: <BarChart3 size={17} /> },
+    { label: "Settings", href: "/settings", icon: <Settings size={17} /> },
   ];
 
   if (isLoading) {
@@ -169,7 +169,7 @@ export default function DashboardLayout({
     <div style={{ display: "flex", height: "100vh", overflow: "hidden", backgroundColor: "var(--bg-canvas)" }}>
       <aside
         style={{
-          width: isCollapsed ? "72px" : "268px",
+          width: isCollapsed ? "60px" : "228px",
           height: "100vh",
           borderRight: "1px solid var(--border-subtle)",
           backgroundColor: "var(--bg-sidebar)",
@@ -184,9 +184,9 @@ export default function DashboardLayout({
       >
         <div
           style={{
-            height: "64px",
+            height: "50px",
             boxSizing: "border-box",
-            padding: isCollapsed ? "0 8px" : "0 14px",
+            padding: isCollapsed ? "0 8px" : "0 12px",
             borderBottom: "1px solid var(--border-subtle)",
             display: "flex",
             alignItems: "center",
@@ -207,7 +207,7 @@ export default function DashboardLayout({
             <SysTrolLogo
               isCollapsed={isCollapsed}
               onClick={toggleSidebar}
-              height={32}
+              height={26}
             />
           </div>
 
@@ -223,13 +223,13 @@ export default function DashboardLayout({
                 background: "transparent",
                 border: "none",
                 color: "var(--text-muted)",
-                padding: "6px",
+                padding: "4px",
                 borderRadius: "6px",
                 cursor: "pointer",
                 transition: "color 0.15s ease",
               }}
             >
-              <PanelLeftClose size={17} />
+              <PanelLeftClose size={16} />
             </button>
           )}
         </div>
@@ -237,7 +237,7 @@ export default function DashboardLayout({
         <nav
           style={{
             flex: 1,
-            padding: isCollapsed ? "16px 8px" : "18px 12px",
+            padding: isCollapsed ? "10px 6px" : "12px 10px",
             overflow: "hidden",
             display: "flex",
             flexDirection: "column",
@@ -246,11 +246,11 @@ export default function DashboardLayout({
           {!isCollapsed && (
             <div
               style={{
-                fontSize: "11px",
+                fontSize: "10.5px",
                 fontWeight: 700,
                 color: "var(--text-muted)",
                 textTransform: "uppercase",
-                padding: "0 12px 10px 12px",
+                padding: "0 10px 8px 10px",
                 letterSpacing: "0.6px",
                 flexShrink: 0,
               }}
@@ -258,7 +258,7 @@ export default function DashboardLayout({
               Core Operations
             </div>
           )}
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
             {navItems.map((item) => (
               <NavLink
                 key={item.href}
@@ -272,29 +272,29 @@ export default function DashboardLayout({
 
         <div
           style={{
-            padding: isCollapsed ? "14px 8px" : "14px 16px",
+            padding: isCollapsed ? "10px 6px" : "12px 12px",
             borderTop: "1px solid var(--border-subtle)",
             backgroundColor: "var(--bg-card)",
             display: "flex",
             flexDirection: "column",
-            gap: "12px",
+            gap: "8px",
             flexShrink: 0,
           }}
         >
           {isCollapsed ? (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
               <div
                 title={`${user?.name || "Team Member"} (${user?.role || "OPERATOR"})`}
                 style={{
-                  width: "36px",
-                  height: "36px",
+                  width: "32px",
+                  height: "32px",
                   borderRadius: "50%",
                   backgroundColor: "var(--sys-blue-subtle)",
                   color: "var(--sys-blue-primary)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: "12px",
+                  fontSize: "11px",
                   fontWeight: 700,
                   cursor: "pointer",
                   border: "1px solid var(--sys-blue-border)",
@@ -308,12 +308,12 @@ export default function DashboardLayout({
                 onClick={logout}
                 title="Log Out of sysTROL"
                 style={{
-                  width: "36px",
-                  height: "36px",
+                  width: "32px",
+                  height: "32px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  borderRadius: "8px",
+                  borderRadius: "6px",
                   backgroundColor: "rgba(239, 68, 68, 0.08)",
                   border: "1px solid rgba(239, 68, 68, 0.25)",
                   color: "#ef4444",
@@ -321,23 +321,23 @@ export default function DashboardLayout({
                   transition: "all 0.15s ease",
                 }}
               >
-                <LogOut size={16} />
+                <LogOut size={15} />
               </button>
             </div>
           ) : (
             <>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "9px" }}>
                 <div
                   style={{
-                    width: "34px",
-                    height: "34px",
+                    width: "30px",
+                    height: "30px",
                     borderRadius: "50%",
                     backgroundColor: "var(--sys-blue-subtle)",
                     color: "var(--sys-blue-primary)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: "12px",
+                    fontSize: "11px",
                     fontWeight: 700,
                     border: "1px solid var(--sys-blue-border)",
                     flexShrink: 0,
@@ -348,7 +348,7 @@ export default function DashboardLayout({
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <div
                     style={{
-                      fontSize: "13px",
+                      fontSize: "12.5px",
                       fontWeight: 600,
                       color: "var(--text-heading)",
                       overflow: "hidden",
@@ -360,7 +360,7 @@ export default function DashboardLayout({
                   </div>
                   <div
                     style={{
-                      fontSize: "11px",
+                      fontSize: "10.5px",
                       color: "var(--sys-green-accent)",
                       fontFamily: "var(--font-mono)",
                       overflow: "hidden",
@@ -381,19 +381,19 @@ export default function DashboardLayout({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  gap: "8px",
-                  padding: "8px 12px",
+                  gap: "6px",
+                  padding: "6px 10px",
                   borderRadius: "6px",
                   backgroundColor: "rgba(239, 68, 68, 0.08)",
                   border: "1px solid rgba(239, 68, 68, 0.25)",
                   color: "#ef4444",
-                  fontSize: "12.5px",
+                  fontSize: "12px",
                   fontWeight: 600,
                   cursor: "pointer",
                   transition: "background-color 0.15s ease",
                 }}
               >
-                <LogOut size={15} />
+                <LogOut size={14} />
                 <span>Log Out</span>
               </button>
             </>
@@ -404,19 +404,19 @@ export default function DashboardLayout({
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, height: "100vh", overflow: "hidden" }}>
         <header
           style={{
-            height: "64px",
+            height: "50px",
             boxSizing: "border-box",
             borderBottom: "1px solid var(--border-subtle)",
             backgroundColor: "var(--bg-header)",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            padding: "0 28px",
+            padding: "0 20px",
             flexShrink: 0,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <div style={{ fontSize: "14px", color: "var(--text-body)", fontWeight: 600 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div style={{ fontSize: "13px", color: "var(--text-body)", fontWeight: 600 }}>
               sysTROL Enterprise Lifecycle & Automation
             </div>
             <span
@@ -424,11 +424,11 @@ export default function DashboardLayout({
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "4px",
-                padding: "2px 8px",
+                padding: "1.5px 6px",
                 borderRadius: "4px",
                 backgroundColor: "var(--sys-blue-subtle)",
                 color: "var(--sys-blue-primary)",
-                fontSize: "11px",
+                fontSize: "10.5px",
                 fontFamily: "var(--font-mono)",
                 fontWeight: 600,
               }}
@@ -437,18 +437,18 @@ export default function DashboardLayout({
             </span>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <ThemeToggle />
             <span
               style={{
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "6px",
-                padding: "5px 12px",
+                padding: "3.5px 10px",
                 borderRadius: "999px",
                 backgroundColor: "var(--sys-green-subtle)",
                 color: "var(--sys-green-accent)",
-                fontSize: "12px",
+                fontSize: "11px",
                 fontFamily: "var(--font-mono)",
                 fontWeight: 600,
                 border: "1px solid var(--sys-green-border)",
@@ -456,8 +456,8 @@ export default function DashboardLayout({
             >
               <span
                 style={{
-                  width: "7px",
-                  height: "7px",
+                  width: "6px",
+                  height: "6px",
                   borderRadius: "50%",
                   backgroundColor: "var(--sys-green-accent)",
                   boxShadow: "0 0 8px var(--sys-green-accent)",
@@ -468,7 +468,7 @@ export default function DashboardLayout({
           </div>
         </header>
 
-        <main style={{ flex: 1, padding: "28px", overflowY: "auto", backgroundColor: "var(--bg-canvas)" }}>
+        <main style={{ flex: 1, padding: "24px", overflowY: "auto", backgroundColor: "var(--bg-canvas)" }}>
           {children}
         </main>
       </div>
