@@ -16,7 +16,7 @@ interface JobPostingItem {
 
 async function getPostings(): Promise<JobPostingItem[]> {
   try {
-    const apiUrl = process.env.API_URL || "http://localhost:4000";
+    const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "https://systrol-api.onrender.com";
     const res = await fetch(`${apiUrl}/api/v1/public/jobs`, { cache: "no-store" });
     if (res.ok) {
       const data = await res.json();

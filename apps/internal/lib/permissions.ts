@@ -20,10 +20,10 @@ export const TEAM_LABELS: Record<EmployeeTeam, string> = {
 };
 
 export const PAGE_ACCESS_RULES: Record<EmployeeTeam, string[]> = {
-  LEADERSHIP: ["/dashboard", "/projects", "/employees", "/analytics", "/settings"],
-  COMMISSIONING: ["/dashboard", "/projects", "/analytics", "/settings"],
-  HR_ACCOUNTS: ["/dashboard", "/projects", "/employees", "/analytics", "/settings"],
-  SALES: ["/dashboard", "/projects", "/analytics", "/settings"],
+  LEADERSHIP: ["/dashboard", "/projects", "/employees", "/media", "/careers-admin", "/analytics", "/settings"],
+  COMMISSIONING: ["/dashboard", "/projects", "/media", "/analytics", "/settings"],
+  HR_ACCOUNTS: ["/dashboard", "/projects", "/employees", "/media", "/careers-admin", "/analytics", "/settings"],
+  SALES: ["/dashboard", "/projects", "/media", "/analytics", "/settings"],
 };
 
 export function canAccessPage(team: EmployeeTeam | undefined | null, pathname: string): boolean {

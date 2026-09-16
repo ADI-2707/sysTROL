@@ -14,6 +14,8 @@ import {
   PanelLeftClose,
   Sparkles,
   ShieldAlert,
+  Image as ImageIcon,
+  FileText,
 } from "lucide-react";
 import { ThemeToggle } from "../theme-toggle";
 import { SysTrolLogo } from "@/components/brand/SysTrolLogo";
@@ -145,6 +147,8 @@ export default function DashboardLayout({
     { label: "Dashboard", href: "/dashboard", icon: <LayoutDashboard size={17} /> },
     { label: "Project Management", href: "/projects", icon: <Briefcase size={17} /> },
     { label: "Employee Management", href: "/employees", icon: <Users size={17} /> },
+    { label: "Media CMS", href: "/media", icon: <ImageIcon size={17} /> },
+    { label: "Careers & Jobs", href: "/careers-admin/postings", icon: <FileText size={17} /> },
     { label: "Analytics", href: "/analytics", icon: <BarChart3 size={17} /> },
     { label: "Settings", href: "/settings", icon: <Settings size={17} /> },
   ];
