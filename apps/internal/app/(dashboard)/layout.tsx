@@ -166,17 +166,18 @@ export default function DashboardLayout({
   }
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "var(--bg-canvas)" }}>
+    <div style={{ display: "flex", height: "100vh", overflow: "hidden", backgroundColor: "var(--bg-canvas)" }}>
       <aside
         style={{
           width: isCollapsed ? "72px" : "268px",
+          height: "100vh",
           borderRight: "1px solid var(--border-subtle)",
           backgroundColor: "var(--bg-sidebar)",
           display: "flex",
           flexDirection: "column",
           flexShrink: 0,
           transition: "width 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
-          overflow: "visible",
+          overflow: "hidden",
           position: "relative",
           zIndex: 40,
         }}
@@ -191,6 +192,7 @@ export default function DashboardLayout({
             alignItems: "center",
             justifyContent: isCollapsed ? "center" : "space-between",
             gap: "8px",
+            flexShrink: 0,
           }}
         >
           <div
@@ -236,8 +238,9 @@ export default function DashboardLayout({
           style={{
             flex: 1,
             padding: isCollapsed ? "16px 8px" : "18px 12px",
-            overflowX: "visible",
-            overflowY: isCollapsed ? "visible" : "auto",
+            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column",
           }}
         >
           {!isCollapsed && (
@@ -249,6 +252,7 @@ export default function DashboardLayout({
                 textTransform: "uppercase",
                 padding: "0 12px 10px 12px",
                 letterSpacing: "0.6px",
+                flexShrink: 0,
               }}
             >
               Core Operations
@@ -274,6 +278,7 @@ export default function DashboardLayout({
             display: "flex",
             flexDirection: "column",
             gap: "12px",
+            flexShrink: 0,
           }}
         >
           {isCollapsed ? (
@@ -396,7 +401,7 @@ export default function DashboardLayout({
         </div>
       </aside>
 
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, height: "100vh", overflow: "hidden" }}>
         <header
           style={{
             height: "64px",
@@ -407,6 +412,7 @@ export default function DashboardLayout({
             alignItems: "center",
             justifyContent: "space-between",
             padding: "0 28px",
+            flexShrink: 0,
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
