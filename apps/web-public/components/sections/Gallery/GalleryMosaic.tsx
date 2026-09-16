@@ -15,6 +15,7 @@ import {
 import styles from "./GalleryMosaic.module.css";
 
 interface GalleryMosaicProps {
+  items?: GalleryItem[];
   onSelectItem: (item: GalleryItem) => void;
 }
 
@@ -31,12 +32,13 @@ const areaClassMap: Record<string, string> = {
   "sub-tooling": styles.areaSubTooling,
 };
 
-export const GalleryMosaic: React.FC<GalleryMosaicProps> = ({ onSelectItem }) => {
+export const GalleryMosaic: React.FC<GalleryMosaicProps> = ({ items, onSelectItem }) => {
   const [activeCategory, setActiveCategory] = useState<GalleryCategory>("all");
+  const list = items && items.length > 0 ? items : galleryItems;
 
-  const workplaceItems = galleryItems.filter((i) => i.category === "workplace");
-  const teamItems = galleryItems.filter((i) => i.category === "team");
-  const deploymentItems = galleryItems.filter((i) => i.category === "deployments");
+  const workplaceItems = list.filter((i) => i.category === "workplace");
+  const teamItems = list.filter((i) => i.category === "team");
+  const deploymentItems = list.filter((i) => i.category === "deployments");
 
   const renderCard = (item: GalleryItem) => {
     const areaClass = item.gridArea ? areaClassMap[item.gridArea] || "" : "";
@@ -97,8 +99,8 @@ export const GalleryMosaic: React.FC<GalleryMosaicProps> = ({ onSelectItem }) =>
           {galleryCategories.map((cat) => {
             const count =
               cat.id === "all"
-                ? galleryItems.length
-                : galleryItems.filter((i) => i.category === cat.id).length;
+                ? list.length
+                : list.filter((i) => i.category === cat.id).length;
 
             return (
               <button

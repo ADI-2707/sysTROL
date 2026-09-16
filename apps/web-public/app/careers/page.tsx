@@ -54,7 +54,7 @@ const PERKS = [
 
 async function getVacancies(): Promise<Vacancy[]> {
   try {
-    const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+    const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "https://systrol-api.onrender.com";
     const res = await fetch(`${apiUrl}/api/v1/public/jobs`, { next: { revalidate: 300 } });
     if (!res.ok) return vacanciesData;
     const data = await res.json();
