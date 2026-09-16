@@ -6,6 +6,18 @@ Built with Fastify, TypeScript, Prisma ORM, PostgreSQL, Redis, BullMQ, and MinIO
 
 ---
 
+## Live Production Deployment
+
+- **Service URL**: [https://systrol-api.onrender.com](https://systrol-api.onrender.com)
+- **Hosting Platform**: Render (Web Service)
+- **Monorepo Build Command**: `pnpm install --frozen-lockfile && pnpm --filter @systrol/database generate && pnpm --filter @systrol/api build`
+- **Start Command**: `node apps/api/dist/server.js`
+- **Cloud Database**: Neon PostgreSQL (Serverless)
+- **Cloud Cache / Queue**: Upstash Redis (TLS)
+- **Cloud Storage**: Supabase Storage (S3-compatible bucket)
+
+---
+
 ## Architectural Overview
 
 The API application is structured as a modular monolith providing high-throughput REST endpoints and asynchronous worker queues:

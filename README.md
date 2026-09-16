@@ -6,6 +6,19 @@ The platform comprises the public corporate website, an internal operations and 
 
 ---
 
+## Live Deployments & Cloud Infrastructure
+
+| Service | Environment | Provider | URL / Endpoint |
+|---|---|---|---|
+| **Public Corporate Platform** | Production | Vercel | [sys-trol-web-public-nu.vercel.app](https://sys-trol-web-public-nu.vercel.app) |
+| **Internal Operations & ERP Portal** | Production | Vercel | [sys-trol-internal](https://sys-trol-internal.vercel.app) |
+| **Backend REST API** | Production | Render | [systrol-api.onrender.com](https://systrol-api.onrender.com) |
+| **Serverless Database** | Production | Neon PostgreSQL | AWS `ap-southeast-1` (Singapore) |
+| **Distributed Cache & Queue** | Production | Upstash Redis | Serverless Redis with TLS |
+| **Object Storage (Documents)** | Production | Supabase Storage (S3) | AWS `ap-south-1` (Mumbai) |
+
+---
+
 ## Monorepo Architecture
 
 The repository is organized as a Turborepo monorepo powered by pnpm workspaces:
@@ -67,7 +80,7 @@ sysTrol/
 - Containerization: Docker multi-stage builds and Docker Compose
 
 ### Frontend Applications
-- Framework: Next.js 15.2.0 (App Router)
+- Framework: Next.js 15.5.25 (App Router)
 - UI Library: React 19.0.0 and React-DOM 19.0.0
 - Language: TypeScript 5.7.2 (Strict mode)
 - Styling: Custom design tokens, CSS variables, utility engine, and CSS modules (Tailwind-free)

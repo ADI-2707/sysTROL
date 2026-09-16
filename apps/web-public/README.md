@@ -2,7 +2,18 @@
 
 Official public corporate web platform for sysTROL Engineering & Consultancy Pvt. Ltd.
 
-Built with Next.js 15 (App Router), React 19, TypeScript, Motion animations, and custom CSS token architecture.
+Built with Next.js 15.5.25 (App Router), React 19, TypeScript, Motion animations, and custom CSS token architecture.
+
+---
+
+## Live Production Deployment
+
+- **Public URL**: [https://sys-trol-web-public-nu.vercel.app](https://sys-trol-web-public-nu.vercel.app)
+- **Hosting Platform**: Vercel
+- **Root Directory**: `apps/web-public`
+- **Framework Preset**: Next.js
+- **Environment Variables**:
+  - `NEXT_PUBLIC_API_URL`: `https://systrol-api.onrender.com`
 
 ---
 

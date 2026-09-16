@@ -2,7 +2,17 @@
 
 Enterprise Operations & ERP Dashboard for sysTROL Engineering & Consultancy Pvt. Ltd.
 
-Built with Next.js 15 (App Router), React 19, TypeScript, and a custom design system featuring dual-theme dark/light support, collapsible icon-rail navigation, and standardized industrial UI components.
+Built with Next.js 15.5.25 (App Router), React 19, TypeScript, and a custom design system featuring dual-theme dark/light support, collapsible icon-rail navigation, and standardized industrial UI components.
+
+---
+
+## Live Production Deployment
+
+- **Hosting Platform**: Vercel
+- **Root Directory**: `apps/internal`
+- **Framework Preset**: Next.js
+- **Environment Variables**:
+  - `NEXT_PUBLIC_API_URL`: `https://systrol-api.onrender.com`
 
 ---
 

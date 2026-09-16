@@ -8,10 +8,11 @@ Manages the PostgreSQL schema, Prisma ORM generation, migrations, and database s
 
 ## Architectural Overview
 
-- Engine: PostgreSQL 16
+- Local Engine: PostgreSQL 16 (Docker Compose)
+- Cloud Production Engine: Neon Serverless PostgreSQL (`ap-southeast-1` AWS Singapore)
 - ORM: Prisma 5.22.0
 - Schema: `prisma/schema.prisma`
-- Connection: Managed via `DATABASE_URL` environment variable
+- Connection: Managed via `DATABASE_URL` environment variable (with connection pooling)
 
 The database models map directly to the 14-stage industrial execution lifecycle:
 `ENQUIRY` -> `SALES_VISIT` -> `PROCUREMENT` -> `ENGINEERING` -> `MANUFACTURING` -> `DISPATCH` -> `ERECTION` -> `COMMISSIONING` -> `COLD_TRIAL` -> `HOT_TRIAL` -> `PERFORMANCE_GUARANTEE_TEST` -> `MOM_AND_HANDOVER` -> `PAYMENT` -> `AMC`.
