@@ -12,7 +12,8 @@
     "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
     "db:generate": "pnpm --filter @systrol/database generate",
     "db:migrate": "pnpm --filter @systrol/database migrate:deploy",
-    "db:seed": "pnpm --filter @systrol/database seed"
+    "db:seed": "pnpm --filter @systrol/database seed",
+    "media:migrate": "tsx scripts/migrate-media.ts"
   },
   "devDependencies": {
     "@playwright/test": "1.50.1",
