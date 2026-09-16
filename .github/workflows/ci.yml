@@ -36,8 +36,6 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10.29.3
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -49,10 +47,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma Client
-        run: pnpm --filter @systrol/database prisma generate
+        run: pnpm --filter @systrol/database generate
 
       - name: Run Unit Tests
-        run: pnpm --filter @systrol/api test
+        run: pnpm --filter @systrol/api test && pnpm --filter @systrol/web-public test
 
       - name: Build All Packages & Apps
         run: pnpm build
