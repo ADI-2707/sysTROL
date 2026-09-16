@@ -2,24 +2,21 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
+  LayoutDashboard,
   Briefcase,
-  Layers,
-  FileText,
-  Activity,
-  ShoppingBag,
-  Cpu,
-  Truck,
-  CheckCircle2,
-  DollarSign,
+  Users,
   BarChart3,
-  Shield,
-  ExternalLink,
+  Settings,
+  LogOut,
   ChevronRight,
   PanelLeftClose,
+  Sparkles,
 } from "lucide-react";
 import { ThemeToggle } from "../theme-toggle";
+import { SysTrolLogo } from "@/components/brand/SysTrolLogo";
+import { useAuth } from "@/lib/auth-context";
 
 interface NavItemConfig {
   label: string;
@@ -51,15 +48,15 @@ function NavLink({
           display: "flex",
           alignItems: "center",
           justifyContent: isCollapsed ? "center" : "flex-start",
-          gap: "12px",
-          padding: isCollapsed ? "10px 0" : "9px 12px",
-          borderRadius: "6px",
+          gap: "14px",
+          padding: isCollapsed ? "11px 0" : "10px 14px",
+          borderRadius: "8px",
           color: isActive ? "var(--text-heading)" : "var(--text-body)",
           backgroundColor: isActive ? "var(--bg-nav-active)" : hovered ? "var(--bg-hover)" : "transparent",
           borderLeft: isCollapsed ? "none" : isActive ? "3px solid var(--sys-green-accent)" : "3px solid transparent",
-          fontSize: "13.5px",
+          fontSize: "14px",
           fontWeight: isActive ? 600 : 500,
-          transition: "all 0.15s ease",
+          transition: "all 0.18s ease",
         }}
       >
         <span
@@ -68,6 +65,8 @@ function NavLink({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            transform: isActive ? "scale(1.05)" : "scale(1)",
+            transition: "transform 0.18s ease",
           }}
         >
           {item.icon}
@@ -79,15 +78,15 @@ function NavLink({
         <div
           style={{
             position: "absolute",
-            left: "calc(100% + 12px)",
+            left: "calc(100% + 14px)",
             top: "50%",
             transform: "translateY(-50%)",
             backgroundColor: "var(--tooltip-bg)",
             color: "var(--tooltip-text)",
             border: "1px solid var(--tooltip-border)",
-            padding: "6px 12px",
+            padding: "6px 14px",
             borderRadius: "6px",
-            fontSize: "12px",
+            fontSize: "12.5px",
             fontWeight: 600,
             whiteSpace: "nowrap",
             boxShadow: "var(--shadow-lg)",
@@ -108,6 +107,8 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   useEffect(() => {
@@ -116,6 +117,12 @@ export default function DashboardLayout({
       setIsCollapsed(true);
     }
   }, []);
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push("/login");
+    }
+  }, [isLoading, isAuthenticated, router]);
 
   const toggleSidebar = () => {
     setIsCollapsed((prev) => {
@@ -127,40 +134,48 @@ export default function DashboardLayout({
 
   const isItemActive = (href: string) => {
     if (pathname === href) return true;
-    if (href === "/careers-admin/postings" && pathname.startsWith("/careers-admin/postings/new")) return false;
-    if (href === "/enquiries" && pathname.startsWith("/enquiries/new")) return false;
-    if (href === "/sales-visits" && pathname.startsWith("/sales-visits/new")) return false;
     if (href !== "/" && pathname.startsWith(href + "/")) return true;
     return false;
   };
 
   const navItems: NavItemConfig[] = [
-    { label: "Job Postings", href: "/careers-admin/postings", icon: <Briefcase size={18} /> },
-    { label: "New Posting", href: "/careers-admin/postings/new", icon: <FileText size={18} /> },
-    { label: "Enquiries (CRM)", href: "/enquiries", icon: <Activity size={18} /> },
-    { label: "Sales Visits", href: "/sales-visits", icon: <Shield size={18} /> },
-    { label: "Project Lifecycle", href: "/lifecycle", icon: <Layers size={18} /> },
-    { label: "Commissioning DAG", href: "/commissioning", icon: <Cpu size={18} /> },
-    { label: "Procurement / PO", href: "/procurement/purchase-orders", icon: <ShoppingBag size={18} /> },
-    { label: "Engineering Docs", href: "/engineering/documents", icon: <FileText size={18} /> },
-    { label: "Manufacturing & QC", href: "/manufacturing/batches", icon: <CheckCircle2 size={18} /> },
-    { label: "Dispatch & Logistics", href: "/dispatch/shipments", icon: <Truck size={18} /> },
-    { label: "Trials & Handover", href: "/post-commissioning", icon: <CheckCircle2 size={18} /> },
-    { label: "Finance & Retention", href: "/finance", icon: <DollarSign size={18} /> },
-    { label: "Executive Analytics", href: "/analytics", icon: <BarChart3 size={18} /> },
+    { label: "Dashboard", href: "/dashboard", icon: <LayoutDashboard size={19} /> },
+    { label: "Project Management", href: "/projects", icon: <Briefcase size={19} /> },
+    { label: "Employee Management", href: "/employees", icon: <Users size={19} /> },
+    { label: "Analytics", href: "/analytics", icon: <BarChart3 size={19} /> },
+    { label: "Settings", href: "/settings", icon: <Settings size={19} /> },
   ];
+
+  if (isLoading) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "var(--bg-canvas)",
+          color: "var(--text-muted)",
+          fontSize: "14px",
+          fontWeight: 500,
+        }}
+      >
+        Initializing sysTROL Workspace...
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "var(--bg-canvas)" }}>
       <aside
         style={{
-          width: isCollapsed ? "68px" : "260px",
+          width: isCollapsed ? "72px" : "268px",
           borderRight: "1px solid var(--border-subtle)",
           backgroundColor: "var(--bg-sidebar)",
           display: "flex",
           flexDirection: "column",
           flexShrink: 0,
-          transition: "width 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+          transition: "width 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
           overflow: "visible",
           position: "relative",
           zIndex: 40,
@@ -168,123 +183,59 @@ export default function DashboardLayout({
       >
         <div
           style={{
-            height: "58px",
+            height: "64px",
             boxSizing: "border-box",
-            padding: isCollapsed ? "0 10px" : "0 16px 0 20px",
+            padding: isCollapsed ? "0 8px" : "0 14px",
             borderBottom: "1px solid var(--border-subtle)",
             display: "flex",
             alignItems: "center",
             justifyContent: isCollapsed ? "center" : "space-between",
-            gap: "6px",
+            gap: "8px",
           }}
         >
-          {isCollapsed ? (
-            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-              <button
-                type="button"
-                onClick={toggleSidebar}
-                title="Click logo to expand sidebar"
-                style={{
-                  width: "32px",
-                  height: "32px",
-                  borderRadius: "8px",
-                  backgroundColor: "var(--sys-blue-primary)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: 900,
-                  color: "#ffffff",
-                  fontSize: "13px",
-                  letterSpacing: "-0.5px",
-                  boxShadow: "var(--shadow-sm)",
-                  border: "none",
-                  cursor: "pointer",
-                }}
-              >
-                sT
-              </button>
-              <button
-                type="button"
-                onClick={toggleSidebar}
-                title="Expand sidebar"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: "transparent",
-                  border: "none",
-                  color: "var(--text-muted)",
-                  padding: "4px",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                }}
-              >
-                <ChevronRight size={14} />
-              </button>
-            </div>
-          ) : (
-            <>
-              <div
-                onClick={toggleSidebar}
-                title="sysTROL Enterprise Console"
-                style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}
-              >
-                <div
-                  style={{
-                    width: "32px",
-                    height: "32px",
-                    borderRadius: "8px",
-                    backgroundColor: "var(--sys-blue-primary)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontWeight: 900,
-                    color: "#ffffff",
-                    fontSize: "13px",
-                    letterSpacing: "-0.5px",
-                    boxShadow: "var(--shadow-sm)",
-                    flexShrink: 0,
-                  }}
-                >
-                  sT
-                </div>
-                <div>
-                  <div style={{ fontSize: "15px", letterSpacing: "0.2px" }}>
-                    <span style={{ fontWeight: 800, color: "var(--sys-blue-primary)" }}>sys</span>
-                    <span style={{ fontWeight: 800, color: "var(--sys-green-accent)" }}>TROL</span>
-                  </div>
-                  <div style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                    Enterprise L2
-                  </div>
-                </div>
-              </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: isCollapsed ? "center" : "flex-start",
+              flex: 1,
+              overflow: "hidden",
+            }}
+          >
+            <SysTrolLogo
+              isCollapsed={isCollapsed}
+              onClick={toggleSidebar}
+              height={32}
+            />
+          </div>
 
-              <button
-                type="button"
-                onClick={toggleSidebar}
-                title="Collapse sidebar"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: "transparent",
-                  border: "none",
-                  color: "var(--text-muted)",
-                  padding: "6px",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                }}
-              >
-                <PanelLeftClose size={16} />
-              </button>
-            </>
+          {!isCollapsed && (
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              title="Collapse sidebar"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "transparent",
+                border: "none",
+                color: "var(--text-muted)",
+                padding: "6px",
+                borderRadius: "6px",
+                cursor: "pointer",
+                transition: "color 0.15s ease",
+              }}
+            >
+              <PanelLeftClose size={17} />
+            </button>
           )}
         </div>
 
         <nav
           style={{
             flex: 1,
-            padding: isCollapsed ? "16px 8px" : "16px 12px",
+            padding: isCollapsed ? "16px 8px" : "18px 12px",
             overflowX: "visible",
             overflowY: isCollapsed ? "visible" : "auto",
           }}
@@ -296,14 +247,14 @@ export default function DashboardLayout({
                 fontWeight: 700,
                 color: "var(--text-muted)",
                 textTransform: "uppercase",
-                padding: "0 12px 8px 12px",
-                letterSpacing: "0.5px",
+                padding: "0 12px 10px 12px",
+                letterSpacing: "0.6px",
               }}
             >
-              Operations & Modules
+              Core Operations
             </div>
           )}
-          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
             {navItems.map((item) => (
               <NavLink
                 key={item.href}
@@ -315,53 +266,99 @@ export default function DashboardLayout({
           </div>
         </nav>
 
-        <div style={{ padding: isCollapsed ? "14px 8px" : "16px", borderTop: "1px solid var(--border-subtle)" }}>
+        <div
+          style={{
+            padding: isCollapsed ? "14px 8px" : "14px 16px",
+            borderTop: "1px solid var(--border-subtle)",
+            backgroundColor: "var(--bg-card)",
+          }}
+        >
           {isCollapsed ? (
-            <div style={{ display: "flex", justifyContent: "center" }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
               <div
-                title="System Admin (SUPER_ADMIN)"
+                title={`${user?.name || "Team Member"} (${user?.role || "OPERATOR"})`}
                 style={{
-                  width: "32px",
-                  height: "32px",
+                  width: "36px",
+                  height: "36px",
                   borderRadius: "50%",
-                  backgroundColor: "var(--bg-hover)",
-                  color: "var(--sys-green-accent)",
+                  backgroundColor: "var(--sys-blue-subtle)",
+                  color: "var(--sys-blue-primary)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: "11px",
+                  fontSize: "12px",
                   fontWeight: 700,
-                  fontFamily: "var(--font-mono)",
                   cursor: "pointer",
+                  border: "1px solid var(--sys-blue-border)",
                 }}
                 onClick={toggleSidebar}
               >
-                SA
+                {user?.name ? user.name.slice(0, 2).toUpperCase() : "ST"}
               </div>
-            </div>
-          ) : (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div>
-                <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-heading)" }}>System Admin</div>
-                <div style={{ fontSize: "11px", color: "var(--sys-green-accent)", fontFamily: "var(--font-mono)" }}>
-                  SUPER_ADMIN
-                </div>
-              </div>
-              <a
-                href="http://localhost:3000"
-                target="_blank"
-                rel="noreferrer"
-                title="Open Public Web"
+              <button
+                type="button"
+                onClick={logout}
+                title="Log Out"
                 style={{
+                  background: "transparent",
+                  border: "none",
                   color: "var(--text-muted)",
-                  display: "flex",
-                  alignItems: "center",
                   padding: "6px",
                   borderRadius: "6px",
+                  cursor: "pointer",
                 }}
               >
-                <ExternalLink size={16} />
-              </a>
+                <LogOut size={16} />
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    color: "var(--text-heading)",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {user?.name || "System Operator"}
+                </div>
+                <div
+                  style={{
+                    fontSize: "11px",
+                    color: "var(--sys-green-accent)",
+                    fontFamily: "var(--font-mono)",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {user?.designation || user?.role || "Field Specialist"}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={logout}
+                title="Log Out"
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "var(--text-muted)",
+                  padding: "6px",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "color 0.15s ease",
+                }}
+              >
+                <LogOut size={16} />
+              </button>
             </div>
           )}
         </div>
@@ -370,7 +367,7 @@ export default function DashboardLayout({
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         <header
           style={{
-            height: "58px",
+            height: "64px",
             boxSizing: "border-box",
             borderBottom: "1px solid var(--border-subtle)",
             backgroundColor: "var(--bg-header)",
@@ -380,21 +377,40 @@ export default function DashboardLayout({
             padding: "0 28px",
           }}
         >
-          <div style={{ fontSize: "13.5px", color: "var(--text-body)", fontWeight: 500 }}>
-            Rolling Mill Lifecycle & Automation System • v2.0
-          </div>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div style={{ fontSize: "14px", color: "var(--text-body)", fontWeight: 600 }}>
+              sysTROL Enterprise Lifecycle & Automation
+            </div>
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
+                padding: "2px 8px",
+                borderRadius: "4px",
+                backgroundColor: "var(--sys-blue-subtle)",
+                color: "var(--sys-blue-primary)",
+                fontSize: "11px",
+                fontFamily: "var(--font-mono)",
+                fontWeight: 600,
+              }}
+            >
+              v2.4 Core
+            </span>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
             <ThemeToggle />
             <span
               style={{
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "6px",
-                padding: "4px 10px",
+                padding: "5px 12px",
                 borderRadius: "999px",
                 backgroundColor: "var(--sys-green-subtle)",
                 color: "var(--sys-green-accent)",
-                fontSize: "11.5px",
+                fontSize: "12px",
                 fontFamily: "var(--font-mono)",
                 fontWeight: 600,
                 border: "1px solid var(--sys-green-border)",
@@ -402,13 +418,14 @@ export default function DashboardLayout({
             >
               <span
                 style={{
-                  width: "6px",
-                  height: "6px",
+                  width: "7px",
+                  height: "7px",
                   borderRadius: "50%",
                   backgroundColor: "var(--sys-green-accent)",
+                  boxShadow: "0 0 8px var(--sys-green-accent)",
                 }}
               />
-              API: ONLINE (:4000)
+              SYSTEM ONLINE
             </span>
           </div>
         </header>
