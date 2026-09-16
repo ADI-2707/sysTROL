@@ -105,6 +105,7 @@ The platform implements an end-to-end industrial execution and management pipeli
 8. Finance and Retention: Commercial milestones, milestone billing invoices, retention money management, and Annual Maintenance Contracts (AMC) forecasting.
 9. Executive Analytics: Stage dwell time analysis, sales-to-commissioning funnel conversion, procurement aging telemetry, and recurring AMC forecast matrices.
 10. Careers Administration: Public job listings management, job application intake, candidate resume storage, and status pipelines.
+11. Media CMS: Cloud-backed industrial imagery management with browser-to-S3 presigned uploads, client-side pre-flight resolution/format/size validation, and real-time public CDN delivery to the marketing platform.
 
 ---
 
