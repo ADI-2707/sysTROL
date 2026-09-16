@@ -13,10 +13,12 @@ import {
   ChevronRight,
   PanelLeftClose,
   Sparkles,
+  ShieldAlert,
 } from "lucide-react";
 import { ThemeToggle } from "../theme-toggle";
 import { SysTrolLogo } from "@/components/brand/SysTrolLogo";
 import { useAuth } from "@/lib/auth-context";
+import { canAccessPage, TEAM_LABELS } from "@/lib/permissions";
 
 interface NavItemConfig {
   label: string;
@@ -147,6 +149,9 @@ export default function DashboardLayout({
     { label: "Settings", href: "/settings", icon: <Settings size={17} /> },
   ];
 
+  const visibleNavItems = navItems.filter((item) => canAccessPage(user?.team, item.href));
+  const isAuthorized = canAccessPage(user?.team, pathname);
+
   if (isLoading) {
     return (
       <div
@@ -260,7 +265,7 @@ export default function DashboardLayout({
             </div>
           )}
           <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
-            {navItems.map((item) => (
+            {visibleNavItems.map((item) => (
               <NavLink
                 key={item.href}
                 item={item}
@@ -363,17 +368,34 @@ export default function DashboardLayout({
                   >
                     {user?.name || "System Operator"}
                   </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
+                    <span
+                      style={{
+                        fontSize: "9px",
+                        fontWeight: 700,
+                        backgroundColor: "var(--sys-blue-subtle)",
+                        color: "var(--sys-blue-primary)",
+                        padding: "1px 5px",
+                        borderRadius: "4px",
+                        letterSpacing: "0.2px",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {user?.team ? TEAM_LABELS[user.team] : "Leadership Team"}
+                    </span>
+                  </div>
                   <div
                     style={{
-                      fontSize: "10.5px",
+                      fontSize: "10px",
                       color: "var(--sys-green-accent)",
                       fontFamily: "var(--font-mono)",
                       overflow: "hidden",
                       textOverflow: "ellipsis",
                       whiteSpace: "nowrap",
+                      marginTop: "1px",
                     }}
                   >
-                    {user?.designation || user?.role || "Field Specialist"}
+                    {user?.designation || "Field Specialist"}
                   </div>
                 </div>
               </div>
@@ -484,7 +506,66 @@ export default function DashboardLayout({
         </header>
 
         <main style={{ flex: 1, padding: "24px", overflowY: "auto", backgroundColor: "var(--bg-canvas)" }}>
-          {children}
+          {!isAuthorized ? (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                minHeight: "380px",
+                textAlign: "center",
+                padding: "32px",
+                backgroundColor: "var(--bg-card)",
+                borderRadius: "12px",
+                border: "1px solid var(--border-subtle)",
+                maxWidth: "520px",
+                margin: "40px auto 0 auto",
+                boxShadow: "var(--shadow-sm)",
+              }}
+            >
+              <div
+                style={{
+                  width: "52px",
+                  height: "52px",
+                  borderRadius: "12px",
+                  backgroundColor: "rgba(239, 68, 68, 0.1)",
+                  color: "#ef4444",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: "16px",
+                }}
+              >
+                <ShieldAlert size={28} />
+              </div>
+              <h2 style={{ fontSize: "19px", fontWeight: 700, color: "var(--text-heading)", margin: "0 0 8px 0" }}>
+                Access Restricted
+              </h2>
+              <p style={{ fontSize: "13.5px", color: "var(--text-muted)", maxWidth: "400px", margin: "0 0 20px 0", lineHeight: 1.5 }}>
+                Your assigned team ({user?.team ? TEAM_LABELS[user.team] : "Standard"}) does not have authorization to access this page.
+              </p>
+              <Link
+                href="/dashboard"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "8px 18px",
+                  borderRadius: "7px",
+                  backgroundColor: "var(--sys-blue-primary)",
+                  color: "#ffffff",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  textDecoration: "none",
+                }}
+              >
+                Return to Dashboard
+              </Link>
+            </div>
+          ) : (
+            children
+          )}
         </main>
       </div>
     </div>
