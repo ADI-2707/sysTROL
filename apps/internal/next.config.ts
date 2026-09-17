@@ -15,8 +15,8 @@ const nextConfig: NextConfig = {
     return config;
   },
   env: {
-    API_URL: process.env.API_URL || "http://localhost:4000",
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000",
+    API_URL: process.env.API_URL || "https://systrol-api.onrender.com",
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || "https://systrol-api.onrender.com",
     NEXT_PUBLIC_APP_VERSION: `v${pkg.version}`,
   },
 };
