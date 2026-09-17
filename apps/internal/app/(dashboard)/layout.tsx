@@ -125,6 +125,8 @@ export default function DashboardLayout({
     const saved = localStorage.getItem("systrol_sidebar_collapsed");
     if (saved === "true") {
       setIsCollapsed(true);
+    } else if (saved === null && typeof window !== "undefined" && window.innerWidth <= 1024) {
+      setIsCollapsed(true);
     }
   }, []);
 
@@ -264,6 +266,7 @@ export default function DashboardLayout({
         data-testid="desktop-portal-root"
       >
       <aside
+        className="dashboard-sidebar"
         style={{
           width: isCollapsed ? "60px" : "228px",
           height: "100vh",
@@ -578,7 +581,10 @@ export default function DashboardLayout({
           </div>
         </header>
 
-        <main style={{ flex: 1, padding: "24px", overflowY: "auto", backgroundColor: "var(--bg-canvas)" }}>
+        <main
+          className="dashboard-main-content"
+          style={{ flex: 1, padding: "24px", overflowY: "auto", backgroundColor: "var(--bg-canvas)" }}
+        >
           {!isAuthorized ? (
             <div
               style={{
