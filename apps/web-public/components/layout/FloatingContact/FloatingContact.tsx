@@ -2,15 +2,31 @@
 
 import React from "react";
 import { Phone, MessageSquare } from "lucide-react";
+import { trackCtaEvent } from "@/lib/attribution";
 import styles from "./FloatingContact.module.css";
 
 export const FloatingContact: React.FC = () => {
+  const handleCallClick = () => {
+    trackCtaEvent({
+      eventType: "PHONE_CLICK",
+      ctaId: "floating_call",
+    });
+  };
+
+  const handleWhatsappClick = () => {
+    trackCtaEvent({
+      eventType: "WHATSAPP_CLICK",
+      ctaId: "floating_whatsapp",
+    });
+  };
+
   return (
     <aside className={styles.floatingBar} aria-label="Quick contact actions">
       <a
         href="tel:+919845012345"
         className={`${styles.actionButton} ${styles.call}`}
         aria-label="Call sysTROL directly"
+        onClick={handleCallClick}
       >
         <span className={styles.icon}>
           <Phone size={14} />
@@ -24,6 +40,7 @@ export const FloatingContact: React.FC = () => {
         rel="noopener noreferrer"
         className={`${styles.actionButton} ${styles.whatsapp}`}
         aria-label="Chat with sysTROL on WhatsApp"
+        onClick={handleWhatsappClick}
       >
         <span className={styles.icon}>
           <MessageSquare size={14} />

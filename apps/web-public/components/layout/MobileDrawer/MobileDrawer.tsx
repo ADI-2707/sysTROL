@@ -96,7 +96,7 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) =
 
         <div className={styles.footer}>
           <Button
-            href="/contact"
+            href="/contact?cta=mobile_drawer_get_in_touch"
             variant="primary"
             size="md"
             style={{ width: "100%" }}
@@ -106,7 +106,15 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) =
           </Button>
 
           <div className={styles.contactSnippet}>
-            <a href="tel:+919845012345" className={styles.contactItem}>
+            <a
+              href="tel:+919845012345"
+              className={styles.contactItem}
+              onClick={() => {
+                import("@/lib/attribution").then(({ trackCtaEvent }) => {
+                  trackCtaEvent({ eventType: "PHONE_CLICK", ctaId: "mobile_drawer_call" });
+                });
+              }}
+            >
               <Phone size={14} color="var(--color-brand-green-600)" />
               <span>+91 (80) 2845-XXXX / Direct Line</span>
             </a>
@@ -119,6 +127,11 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) =
               target="_blank"
               rel="noopener noreferrer"
               className={styles.contactItem}
+              onClick={() => {
+                import("@/lib/attribution").then(({ trackCtaEvent }) => {
+                  trackCtaEvent({ eventType: "WHATSAPP_CLICK", ctaId: "mobile_drawer_whatsapp" });
+                });
+              }}
             >
               <MessageSquare size={14} color="var(--color-brand-green-600)" />
               <span>WhatsApp Quick Enquiry</span>

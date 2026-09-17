@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,6 +16,7 @@ import { Reveal } from "@/components/ui/Reveal/Reveal";
 import { TextField, TextArea, Select } from "@/components/ui/Forms";
 import { Toast } from "@/components/ui/Toast/Toast";
 import { contactFormSchema, ContactFormValues } from "@/lib/validations";
+import { initAttribution, getAttribution } from "@/lib/attribution";
 import {
   Phone,
   Mail,
@@ -43,6 +44,10 @@ export default function ContactPage() {
     type: "success" | "error";
   } | null>(null);
 
+  useEffect(() => {
+    initAttribution();
+  }, []);
+
   const {
     register,
     handleSubmit,
@@ -67,11 +72,23 @@ export default function ContactPage() {
     }
     try {
       setIsSubmitting(true);
+      const attribution = getAttribution();
+      const payload = {
+        ...data,
+        ctaId: attribution.ctaId || "contact_page_form",
+        pagePath: attribution.pagePath || "/contact",
+        utmSource: attribution.utmSource,
+        utmMedium: attribution.utmMedium,
+        utmCampaign: attribution.utmCampaign,
+        utmContent: attribution.utmContent,
+        referrer: attribution.referrer,
+      };
+
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://systrol-api.onrender.com";
       const res = await fetch(`${apiUrl}/api/v1/public/enquiry`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
 
       setIsSubmitting(false);

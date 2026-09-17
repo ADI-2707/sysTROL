@@ -132,7 +132,7 @@ export const Navbar: React.FC = () => {
 
             <div className={styles.actions}>
               <Button
-                href="/contact"
+                href="/contact?cta=navbar_get_in_touch"
                 variant="primary"
                 size="sm"
                 rightIcon={<ArrowUpRight size={16} />}
