@@ -101,6 +101,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem("systrol_user_session", JSON.stringify(authedUser));
         return { success: true };
       }
+
+      if (res.status === 401 || res.status === 400) {
+        const errData = await res.json().catch(() => ({}));
+        return { success: false, error: errData.message || "Invalid email or password" };
+      }
     } catch {
     }
 
