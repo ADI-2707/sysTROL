@@ -116,7 +116,8 @@ async function jwtPluginAsync(fastify: FastifyInstance) {
         path: "/",
         httpOnly: true,
         secure: env.NODE_ENV === "production",
-        sameSite: "lax",
+        sameSite: env.NODE_ENV === "production" ? "none" : "lax",
+        partitioned: env.NODE_ENV === "production",
         maxAge: refreshTtl,
       });
 

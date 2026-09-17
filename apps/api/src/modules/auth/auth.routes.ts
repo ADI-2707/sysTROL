@@ -3,6 +3,7 @@ import { z } from "zod";
 import { AuthService } from "./auth.service.js";
 import { TotpService } from "../../common/auth/totp.service.js";
 import { UserRole } from "@systrol/types";
+import { env } from "@systrol/config";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -101,6 +102,10 @@ export async function authRoutes(fastify: FastifyInstance) {
 
       reply.clearCookie("refreshToken", {
         path: "/",
+        httpOnly: true,
+        secure: env.NODE_ENV === "production",
+        sameSite: env.NODE_ENV === "production" ? "none" : "lax",
+        partitioned: env.NODE_ENV === "production",
       });
 
       return reply.send({ success: true, message: "Logged out successfully" });
