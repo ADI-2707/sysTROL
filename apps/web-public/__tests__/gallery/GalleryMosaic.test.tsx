@@ -191,4 +191,50 @@ describe("GalleryMosaic Component", () => {
     render(<GalleryMosaic items={[]} onSelectItem={vi.fn()} />);
     expect(screen.getAllByRole("button", { name: /^View /i }).length).toBe(galleryItems.length);
   });
+
+  it("does not render empty section block when a category has zero items in all showcase view", () => {
+    const onlyTeamItems: GalleryItem[] = [
+      {
+        id: "team-only-1",
+        title: "Single Team Image",
+        category: "team",
+        categoryLabel: "Our Team",
+        location: "Bengaluru",
+        description: "Team description",
+        image: "/images/gallery/team.jpg",
+        tags: ["team"],
+        aspect: "standard",
+      },
+    ];
+
+    render(<GalleryMosaic items={onlyTeamItems} onSelectItem={vi.fn()} />);
+
+    expect(screen.queryByRole("heading", { name: /our workplace & simulation labs/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /our team in action/i })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /onsite deployments & commissioning/i })).not.toBeInTheDocument();
+  });
+
+  it("renders empty state notice when filtered category has zero items", () => {
+    const onlyTeamItems: GalleryItem[] = [
+      {
+        id: "team-only-1",
+        title: "Single Team Image",
+        category: "team",
+        categoryLabel: "Our Team",
+        location: "Bengaluru",
+        description: "Team description",
+        image: "/images/gallery/team.jpg",
+        tags: ["team"],
+        aspect: "standard",
+      },
+    ];
+
+    render(<GalleryMosaic items={onlyTeamItems} onSelectItem={vi.fn()} />);
+
+    const workplaceBtn = screen.getByRole("button", { name: /our workplace & labs/i });
+    fireEvent.click(workplaceBtn);
+
+    expect(screen.getByText(/no workplace & labs assets found/i)).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /our workplace & simulation labs/i })).not.toBeInTheDocument();
+  });
 });
