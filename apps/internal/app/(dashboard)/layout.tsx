@@ -16,6 +16,7 @@ import {
   ShieldAlert,
   Image as ImageIcon,
   FileText,
+  Monitor,
 } from "lucide-react";
 import { ThemeToggle } from "../theme-toggle";
 import { SysTrolLogo } from "@/components/brand/SysTrolLogo";
@@ -180,7 +181,88 @@ export default function DashboardLayout({
   }
 
   return (
-    <div style={{ display: "flex", height: "100vh", overflow: "hidden", backgroundColor: "var(--bg-canvas)" }}>
+    <>
+      <div
+        className="mobile-lock-screen"
+        data-testid="mobile-lock-screen"
+      >
+        <div
+          style={{
+            maxWidth: "380px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            textAlign: "center",
+            padding: "24px",
+            backgroundColor: "var(--bg-card)",
+            borderRadius: "16px",
+            border: "1px solid var(--border-subtle)",
+            boxShadow: "var(--shadow-lg)",
+          }}
+        >
+          <div
+            style={{
+              width: "60px",
+              height: "60px",
+              borderRadius: "14px",
+              backgroundColor: "rgba(37, 99, 235, 0.1)",
+              border: "1px solid var(--sys-blue-border)",
+              color: "var(--sys-blue-primary)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: "20px",
+            }}
+          >
+            <Monitor size={30} />
+          </div>
+
+          <h1
+            style={{
+              fontSize: "18px",
+              fontWeight: 700,
+              color: "var(--text-heading)",
+              marginBottom: "12px",
+              lineHeight: 1.4,
+            }}
+          >
+            Please open in desktop to operate the internal tool
+          </h1>
+
+          <p
+            style={{
+              fontSize: "13px",
+              color: "var(--text-muted)",
+              lineHeight: 1.5,
+              marginBottom: "20px",
+            }}
+          >
+            sysTROL Internal Management Console is engineered exclusively for authorized desktop, laptop, and tablet workstations.
+          </p>
+
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "4px 12px",
+              borderRadius: "999px",
+              backgroundColor: "var(--sys-blue-subtle)",
+              color: "var(--sys-blue-primary)",
+              fontSize: "11.5px",
+              fontFamily: "var(--font-mono)",
+              fontWeight: 600,
+            }}
+          >
+            DESKTOP WORKSTATION REQUIRED
+          </div>
+        </div>
+      </div>
+
+      <div
+        className="desktop-portal-root"
+        data-testid="desktop-portal-root"
+      >
       <aside
         style={{
           width: isCollapsed ? "60px" : "228px",
@@ -560,5 +642,6 @@ export default function DashboardLayout({
         </main>
       </div>
     </div>
+  </>
   );
 }
