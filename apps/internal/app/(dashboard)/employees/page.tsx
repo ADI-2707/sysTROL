@@ -20,6 +20,7 @@ import {
   canAccessPage,
   isSeededSuperAdmin,
 } from "@/lib/permissions";
+import { useDebounce } from "@/lib/use-debounce";
 
 export interface ExtendedEmployee {
   id: string;
@@ -53,6 +54,7 @@ export default function EmployeeManagementPage() {
   const { user } = useAuth();
   const [employees, setEmployees] = useState<ExtendedEmployee[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 350);
   const [filterTeam, setFilterTeam] = useState<string>("ALL");
   const [filterDept, setFilterDept] = useState("ALL");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -194,8 +196,8 @@ export default function EmployeeManagementPage() {
     if (!matchesTeam) return false;
     const matchesDept = filterDept === "ALL" || emp.department === filterDept;
     if (!matchesDept) return false;
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
+    if (!debouncedSearch.trim()) return true;
+    const q = debouncedSearch.toLowerCase();
     const teamLabel = TEAM_LABELS[emp.team] || "";
     return (
       emp.name.toLowerCase().includes(q) ||

@@ -21,6 +21,7 @@ import {
   Cpu,
 } from "lucide-react";
 import { Button, KpiCard, Badge } from "@/components/ui";
+import { useDebounce } from "@/lib/use-debounce";
 
 interface ProjectMetricRow {
   id: string;
@@ -107,6 +108,7 @@ const mockProjectsData: ProjectMetricRow[] = [
 export default function AnalyticsDashboardPage() {
   const [selectedMillType, setSelectedMillType] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const debouncedSearch = useDebounce(searchQuery, 350);
 
   const filteredProjects = mockProjectsData.filter((p) => {
     const matchesMill =
@@ -116,9 +118,9 @@ export default function AnalyticsDashboardPage() {
       (selectedMillType === "ERW_TUBE_MILL" && p.architecture.includes("ERW Tube")) ||
       (selectedMillType === "BAR_MILL" && p.architecture.includes("Bar & Section"));
     const matchesSearch =
-      p.projectCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.client.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.stage.toLowerCase().includes(searchQuery.toLowerCase());
+      p.projectCode.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      p.client.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      p.stage.toLowerCase().includes(debouncedSearch.toLowerCase());
     return matchesMill && matchesSearch;
   });
 
