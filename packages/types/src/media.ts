@@ -1,5 +1,13 @@
 import { z } from "zod";
 
+export const GallerySectionEnum = z.enum([
+  "WORKPLACE",
+  "TEAM",
+  "DEPLOYMENTS",
+]);
+
+export type GallerySection = z.infer<typeof GallerySectionEnum>;
+
 export const MediaCategoryEnum = z.enum([
   "GALLERY",
   "PROJECTS",
@@ -30,6 +38,7 @@ export const PresignMediaInputSchema = z.object({
   width: z.number().int().min(MIN_IMAGE_WIDTH).max(MAX_IMAGE_WIDTH).optional(),
   height: z.number().int().min(MIN_IMAGE_HEIGHT).max(MAX_IMAGE_HEIGHT).optional(),
   category: MediaCategoryEnum.default("GALLERY"),
+  gallerySection: GallerySectionEnum.optional(),
   projectId: z.string().uuid().optional(),
 });
 
@@ -40,6 +49,7 @@ export const ConfirmMediaInputSchema = z.object({
   altText: z.string().max(255).optional(),
   caption: z.string().max(1000).optional(),
   category: MediaCategoryEnum.default("GALLERY"),
+  gallerySection: GallerySectionEnum.optional(),
   tags: z.array(z.string().min(1).max(50)).default([]),
   fileUrl: z.string().url(),
   s3Key: z.string().min(1),
@@ -57,6 +67,7 @@ export const UpdateMediaInputSchema = z.object({
   altText: z.string().max(255).optional(),
   caption: z.string().max(1000).optional(),
   category: MediaCategoryEnum.optional(),
+  gallerySection: GallerySectionEnum.nullable().optional(),
   tags: z.array(z.string().min(1).max(50)).optional(),
   projectId: z.string().uuid().nullable().optional(),
 });
@@ -67,6 +78,7 @@ export const MediaQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
   category: MediaCategoryEnum.optional(),
+  gallerySection: GallerySectionEnum.optional(),
   search: z.string().optional(),
   projectId: z.string().uuid().optional(),
 });
@@ -86,6 +98,7 @@ export interface MediaAssetDto {
   altText: string | null;
   caption: string | null;
   category: MediaCategory;
+  gallerySection?: GallerySection | null;
   tags: string[];
   fileUrl: string;
   s3Key: string;
