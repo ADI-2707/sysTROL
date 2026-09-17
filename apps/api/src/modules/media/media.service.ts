@@ -199,7 +199,7 @@ export class MediaService {
       where.category = category;
     }
 
-    return prisma.mediaAsset.findMany({
+    const rows = await prisma.mediaAsset.findMany({
       where,
       take: limit,
       orderBy: { createdAt: "desc" },
@@ -215,6 +215,21 @@ export class MediaService {
         height: true,
         createdAt: true,
       },
+    });
+
+    return rows.map((asset) => {
+      let aspect: "featured" | "tall" | "wide" | "standard" = "standard";
+      if (asset.width && asset.height && asset.height > 0) {
+        const ratio = asset.width / asset.height;
+        if (ratio > 1.6) {
+          aspect = "featured";
+        } else if (ratio > 1.3) {
+          aspect = "wide";
+        } else if (ratio < 0.7) {
+          aspect = "tall";
+        }
+      }
+      return { ...asset, aspect };
     });
   }
 }
