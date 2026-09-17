@@ -57,7 +57,7 @@ Key entities declared in `schema.prisma`:
 
 ---
 
-## Development Scripts
+## Development and Seeding Scripts
 
 ```bash
 # Generate Prisma client artifacts
@@ -71,6 +71,9 @@ pnpm --filter @systrol/database migrate:dev
 
 # Seed database with development records
 pnpm --filter @systrol/database seed
+
+# Seed superadmin account directly in Neon PostgreSQL production
+pnpm tsx scripts/seed-neon-superadmin.ts
 
 # Open visual Prisma Studio database browser
 pnpm --filter @systrol/database studio

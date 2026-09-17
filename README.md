@@ -41,6 +41,8 @@ sysTrol/
 │   └── README.md             # Docker infrastructure guide
 ├── .github/
 │   └── workflows/ci.yml      # GitHub Actions CI workflow (lint, test, build, docker)
+├── scripts/
+│   └── seed-neon-superadmin.ts # Dedicated Neon PostgreSQL superadmin bootstrap script
 ├── docker-compose.yml        # Local development & integration services stack
 ├── package.json              # Workspace root scripts and devDependencies
 ├── pnpm-workspace.yaml       # Monorepo workspace package definitions
@@ -54,17 +56,55 @@ sysTrol/
 
 ### Applications (`apps/`)
 
-- [apps/api](file:///c:/Users/hp/OneDrive/Desktop/sysTrol/apps/api): Node.js and Fastify backend application with BullMQ asynchronous job processing, Redis caching/queues, MinIO/S3 document management, JWT authentication with TOTP 2FA, and domain modules covering the industrial lifecycle.
-- [apps/internal](file:///c:/Users/hp/OneDrive/Desktop/sysTrol/apps/internal): Next.js 15 App Router internal operations portal. Features an enterprise authentication landing page, streamlined 5-page sidebar navigation (Dashboard, Project Management, Employee Management, Analytics, Settings), an interactive animated official sysTROL logo (collapsing into a unified circular emblem and expanding to full brand typography), an Ongoing & Commissioned two-tab project card view, a 12-step sequential lifecycle engine with intermediate step insertion and on-site staff roster, employee directory with designations, and self-service password management.
+- [apps/api](file:///c:/Users/hp/OneDrive/Desktop/sysTrol/apps/api): Node.js and Fastify backend application with BullMQ asynchronous job processing, Redis caching/queues, MinIO/S3 document management, JWT authentication with TOTP 2FA, compound email and IP rate limiting, bounded pagination schemas, decoupled query architecture, and domain modules covering the industrial lifecycle.
+- [apps/internal](file:///c:/Users/hp/OneDrive/Desktop/sysTrol/apps/internal): Next.js 15 App Router internal operations portal. Features enterprise authentication with silent token refresh, relocated topbar user profile badge, industrial mechanical rocker theme switch, responsive mobile lock screen (< 768px), debounced search inputs, double-click mutation locking, global error boundaries and route loaders, an interactive animated official sysTROL logo, an Ongoing & Commissioned two-tab project card view, a 12-step sequential lifecycle engine with intermediate step insertion, and on-site staff roster management.
 - [apps/web-public](file:///c:/Users/hp/OneDrive/Desktop/sysTrol/apps/web-public): Next.js 15 App Router public-facing web platform. Features cinematic branding, Motion animations, L2 automation interactive commissioning stepper, machinery and spares catalog, filtered projects directory, careers portal, visual showcase gallery, and RFQ contact forms.
 
 ### Shared Packages (`packages/`)
 
-- [packages/database](file:///c:/Users/hp/OneDrive/Desktop/sysTrol/packages/database): Prisma schema and client for PostgreSQL. Manages all relational data models, migrations, and database seed scripts.
-- [packages/types](file:///c:/Users/hp/OneDrive/Desktop/sysTrol/packages/types): Cross-application TypeScript types, interface contracts, and Zod validation schemas.
+- [packages/database](file:///c:/Users/hp/OneDrive/Desktop/sysTrol/packages/database): Prisma schema and client for PostgreSQL. Manages all relational data models, migrations, and database seed scripts for local and Neon PostgreSQL.
+- [packages/types](file:///c:/Users/hp/OneDrive/Desktop/sysTrol/packages/types): Cross-application TypeScript types, interface contracts, reusable pagination schemas (`PaginationQuerySchema`), and Zod validation schemas.
 - [packages/ui](file:///c:/Users/hp/OneDrive/Desktop/sysTrol/packages/ui): Shared UI tokens, themes, and base component interfaces.
 - [packages/logger](file:///c:/Users/hp/OneDrive/Desktop/sysTrol/packages/logger): Centralized, structured JSON logger wrapper built on Pino.
-- [packages/config](file:///c:/Users/hp/OneDrive/Desktop/sysTrol/packages/config): Shared TypeScript configurations and shared runtime config utilities.
+- [packages/config](file:///c:/Users/hp/OneDrive/Desktop/sysTrol/packages/config): Shared TypeScript configurations and runtime environment validation utilities.
+
+---
+
+## Platform Hardening & Reliability Features
+
+1. **Compound Rate Limiting with Incremental Backoff**:
+   - Authentication endpoints use an `email + IP` compound key strategy (`login_fail:${email}:${ip}`).
+   - NAT and office-friendly: does not penalize concurrent users sharing a single office IP.
+   - Only failed login attempts (`401 Unauthorized`) increment penalties; successful logins immediately reset counters.
+   - Escalating lockout tiers: 5 fails -> 60s, 10 fails -> 300s, 15 fails -> 900s, 20+ fails -> 3600s.
+
+2. **Cross-Domain Cookie Security & CORS Lockdown**:
+   - HTTP-only refresh tokens use `SameSite=None; Secure; Partitioned` cookies for robust cross-origin session rotation.
+   - CORS origin verification strictly limits incoming requests to authorized internal and public domain origins.
+
+3. **Bounded Pagination & Query Decoupling**:
+   - Standardized limit/offset pagination with hard upper bounds (max 100) and total count metadata across all internal endpoints.
+   - Heavy relational subresources (drawings, review notes, inspection batches) are decoupled from primary project queries to optimize memory and throughput.
+
+4. **Resilient Client-Side Fetching & Silent Token Refresh**:
+   - Authenticated API client (`apps/internal/lib/api-client.ts`) intercepts `401` errors, requests token renewals silently, and queues concurrent requests to avoid stampedes.
+   - Graceful session invalidation on permanent token expiry.
+
+5. **Input Debouncing & Mutation Locking**:
+   - `useDebounce` hook (350ms) prevents excessive network calls on fast keystrokes across Media, Project, Employee, and Analytics search inputs.
+   - Double-click prevention and loading locks prevent duplicate database mutations on purchase orders, visit logs, and enquiry qualification.
+
+6. **Error Boundaries & Fallbacks**:
+   - Global root and dashboard `error.tsx` handlers, custom `not-found.tsx` 404 pages, and skeleton `loading.tsx` states.
+
+7. **UI Evolution & Industrial Design**:
+   - User profile badge (avatar initials, online beacon, name, team badge, and designation) mounted in topbar header.
+   - Authentic industrial mechanical rocker switch for dark and light theme toggling with 3D tactile bevels, grooved lever grip, tilt animation, and luminescent micro-LED indicator.
+
+8. **Responsive Layouts & Mobile Gatekeeper**:
+   - Mobile viewports (< 768px) display an exclusive full-screen lock screen: "Please open in desktop to operate the internal tool".
+   - Tablet viewports (768px to 1024px) automatically collapse sidebar navigation to a compact 60px rail.
+   - Laptops and ultrawide screens feature balanced spacing and fluid container scaling.
 
 ---
 
@@ -76,7 +116,7 @@ sysTrol/
 - Job Queue and Asynchronous Workers: BullMQ 5.41.6 with Redis 7
 - Database and ORM: PostgreSQL 16 with Prisma ORM 5.22.0
 - Object Storage: MinIO / AWS S3 SDK 3.758.0 for technical documents, drawings, and certificates
-- Authentication: JWT access/refresh tokens with bcryptjs password hashing and otplib TOTP two-factor authentication
+- Authentication: JWT access and refresh tokens with bcryptjs password hashing and otplib TOTP two-factor authentication
 - Containerization: Docker multi-stage builds and Docker Compose
 
 ### Frontend Applications
@@ -84,7 +124,7 @@ sysTrol/
 - UI Library: React 19.0.0 and React-DOM 19.0.0
 - Language: TypeScript 5.7.2 (Strict mode)
 - Styling: Custom design tokens, CSS variables, utility engine, and CSS modules (Tailwind-free)
-- Theming: Adaptive dual-theme system (Light mode and soothing neutral black Dark mode #050811)
+- Theming: Adaptive dual-theme system (Light mode and neutral black Dark mode #050811)
 - Icons: lucide-react 0.475.0
 - Animation: motion 12.4.7
 - Forms and Validation: react-hook-form 7.54.2, zod 3.24.2, @hookform/resolvers 3.10.0
@@ -92,8 +132,6 @@ sysTrol/
 ---
 
 ## Domain Capabilities and Modules
-
-The platform implements an end-to-end industrial execution and management pipeline:
 
 1. Sales and Enquiries: Lead tracking, client visit logs with GPS coordinates, technical enquiries, and preliminary feasibility review.
 2. Engineering and BOQ: Design reviews, engineering document vault (drawings, schematics, manuals), Bill of Quantities (BOQ) with multi-revision support.
@@ -106,26 +144,6 @@ The platform implements an end-to-end industrial execution and management pipeli
 9. Executive Analytics: Stage dwell time analysis, sales-to-commissioning funnel conversion, procurement aging telemetry, and recurring AMC forecast matrices.
 10. Careers Administration: Public job listings management, job application intake, candidate resume storage, and status pipelines.
 11. Media CMS: Cloud-backed industrial imagery management with browser-to-S3 presigned uploads, client-side pre-flight resolution/format/size validation, and real-time public CDN delivery to the marketing platform.
-
----
-
-## Design System and Theming
-
-The platform implements an industrial design language matching sysTROL corporate identity:
-
-### Color System
-- Brand Primary: sys Navy (`#16375B`)
-- Brand Accent: TROL Green (`#1F7A4D`, `#166339`, `#22C55E`)
-- Dark Theme Background: Neutral Black (`#050811`)
-- Dark Theme Surface: Slate-900 / Slate-800 (`#0A0F1D`, `#111827`, `#0F172A`)
-- Light Theme Background: Crisp Surface (`#FFFFFF`, `#F8FAFC`, `#F1F5F9`)
-- Accent Teal: Technical highlight (`#0EA5A5`, `#0B8686`)
-- Status Colors: Success Green, Warning Amber, Destructive Red, Info Sky Blue
-
-### Typography
-- Headings: Space Grotesk
-- Body: Inter
-- Telemetry and Code: JetBrains Mono
 
 ---
 
@@ -164,6 +182,11 @@ pnpm db:migrate
 pnpm db:seed
 ```
 
+To seed the superadmin account in Neon PostgreSQL production:
+```bash
+pnpm tsx scripts/seed-neon-superadmin.ts
+```
+
 ### Running in Development
 Start all applications concurrently via Turborepo:
 ```bash
@@ -181,8 +204,6 @@ Default application ports:
 
 ## Monorepo Scripts
 
-The root `package.json` provides scripts orchestrated by Turborepo:
-
 | Script | Purpose |
 |---|---|
 | `pnpm dev` | Run all applications and workers in development mode concurrently |
@@ -199,26 +220,32 @@ The root `package.json` provides scripts orchestrated by Turborepo:
 
 ## Testing Strategy
 
-- Unit and Integration Tests: Executed with Vitest across API routes, commissioning DAG engine, trials calculations, and UI components.
-- Automated Tests Execution:
-  ```bash
-  pnpm test
-  ```
-- Target specific workspace package tests:
-  ```bash
-  pnpm --filter @systrol/api test
-  pnpm --filter @systrol/web-public test
-  ```
+All automated test suites are executed via Vitest across unit, integration, and security layers:
+
+```bash
+# Run all workspace test suites
+pnpm test
+
+# Target specific workspace packages
+pnpm --filter @systrol/api test
+pnpm --filter @systrol/internal test
+pnpm --filter @systrol/web-public test
+```
+
+Current Test Metrics:
+- `@systrol/api`: 128 tests passing across 12 test suites.
+- `@systrol/internal`: 16 tests passing across 4 test suites.
+- Total: 144 automated tests passing with zero regressions.
 
 ---
 
 ## Continuous Integration
 
-The repository includes a GitHub Actions CI workflow in `.github/workflows/ci.yml` that automatically runs on pull requests and pushes to `main`:
+The repository includes a GitHub Actions CI workflow in `.github/workflows/ci.yml` that automatically validates:
 - Type checking across all workspaces
 - Lint validation
-- Automated unit and integration test execution
-- Production container build validation for API and internal applications
+- Automated unit, integration, and security test execution
+- Production bundle verification
 
 ---
 

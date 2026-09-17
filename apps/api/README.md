@@ -12,9 +12,9 @@ Built with Fastify, TypeScript, Prisma ORM, PostgreSQL, Redis, BullMQ, and MinIO
 - **Hosting Platform**: Render (Web Service)
 - **Monorepo Build Command**: `pnpm install --frozen-lockfile && pnpm --filter @systrol/database generate && pnpm --filter @systrol/api build`
 - **Start Command**: `node apps/api/dist/server.js`
-- **Cloud Database**: Neon PostgreSQL (Serverless)
+- **Cloud Database**: Neon PostgreSQL (Serverless, Singapore `ap-southeast-1`)
 - **Cloud Cache / Queue**: Upstash Redis (TLS)
-- **Cloud Storage**: Supabase Storage (S3-compatible bucket)
+- **Cloud Storage**: Supabase Storage (S3-compatible bucket, Mumbai `ap-south-1`)
 
 ---
 
@@ -26,14 +26,18 @@ The API application is structured as a modular monolith providing high-throughpu
 - Language: TypeScript 5.7.2 (ESM)
 - Database Layer: PostgreSQL 16 managed via Prisma ORM (`@systrol/database`)
 - Job Processing: BullMQ 5.41.6 backed by Redis 7
-- File Storage: S3-compatible object storage (MinIO in development, AWS S3 in production) via `@aws-sdk/client-s3`
-- Authentication and Security:
+- File Storage: S3-compatible object storage (MinIO in development, Supabase/AWS S3 in production) via `@aws-sdk/client-s3`
+- Authentication & Security Architecture:
   - Fastify JWT (`@fastify/jwt`) with access and refresh token rotation
   - Password hashing with `bcryptjs`
   - Two-factor authentication (TOTP) using `otplib` and QR code generation
-  - Rate limiting via `@fastify/rate-limit`
-  - Cookie parser via `@fastify/cookie`
-  - Cross-Origin Resource Sharing via `@fastify/cors`
+  - Partitioned, HTTP-only, `SameSite=None; Secure` refresh cookies for resilient cross-domain auth
+  - Compound Rate Limiting (`login_fail:${email}:${ip}`) preventing office/NAT false positives while penalizing brute-force attacks with progressive backoff tiers (5 fails -> 60s, 10 fails -> 300s, 15 fails -> 900s, 20+ fails -> 3600s)
+  - CORS origin verification strictly locking down allowed frontend origins
+- Query Scalability & Pagination:
+  - Standardized bounded pagination schemas (`PaginationQuerySchema` with max 100 limit cap and offset support)
+  - Total count and pagination metadata returned across all internal list queries
+  - Decoupled relational queries for complex project subresources (drawings, BOQ, review notes) to prevent memory bottlenecks
 - Validation: Zod schemas (`@systrol/types`)
 
 ---
@@ -44,6 +48,7 @@ The API application is structured as a modular monolith providing high-throughpu
 apps/api/
 ├── src/
 │   ├── common/                       # Shared plugins, middleware, errors, and utils
+│   │   ├── auth/                     # Rate limiting, compound lockout strategies, JWT plugin
 │   │   ├── config.ts                 # Environment validation and typed configurations
 │   │   ├── errors.ts                 # Custom HTTP exception hierarchy
 │   │   ├── plugins/                  # Fastify plugins (auth, db, redis, s3, cors, ratelimit)
@@ -75,39 +80,48 @@ apps/api/
 ## Domain Modules and Key Routes
 
 ### Authentication (`/api/v1/auth`)
-- `POST /api/v1/auth/login`: User login with email and password
-- `POST /api/v1/auth/refresh`: Refresh expired JWT access token
-- `POST /api/v1/auth/logout`: Invalidate user session
+- `POST /api/v1/auth/login`: User login with email and password (enforces compound rate limiting)
+- `POST /api/v1/auth/refresh`: Refresh expired JWT access token using HTTP-only partitioned cookie
+- `POST /api/v1/auth/logout`: Invalidate user session and clear refresh cookie
 - `POST /api/v1/auth/2fa/setup`: Generate TOTP secret and QR code
 - `POST /api/v1/auth/2fa/verify`: Verify TOTP passcode to enable 2FA
 
 ### Sales Visits (`/api/v1/sales-visits`)
-- `GET /api/v1/sales-visits`: Query client visit records with search and pagination
+- `GET /api/v1/sales-visits`: Query client visit records with search and bounded pagination
 - `POST /api/v1/sales-visits`: Create visit log with mill contact details and notes
 - `GET /api/v1/sales-visits/:id`: Detailed view of a single visit
 
 ### Enquiries (`/api/v1/enquiries`)
-- `GET /api/v1/enquiries`: List enquiries with stage filtering
+- `GET /api/v1/enquiries`: List enquiries with stage filtering and bounded pagination
 - `POST /api/v1/enquiries`: Create technical enquiry
 - `PATCH /api/v1/enquiries/:id/status`: Update status (Qualified, In Review, Quoted, Closed)
+- `POST /api/v1/enquiries/:id/qualify`: Mark enquiry as qualified
+- `POST /api/v1/enquiries/:id/disqualify`: Disqualify enquiry with recorded reason
+- `POST /api/v1/enquiries/:id/convert`: Convert qualified enquiry to active project
 
 ### Lifecycle and Projects (`/api/v1/lifecycle`, `/api/v1/projects`)
+- `GET /api/v1/projects`: List projects with bounded pagination and total count
+- `GET /api/v1/projects/:id`: Fetch project summary (core fields with decoupled subresources)
+- `GET /api/v1/projects/:id/drawings`: Decoupled project drawings query
+- `GET /api/v1/projects/:id/reviews`: Decoupled design reviews query
 - `GET /api/v1/lifecycle/:projectId`: Fetch project timeline and stage milestone state
 - `POST /api/v1/lifecycle/:projectId/transition`: Advance project through industrial stages
 
 ### Engineering and BOQ (`/api/v1/engineering`)
-- `GET /api/v1/engineering/documents`: Query engineering drawings and specifications
+- `GET /api/v1/engineering/documents`: Query engineering drawings and specifications with pagination
 - `POST /api/v1/engineering/documents/presign-upload`: Presign S3 URL for technical drawing upload
 - `GET /api/v1/engineering/boq/:projectId`: Retrieve active Bill of Quantities
 - `POST /api/v1/engineering/boq/:projectId`: Submit new BOQ version
 
 ### Procurement (`/api/v1/procurement`)
-- `GET /api/v1/procurement/purchase-orders`: List purchase orders with vendor details
+- `GET /api/v1/procurement/vendors`: List vendors with bounded pagination and total count
+- `GET /api/v1/procurement/purchase-orders`: List purchase orders with vendor details and pagination
 - `POST /api/v1/procurement/purchase-orders`: Issue purchase order with line items
-- `PATCH /api/v1/procurement/purchase-orders/:id/status`: Update procurement milestone
+- `POST /api/v1/procurement/purchase-orders/:id/send`: Dispatch purchase order to vendor
+- `PATCH /api/v1/procurement/purchase-orders/:id/delivery`: Update PO delivery milestone
 
 ### Manufacturing (`/api/v1/manufacturing`)
-- `GET /api/v1/manufacturing/batches`: Production batch tracker
+- `GET /api/v1/manufacturing/batches`: Production batch tracker with pagination
 - `POST /api/v1/manufacturing/batches`: Schedule new production batch
 - `POST /api/v1/manufacturing/batches/:id/stages`: Sign off manufacturing milestone (Fabrication, Wiring, FAT)
 
@@ -142,8 +156,6 @@ apps/api/
 
 ## Environment Configuration
 
-The API requires the following environment variables (defined in root `.env` or container environment):
-
 | Variable | Description | Default |
 |---|---|---|
 | `NODE_ENV` | Environment mode (`development`, `production`, `test`) | `development` |
@@ -164,8 +176,6 @@ The API requires the following environment variables (defined in root `.env` or 
 
 ## Development and Scripts
 
-Run scripts from the repository root using pnpm workspace filters or directly inside `apps/api`:
-
 ```bash
 # Start API development server with live reload
 pnpm --filter @systrol/api dev
@@ -176,7 +186,7 @@ pnpm --filter @systrol/api dev:worker
 # Type-check TypeScript sources
 pnpm --filter @systrol/api typecheck
 
-# Run automated tests
+# Run automated tests (128 passing tests across 12 test suites)
 pnpm --filter @systrol/api test
 
 # Build production bundle with tsup

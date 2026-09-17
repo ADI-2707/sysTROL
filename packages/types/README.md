@@ -13,6 +13,7 @@ The package acts as the single source of truth for domain data contracts and inp
 - Runtime Validation: Zod schemas (`zod`) ensuring runtime payload validation at API request boundaries and frontend form submissions.
 - Static Typing: TypeScript interfaces and type aliases exported for API responses, UI component props, and state stores.
 - Strict Type Consistency: Zero drift between frontend forms and backend REST controllers.
+- Standardized Pagination: Reusable pagination schemas (`PaginationQuerySchema`) enforcing bounded limit and offset parameters with total counts across all listing endpoints.
 
 ---
 
@@ -26,6 +27,7 @@ packages/types/
 │   ├── auth.ts                       # Login, token payload, user session, and 2FA types
 │   ├── careers.ts                    # Job posting and applicant intake data contracts
 │   ├── commissioning.ts              # Commissioning DAG nodes, dependencies, and sign-offs
+│   ├── common.ts                     # Reusable pagination, sorting, search schemas, and PaginatedResponse<T>
 │   ├── dispatch.ts                   # Shipment manifests, packing lists, and logistics DTOs
 │   ├── engineering.ts                # Engineering documents, drawing metadata, and BOQ items
 │   ├── enquiries.ts                  # Customer RFQs, qualification states, and technical params
@@ -49,9 +51,14 @@ Import types or validation schemas into any workspace application:
 import {
   type CommissioningStepDto,
   type ProjectTelemetryMatrix,
+  type PaginatedResponse,
+  PaginationQuerySchema,
   CreateEnquirySchema,
   LifecycleStage
 } from "@systrol/types";
+
+// Validate pagination parameters
+const pagination = PaginationQuerySchema.parse(req.query);
 
 // Validate payload with Zod schema
 const result = CreateEnquirySchema.safeParse(req.body);
