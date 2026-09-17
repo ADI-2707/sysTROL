@@ -297,26 +297,6 @@ export default function DashboardLayout({
         >
           {isCollapsed ? (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
-              <div
-                title={`${user?.name || "Team Member"} (${user?.role || "OPERATOR"})`}
-                style={{
-                  width: "32px",
-                  height: "32px",
-                  borderRadius: "50%",
-                  backgroundColor: "var(--sys-blue-subtle)",
-                  color: "var(--sys-blue-primary)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "11px",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  border: "1px solid var(--sys-blue-border)",
-                }}
-                onClick={toggleSidebar}
-              >
-                {user?.name ? user.name.slice(0, 2).toUpperCase() : "ST"}
-              </div>
               <button
                 type="button"
                 onClick={logout}
@@ -347,70 +327,6 @@ export default function DashboardLayout({
             </div>
           ) : (
             <>
-              <div style={{ display: "flex", alignItems: "center", gap: "9px" }}>
-                <div
-                  style={{
-                    width: "30px",
-                    height: "30px",
-                    borderRadius: "50%",
-                    backgroundColor: "var(--sys-blue-subtle)",
-                    color: "var(--sys-blue-primary)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "11px",
-                    fontWeight: 700,
-                    border: "1px solid var(--sys-blue-border)",
-                    flexShrink: 0,
-                  }}
-                >
-                  {user?.name ? user.name.slice(0, 2).toUpperCase() : "ST"}
-                </div>
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <div
-                    style={{
-                      fontSize: "12.5px",
-                      fontWeight: 600,
-                      color: "var(--text-heading)",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {user?.name || "System Operator"}
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
-                    <span
-                      style={{
-                        fontSize: "9px",
-                        fontWeight: 700,
-                        backgroundColor: "var(--sys-blue-subtle)",
-                        color: "var(--sys-blue-primary)",
-                        padding: "1px 5px",
-                        borderRadius: "4px",
-                        letterSpacing: "0.2px",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {user?.team ? TEAM_LABELS[user.team] : "Leadership Team"}
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "10px",
-                      color: "var(--sys-green-accent)",
-                      fontFamily: "var(--font-mono)",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                      marginTop: "1px",
-                    }}
-                  >
-                    {user?.designation || "Field Specialist"}
-                  </div>
-                </div>
-              </div>
-
               <button
                 type="button"
                 onClick={logout}
@@ -422,7 +338,7 @@ export default function DashboardLayout({
                   alignItems: "center",
                   justifyContent: "center",
                   gap: "6px",
-                  padding: "6px 10px",
+                  padding: "7px 10px",
                   borderRadius: "6px",
                   backgroundColor: logoutHovered ? "#ef4444" : "rgba(239, 68, 68, 0.08)",
                   border: logoutHovered ? "1px solid #dc2626" : "1px solid rgba(239, 68, 68, 0.25)",
@@ -492,34 +408,91 @@ export default function DashboardLayout({
             </span>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
             <ThemeToggle />
-            <span
+            <div
+              data-testid="topbar-user-profile"
               style={{
-                display: "inline-flex",
+                display: "flex",
                 alignItems: "center",
-                gap: "6px",
-                padding: "3.5px 10px",
-                borderRadius: "999px",
-                backgroundColor: "var(--sys-green-subtle)",
-                color: "var(--sys-green-accent)",
-                fontSize: "11px",
-                fontFamily: "var(--font-mono)",
-                fontWeight: 600,
-                border: "1px solid var(--sys-green-border)",
+                gap: "9px",
+                padding: "4px 10px 4px 6px",
+                borderRadius: "8px",
+                backgroundColor: "var(--bg-card)",
+                border: "1px solid var(--border-subtle)",
               }}
             >
-              <span
+              <div
                 style={{
-                  width: "6px",
-                  height: "6px",
+                  position: "relative",
+                  width: "28px",
+                  height: "28px",
                   borderRadius: "50%",
-                  backgroundColor: "var(--sys-green-accent)",
-                  boxShadow: "0 0 8px var(--sys-green-accent)",
+                  backgroundColor: "var(--sys-blue-subtle)",
+                  color: "var(--sys-blue-primary)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  border: "1px solid var(--sys-blue-border)",
+                  flexShrink: 0,
                 }}
-              />
-              SYSTEM ONLINE
-            </span>
+              >
+                {user?.name ? user.name.slice(0, 2).toUpperCase() : "ST"}
+                <span
+                  style={{
+                    position: "absolute",
+                    bottom: "-1px",
+                    right: "-1px",
+                    width: "7px",
+                    height: "7px",
+                    borderRadius: "50%",
+                    backgroundColor: "#10b981",
+                    border: "2px solid var(--bg-card)",
+                    boxShadow: "0 0 4px #10b981",
+                  }}
+                />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      color: "var(--text-heading)",
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {user?.name || "System Operator"}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: "9px",
+                      fontWeight: 700,
+                      backgroundColor: "var(--sys-blue-subtle)",
+                      color: "var(--sys-blue-primary)",
+                      padding: "1px 5px",
+                      borderRadius: "4px",
+                      letterSpacing: "0.2px",
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {user?.team ? TEAM_LABELS[user.team] : "Leadership"}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    fontSize: "10px",
+                    color: "var(--text-muted)",
+                    fontFamily: "var(--font-mono)",
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {user?.designation || "Field Specialist"}
+                </div>
+              </div>
+            </div>
           </div>
         </header>
 
