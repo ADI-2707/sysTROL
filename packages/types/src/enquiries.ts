@@ -46,6 +46,16 @@ export const CreateSalesVisitSchema = z.object({
   nextActionAt: z.string().optional(),
 });
 
+export const PublicEnquirySchema = z.object({
+  name: z.string().min(2).max(120),
+  company: z.string().min(2).max(120),
+  email: z.string().email(),
+  phone: z.string().min(8).max(30).regex(/^[+0-9\s\-()]+$/),
+  service: z.string().min(1).max(200),
+  message: z.string().min(10).max(2000),
+});
+
 export type CreateEnquiryDto = z.infer<typeof CreateEnquirySchema>;
 export type ConvertToProjectDto = z.infer<typeof ConvertToProjectSchema>;
 export type CreateSalesVisitDto = z.infer<typeof CreateSalesVisitSchema>;
+export type PublicEnquiryDto = z.infer<typeof PublicEnquirySchema>;
