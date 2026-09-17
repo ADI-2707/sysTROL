@@ -8,17 +8,70 @@ import {
 import { StageGateEngine } from "./stage-gate.engine.js";
 
 export class ProjectsService {
-  static async listProjects() {
-    return prisma.project.findMany({
-      include: {
-        client: true,
-        createdBy: { select: { id: true, name: true, email: true } },
+  static async listProjects(params?: { page?: number; limit?: number; search?: string }) {
+    const page = Math.max(1, Number(params?.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(params?.limit) || 20));
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+    if (params?.search) {
+      where.OR = [
+        { name: { contains: params.search, mode: "insensitive" } },
+        { projectCode: { contains: params.search, mode: "insensitive" } },
+      ];
+    }
+
+    const [data, total] = await Promise.all([
+      prisma.project.findMany({
+        where,
+        skip,
+        take: limit,
+        include: {
+          client: true,
+          createdBy: { select: { id: true, name: true, email: true } },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.project.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit) || 1;
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
       },
-      orderBy: { createdAt: "desc" },
-    });
+    };
   }
 
   static async getProjectById(id: string) {
+    const project = await prisma.project.findUnique({
+      where: { id },
+      include: {
+        client: true,
+        createdBy: { select: { id: true, name: true } },
+        stageHistory: {
+          include: { changedBy: { select: { id: true, name: true } } },
+          orderBy: { changedAt: "desc" },
+        },
+      },
+    });
+
+    if (!project) {
+      const error: any = new Error(`Project '${id}' not found`);
+      error.statusCode = 404;
+      throw error;
+    }
+
+    return project;
+  }
+
+  static async getProjectWithGates(id: string) {
     const project = await prisma.project.findUnique({
       where: { id },
       include: {
@@ -47,8 +100,44 @@ export class ProjectsService {
     return project;
   }
 
+  static async getProjectBOQ(projectId: string) {
+    return prisma.bOQItem.findMany({
+      where: { projectId },
+      orderBy: { id: "asc" },
+    });
+  }
+
+  static async getProjectPOs(projectId: string) {
+    return prisma.purchaseOrder.findMany({
+      where: { projectId },
+      include: { vendor: true },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  static async getProjectDocs(projectId: string) {
+    return prisma.engineeringDoc.findMany({
+      where: { projectId },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  static async getProjectBatches(projectId: string) {
+    return prisma.manufacturingBatch.findMany({
+      where: { projectId },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  static async getProjectShipments(projectId: string) {
+    return prisma.shipment.findMany({
+      where: { projectId },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
   static async advanceStage(projectId: string, dto: AdvanceStageDto, userId: string) {
-    const project = await this.getProjectById(projectId);
+    const project = await this.getProjectWithGates(projectId);
     const currentIndex = STAGE_ORDER.indexOf(project.currentStage as LifecycleStage);
 
     if (currentIndex >= STAGE_ORDER.length - 1) {
