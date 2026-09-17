@@ -19,19 +19,6 @@ interface GalleryMosaicProps {
   onSelectItem: (item: GalleryItem) => void;
 }
 
-const areaClassMap: Record<string, string> = {
-  "feat-workplace": styles.areaFeatWorkplace,
-  "sub-workstation": styles.areaSubWorkstation,
-  "wide-hydraulic": styles.areaWideHydraulic,
-  "sub-electronics": styles.areaSubElectronics,
-  "feat-team": styles.areaFeatTeam,
-  "sub-inspection": styles.areaSubInspection,
-  "wide-operations": styles.areaWideOperations,
-  "feat-deployment": styles.areaFeatDeployment,
-  "tall-pulpit": styles.areaTallPulpit,
-  "sub-tooling": styles.areaSubTooling,
-};
-
 export const GalleryMosaic: React.FC<GalleryMosaicProps> = ({ items, onSelectItem }) => {
   const [activeCategory, setActiveCategory] = useState<GalleryCategory>("all");
   const list = items && items.length > 0 ? items : galleryItems;
@@ -41,12 +28,12 @@ export const GalleryMosaic: React.FC<GalleryMosaicProps> = ({ items, onSelectIte
   const deploymentItems = list.filter((i) => i.category === "deployments");
 
   const renderCard = (item: GalleryItem) => {
-    const areaClass = item.gridArea ? areaClassMap[item.gridArea] || "" : "";
+    const isFeatured = item.aspect === "featured" || item.aspect === "wide";
 
     return (
       <div
         key={item.id}
-        className={`${styles.galleryCard} ${areaClass}`}
+        className={`${styles.galleryCard} ${isFeatured ? styles.featuredCard : ""}`}
         onClick={() => onSelectItem(item)}
         role="button"
         tabIndex={0}
@@ -137,7 +124,7 @@ export const GalleryMosaic: React.FC<GalleryMosaicProps> = ({ items, onSelectIte
             </Reveal>
 
             <Reveal delay={100}>
-              <div className={styles.mosaicWorkplace}>
+              <div className={styles.mosaicGrid}>
                 {workplaceItems.map(renderCard)}
               </div>
             </Reveal>
@@ -159,7 +146,7 @@ export const GalleryMosaic: React.FC<GalleryMosaicProps> = ({ items, onSelectIte
             </Reveal>
 
             <Reveal delay={100}>
-              <div className={styles.mosaicTeam}>
+              <div className={styles.mosaicGrid}>
                 {teamItems.map(renderCard)}
               </div>
             </Reveal>
@@ -181,7 +168,7 @@ export const GalleryMosaic: React.FC<GalleryMosaicProps> = ({ items, onSelectIte
             </Reveal>
 
             <Reveal delay={100}>
-              <div className={styles.mosaicDeployments}>
+              <div className={styles.mosaicGrid}>
                 {deploymentItems.map(renderCard)}
               </div>
             </Reveal>

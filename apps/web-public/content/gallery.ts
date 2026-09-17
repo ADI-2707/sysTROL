@@ -10,7 +10,6 @@ export interface GalleryItem {
   image: string;
   tags: string[];
   aspect: "featured" | "tall" | "standard" | "wide";
-  gridArea?: string;
 }
 
 export const galleryCategories: { id: GalleryCategory; label: string; count?: number }[] = [
@@ -32,7 +31,6 @@ export const galleryItems: GalleryItem[] = [
     image: "/images/gallery/workplace-digital-twin.jpg",
     tags: ["Digital Twin", "HIL Simulation", "C# Model Core", "OPC UA"],
     aspect: "featured",
-    gridArea: "feat-workplace",
   },
   {
     id: "workplace-workstations",
@@ -45,7 +43,6 @@ export const galleryItems: GalleryItem[] = [
     image: "/images/gallery/workplace-workstations.jpg",
     tags: ["Pass Schedules", "Python Modeling", "Thermal Tracking"],
     aspect: "standard",
-    gridArea: "sub-workstation",
   },
   {
     id: "workplace-hydraulic-bench",
@@ -58,7 +55,6 @@ export const galleryItems: GalleryItem[] = [
     image: "/images/gallery/workplace-hydraulic-bench.jpg",
     tags: ["Hydraulic AGC", "Servo Calibration", "Mill Gap Control"],
     aspect: "wide",
-    gridArea: "wide-hydraulic",
   },
   {
     id: "workplace-electronics",
@@ -71,7 +67,6 @@ export const galleryItems: GalleryItem[] = [
     image: "/images/gallery/workplace-electronics.jpg",
     tags: ["PLC Gateway", "Deterministic Clocking", "Industrial Ethernet"],
     aspect: "standard",
-    gridArea: "sub-electronics",
   },
   {
     id: "team-collaboration",
@@ -84,7 +79,6 @@ export const galleryItems: GalleryItem[] = [
     image: "/images/gallery/team-collaboration.jpg",
     tags: ["Software Architecture", "C# .NET", "Algorithm Review"],
     aspect: "featured",
-    gridArea: "feat-team",
   },
   {
     id: "team-inspection",
@@ -97,7 +91,6 @@ export const galleryItems: GalleryItem[] = [
     image: "/images/gallery/team-inspection.jpg",
     tags: ["Metallurgical QC", "EN 10204 3.1", "Tungsten Carbide"],
     aspect: "standard",
-    gridArea: "sub-inspection",
   },
   {
     id: "team-operations",
@@ -110,7 +103,6 @@ export const galleryItems: GalleryItem[] = [
     image: "/images/gallery/team-operations.jpg",
     tags: ["Pulpit Telemetry", "Shadow Cutover", "Field Operations"],
     aspect: "wide",
-    gridArea: "wide-operations",
   },
   {
     id: "deployment-rolling-mill",
@@ -123,7 +115,6 @@ export const galleryItems: GalleryItem[] = [
     image: "/images/gallery/deployment-rolling-mill.jpg",
     tags: ["Continuous Rolling", "16-Stand Mill", "Zero Cobble Run"],
     aspect: "featured",
-    gridArea: "feat-deployment",
   },
   {
     id: "deployment-pulpit",
@@ -136,7 +127,6 @@ export const galleryItems: GalleryItem[] = [
     image: "/images/gallery/deployment-pulpit.jpg",
     tags: ["Operator Pulpit", "HMI Visualization", "Live Telemetry"],
     aspect: "tall",
-    gridArea: "tall-pulpit",
   },
   {
     id: "deployment-tooling",
@@ -149,6 +139,5 @@ export const galleryItems: GalleryItem[] = [
     image: "/images/gallery/deployment-tooling.jpg",
     tags: ["Tungsten Carbide", "Finishing Block", "85 m/s Rebar"],
     aspect: "standard",
-    gridArea: "sub-tooling",
   },
 ];
