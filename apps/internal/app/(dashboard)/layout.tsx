@@ -17,17 +17,20 @@ import {
   Image as ImageIcon,
   FileText,
   Monitor,
+  MessageSquare,
 } from "lucide-react";
 import { ThemeToggle } from "../theme-toggle";
 import { SysTrolLogo } from "@/components/brand/SysTrolLogo";
 import { useAuth } from "@/lib/auth-context";
 import { canAccessPage, TEAM_LABELS } from "@/lib/permissions";
 import { useBackendKeepAlive } from "@/lib/use-keep-alive";
+import { apiClient } from "@/lib/api-client";
 
 interface NavItemConfig {
   label: string;
   href: string;
   icon: React.ReactNode;
+  badgeCount?: number;
 }
 
 function NavLink({
@@ -78,7 +81,38 @@ function NavLink({
           {item.icon}
         </span>
         {!isCollapsed && <span>{item.label}</span>}
+        {!isCollapsed && typeof item.badgeCount === "number" && item.badgeCount > 0 && (
+          <span
+            style={{
+              marginLeft: "auto",
+              backgroundColor: "#ef4444",
+              color: "#ffffff",
+              fontSize: "10px",
+              fontWeight: 700,
+              padding: "2px 7px",
+              borderRadius: "9999px",
+              lineHeight: "1.2",
+            }}
+          >
+            {item.badgeCount > 99 ? "99+" : item.badgeCount}
+          </span>
+        )}
       </Link>
+
+      {isCollapsed && typeof item.badgeCount === "number" && item.badgeCount > 0 && (
+        <span
+          style={{
+            position: "absolute",
+            top: "4px",
+            right: "4px",
+            width: "8px",
+            height: "8px",
+            borderRadius: "50%",
+            backgroundColor: "#ef4444",
+            boxShadow: "0 0 6px #ef4444",
+          }}
+        />
+      )}
 
       {isCollapsed && hovered && (
         <div
@@ -150,10 +184,29 @@ export default function DashboardLayout({
     return false;
   };
 
+  const [unreadCtaCount, setUnreadCtaCount] = useState<number>(0);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const fetchUnread = async () => {
+      try {
+        const res = await apiClient("/api/v1/cta/unread-count");
+        if (res.ok) {
+          const data = await res.json();
+          setUnreadCtaCount(data.unreadCount || 0);
+        }
+      } catch {}
+    };
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 15000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
+
   const navItems: NavItemConfig[] = [
     { label: "Dashboard", href: "/dashboard", icon: <LayoutDashboard size={17} /> },
     { label: "Project Management", href: "/projects", icon: <Briefcase size={17} /> },
     { label: "Employee Management", href: "/employees", icon: <Users size={17} /> },
+    { label: "CTA Inquiries", href: "/cta", icon: <MessageSquare size={17} />, badgeCount: unreadCtaCount },
     { label: "Media CMS", href: "/media", icon: <ImageIcon size={17} /> },
     { label: "Careers & Jobs", href: "/careers-admin/postings", icon: <FileText size={17} /> },
     { label: "Analytics", href: "/analytics", icon: <BarChart3 size={17} /> },
