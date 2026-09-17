@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { EmployeeTeam } from "./permissions";
+import { isTokenValid } from "./token-utils";
 
 export interface AuthUser {
   id: string;
@@ -19,6 +20,7 @@ export interface AuthUser {
 interface AuthContextType {
   user: AuthUser | null;
   isAuthenticated: boolean;
+  hasValidToken: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
@@ -52,7 +54,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const stored = localStorage.getItem("systrol_user_session");
       if (stored) {
-        setUser(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        if (parsed?.token && !isTokenValid(parsed.token)) {
+          parsed.token = undefined;
+          localStorage.setItem("systrol_user_session", JSON.stringify(parsed));
+        }
+        setUser(parsed);
       }
     } catch {
       setUser(null);
@@ -65,9 +72,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const normalizedEmail = email.trim().toLowerCase();
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://systrol-api.onrender.com";
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 1800);
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
 
       const res = await fetch(`${apiUrl}/api/v1/auth/login`, {
         method: "POST",
@@ -156,11 +163,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { success: true };
   };
 
+  const hasValidToken = isTokenValid(user?.token);
+
   return (
     <AuthContext.Provider
       value={{
         user,
         isAuthenticated: !!user,
+        hasValidToken,
         isLoading,
         login,
         logout,
