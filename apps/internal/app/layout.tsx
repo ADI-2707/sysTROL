@@ -8,9 +8,9 @@ export const metadata: Metadata = {
   title: "sysTROL Internal Management Console",
   description: "Enterprise lifecycle, commissioning DAG, and operations portal",
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon.ico",
-    apple: "/favicon.ico",
+    icon: [{ url: "/icon.jpeg", type: "image/jpeg" }],
+    shortcut: "/icon.jpeg",
+    apple: "/icon.jpeg",
   },
 };
 
