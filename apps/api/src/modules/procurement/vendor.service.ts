@@ -12,19 +12,47 @@ export class VendorService {
     });
   }
 
-  static async listVendors(filters?: { category?: string; country?: string }) {
-    return prisma.vendor.findMany({
-      where: {
-        ...(filters?.category ? { category: filters.category } : {}),
-        ...(filters?.country ? { country: filters.country } : {}),
-      },
-      include: {
-        _count: {
-          select: { purchaseOrders: true },
+  static async listVendors(filters?: { category?: string; country?: string; page?: number; limit?: number; search?: string }) {
+    const page = Math.max(1, Number(filters?.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(filters?.limit) || 20));
+    const skip = (page - 1) * limit;
+
+    const where: any = {
+      ...(filters?.category ? { category: filters.category } : {}),
+      ...(filters?.country ? { country: filters.country } : {}),
+    };
+
+    if (filters?.search) {
+      where.name = { contains: filters.search, mode: "insensitive" };
+    }
+
+    const [data, total] = await Promise.all([
+      prisma.vendor.findMany({
+        where,
+        skip,
+        take: limit,
+        include: {
+          _count: {
+            select: { purchaseOrders: true },
+          },
         },
+        orderBy: { name: "asc" },
+      }),
+      prisma.vendor.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit) || 1;
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
       },
-      orderBy: { name: "asc" },
-    });
+    };
   }
 
   static async getVendorById(id: string) {

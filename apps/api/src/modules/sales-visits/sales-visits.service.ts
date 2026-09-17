@@ -28,13 +28,66 @@ export class SalesVisitsService {
     });
   }
 
-  static async listVisits(filters?: { enquiryId?: string; projectId?: string; visitedById?: string }) {
+  static async listVisits(filters?: {
+    enquiryId?: string;
+    projectId?: string;
+    visitedById?: string;
+    page?: number;
+    limit?: number;
+    search?: string;
+  }) {
+    const where: any = {
+      ...(filters?.enquiryId ? { enquiryId: filters.enquiryId } : {}),
+      ...(filters?.projectId ? { projectId: filters.projectId } : {}),
+      ...(filters?.visitedById ? { visitedById: filters.visitedById } : {}),
+    };
+
+    if (filters?.search) {
+      where.plantLocation = { contains: filters.search, mode: "insensitive" };
+    }
+
+    if (filters?.page !== undefined || filters?.limit !== undefined) {
+      const page = Math.max(1, Number(filters?.page) || 1);
+      const limit = Math.min(100, Math.max(1, Number(filters?.limit) || 20));
+      const skip = (page - 1) * limit;
+
+      const [data, total] = await Promise.all([
+        prisma.salesVisit.findMany({
+          where,
+          skip,
+          take: limit,
+          include: {
+            visitedBy: {
+              select: { id: true, name: true, email: true },
+            },
+            enquiry: {
+              select: { id: true, enquiryCode: true, requirement: true },
+            },
+            project: {
+              select: { id: true, projectCode: true, name: true },
+            },
+          },
+          orderBy: { visitDate: "desc" },
+        }),
+        prisma.salesVisit.count({ where }),
+      ]);
+
+      const totalPages = Math.ceil(total / limit) || 1;
+      return {
+        data,
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1,
+        },
+      };
+    }
+
     return prisma.salesVisit.findMany({
-      where: {
-        ...(filters?.enquiryId ? { enquiryId: filters.enquiryId } : {}),
-        ...(filters?.projectId ? { projectId: filters.projectId } : {}),
-        ...(filters?.visitedById ? { visitedById: filters.visitedById } : {}),
-      },
+      where,
       include: {
         visitedBy: {
           select: { id: true, name: true, email: true },
