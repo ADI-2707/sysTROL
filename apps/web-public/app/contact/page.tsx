@@ -36,6 +36,7 @@ const serviceOptions = [
 
 export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [honeypot, setHoneypot] = useState("");
   const [toastData, setToastData] = useState<{
     title: string;
     message: string;
@@ -60,11 +61,39 @@ export default function ContactPage() {
   });
 
   const onSubmit = async (data: ContactFormValues) => {
+    if (honeypot) {
+      reset();
+      return;
+    }
     try {
       setIsSubmitting(true);
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://systrol-api.onrender.com";
+      const res = await fetch(`${apiUrl}/api/v1/public/enquiry`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
 
       setIsSubmitting(false);
+
+      if (res.status === 429) {
+        setToastData({
+          type: "error",
+          title: "Too Many Requests",
+          message: "You have submitted too many enquiries. Please wait and try again later.",
+        });
+        return;
+      }
+
+      if (!res.ok) {
+        setToastData({
+          type: "error",
+          title: "Transmission Interruption",
+          message: "Unable to route enquiry. Please retry or contact info@sys-trol.com directly.",
+        });
+        return;
+      }
+
       setToastData({
         type: "success",
         title: "Enquiry Registered Successfully",
@@ -118,6 +147,16 @@ export default function ContactPage() {
                   </div>
 
                   <form onSubmit={handleSubmit(onSubmit)} noValidate>
+                      <input
+                        type="text"
+                        name="website"
+                        value={honeypot}
+                        onChange={(e) => setHoneypot(e.target.value)}
+                        tabIndex={-1}
+                        autoComplete="off"
+                        aria-hidden="true"
+                        style={{ display: "none" }}
+                      />
                     <div className={styles.formGrid}>
                       <div className={styles.formGrid2Col}>
                         <TextField
@@ -182,10 +221,7 @@ export default function ContactPage() {
                         >
                           {isSubmitting ? "Transmitting Enquiry..." : "Transmit Technical Enquiry"}
                         </Button>
-                        <div className={styles.mockNotice}>
-                          * Phase 1 Client-Side Validation: Validated with Zod schema. Form is ready
-                          for Phase 2 API / SMTP webhook ingestion.
-                        </div>
+
                       </div>
                     </div>
                   </form>

@@ -25,6 +25,7 @@ async function getGalleryItems(): Promise<GalleryItem[]> {
     const data = await res.json();
     if (!data.media || data.media.length === 0) return galleryItems;
 
+    const categorySeen: Record<string, boolean> = {};
     const dynamicItems: GalleryItem[] = data.media.map((asset: any) => {
       let cat: "workplace" | "team" | "deployments" = "deployments";
       const tags = (asset.tags || []).map((t: string) => t.toLowerCase());
@@ -32,6 +33,14 @@ async function getGalleryItems(): Promise<GalleryItem[]> {
         cat = "team";
       } else if (tags.some((t: string) => t.includes("lab") || t.includes("workplace") || t.includes("station") || t.includes("bench"))) {
         cat = "workplace";
+      }
+
+      let aspect: "featured" | "tall" | "wide" | "standard" = asset.aspect || "standard";
+      if (!categorySeen[cat]) {
+        categorySeen[cat] = true;
+        if (aspect === "standard") {
+          aspect = "featured";
+        }
       }
 
       return {
@@ -43,7 +52,7 @@ async function getGalleryItems(): Promise<GalleryItem[]> {
         description: asset.caption || asset.altText || asset.title,
         image: asset.fileUrl,
         tags: asset.tags && asset.tags.length > 0 ? asset.tags : ["rolling-mill", "automation"],
-        aspect: "standard" as const,
+        aspect,
       };
     });
 

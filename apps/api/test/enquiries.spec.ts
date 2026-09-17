@@ -224,3 +224,108 @@ describe("Enquiries Module Unit & Payload Tests", () => {
     });
   });
 });
+
+import { PublicEnquirySchema, EnquirySource as EnquirySourceAlias } from "@systrol/types";
+
+describe("PublicEnquirySchema Validation", () => {
+  const validPublicPayload = {
+    name: "Rajesh Kumar",
+    company: "Steel Plant Ltd",
+    email: "rajesh@steel.com",
+    phone: "+91 9845012345",
+    service: "L2 Automation Consultancy",
+    message: "We need Level-2 automation for our 16-stand bar mill configuration.",
+  };
+
+  it("accepts a fully valid public enquiry payload", () => {
+    const result = PublicEnquirySchema.safeParse(validPublicPayload);
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects name shorter than 2 characters", () => {
+    const result = PublicEnquirySchema.safeParse({ ...validPublicPayload, name: "A" });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].path[0]).toBe("name");
+  });
+
+  it("rejects name longer than 120 characters", () => {
+    const result = PublicEnquirySchema.safeParse({ ...validPublicPayload, name: "A".repeat(121) });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].path[0]).toBe("name");
+  });
+
+  it("rejects company shorter than 2 characters", () => {
+    const result = PublicEnquirySchema.safeParse({ ...validPublicPayload, company: "X" });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].path[0]).toBe("company");
+  });
+
+  it("rejects invalid email address", () => {
+    const result = PublicEnquirySchema.safeParse({ ...validPublicPayload, email: "not-an-email" });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].path[0]).toBe("email");
+  });
+
+  it("rejects phone shorter than 8 characters", () => {
+    const result = PublicEnquirySchema.safeParse({ ...validPublicPayload, phone: "123" });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].path[0]).toBe("phone");
+  });
+
+  it("rejects phone with invalid characters like letters", () => {
+    const result = PublicEnquirySchema.safeParse({ ...validPublicPayload, phone: "ABCDEFGH" });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].path[0]).toBe("phone");
+  });
+
+  it("rejects empty service string", () => {
+    const result = PublicEnquirySchema.safeParse({ ...validPublicPayload, service: "" });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].path[0]).toBe("service");
+  });
+
+  it("rejects message shorter than 10 characters", () => {
+    const result = PublicEnquirySchema.safeParse({ ...validPublicPayload, message: "Short." });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].path[0]).toBe("message");
+  });
+
+  it("rejects message longer than 2000 characters", () => {
+    const result = PublicEnquirySchema.safeParse({ ...validPublicPayload, message: "A".repeat(2001) });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].path[0]).toBe("message");
+  });
+
+  it("rejects payload missing required fields", () => {
+    const result = PublicEnquirySchema.safeParse({ name: "Rajesh" });
+    expect(result.success).toBe(false);
+    const missingPaths = result.error?.issues.map((i) => i.path[0]);
+    expect(missingPaths).toContain("company");
+    expect(missingPaths).toContain("email");
+    expect(missingPaths).toContain("phone");
+    expect(missingPaths).toContain("service");
+    expect(missingPaths).toContain("message");
+  });
+
+  it("maps parsed public enquiry data correctly to internal createEnquiry shape", () => {
+    const result = PublicEnquirySchema.safeParse(validPublicPayload);
+    expect(result.success).toBe(true);
+    const { name, company, email, phone, service, message } = result.data!;
+
+    const internalPayload = {
+      source: EnquirySourceAlias.WEB_RFQ,
+      prospectName: `${name} (${company})`,
+      contactEmail: email,
+      contactPhone: phone,
+      requirement: `[${service}] ${message}`,
+    };
+
+    expect(internalPayload.source).toBe("WEB_RFQ");
+    expect(internalPayload.prospectName).toBe("Rajesh Kumar (Steel Plant Ltd)");
+    expect(internalPayload.contactEmail).toBe("rajesh@steel.com");
+    expect(internalPayload.contactPhone).toBe("+91 9845012345");
+    expect(internalPayload.requirement).toContain("[L2 Automation Consultancy]");
+    expect(internalPayload.requirement).toContain("16-stand bar mill");
+  });
+});
+

@@ -145,7 +145,16 @@ describe("Media Module Tests", () => {
       (prisma.mediaAsset.findMany as any).mockResolvedValue(mockItems);
 
       const items = await MediaService.listPublicMedia("GALLERY", 10);
-      expect(items).toEqual(mockItems);
+      expect(items).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: "m1",
+            title: "Continuous Caster Pulpit",
+            category: "GALLERY",
+            fileUrl: "https://cdn.example.com/caster.webp",
+          }),
+        ])
+      );
       expect(prisma.mediaAsset.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { category: "GALLERY" },
@@ -155,3 +164,107 @@ describe("Media Module Tests", () => {
     });
   });
 });
+
+describe("MediaService.listPublicMedia Aspect Hint Derivation", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  const makeAsset = (width: number | null, height: number | null) => ({
+    id: `m-${width}-${height}`,
+    title: "Test Asset",
+    altText: null,
+    caption: null,
+    category: "GALLERY",
+    tags: ["test"],
+    fileUrl: "https://example.com/img.webp",
+    width,
+    height,
+    createdAt: new Date(),
+  });
+
+  it("assigns featured aspect when width/height ratio > 1.6", async () => {
+    (prisma.mediaAsset.findMany as any).mockResolvedValue([makeAsset(1920, 1080)]);
+    const result = await MediaService.listPublicMedia();
+    expect((result[0] as any).aspect).toBe("featured");
+  });
+
+  it("assigns wide aspect when width/height ratio is between 1.3 and 1.6", async () => {
+    (prisma.mediaAsset.findMany as any).mockResolvedValue([makeAsset(1400, 1000)]);
+    const result = await MediaService.listPublicMedia();
+    expect((result[0] as any).aspect).toBe("wide");
+  });
+
+  it("assigns tall aspect when width/height ratio < 0.7", async () => {
+    (prisma.mediaAsset.findMany as any).mockResolvedValue([makeAsset(800, 1200)]);
+    const result = await MediaService.listPublicMedia();
+    expect((result[0] as any).aspect).toBe("tall");
+  });
+
+  it("assigns standard aspect when width/height ratio is between 0.7 and 1.3", async () => {
+    (prisma.mediaAsset.findMany as any).mockResolvedValue([makeAsset(1000, 1000)]);
+    const result = await MediaService.listPublicMedia();
+    expect((result[0] as any).aspect).toBe("standard");
+  });
+
+  it("falls back to standard when width is null", async () => {
+    (prisma.mediaAsset.findMany as any).mockResolvedValue([makeAsset(null, 1080)]);
+    const result = await MediaService.listPublicMedia();
+    expect((result[0] as any).aspect).toBe("standard");
+  });
+
+  it("falls back to standard when height is null", async () => {
+    (prisma.mediaAsset.findMany as any).mockResolvedValue([makeAsset(1920, null)]);
+    const result = await MediaService.listPublicMedia();
+    expect((result[0] as any).aspect).toBe("standard");
+  });
+
+  it("falls back to standard when height is zero to prevent division by zero", async () => {
+    (prisma.mediaAsset.findMany as any).mockResolvedValue([makeAsset(1920, 0)]);
+    const result = await MediaService.listPublicMedia();
+    expect((result[0] as any).aspect).toBe("standard");
+  });
+
+  it("correctly assigns aspect hints for multiple items in a single call", async () => {
+    (prisma.mediaAsset.findMany as any).mockResolvedValue([
+      makeAsset(1920, 1080),
+      makeAsset(800, 1200),
+      makeAsset(1000, 1000),
+      makeAsset(1400, 1000),
+    ]);
+    const result = await MediaService.listPublicMedia();
+    expect((result[0] as any).aspect).toBe("featured");
+    expect((result[1] as any).aspect).toBe("tall");
+    expect((result[2] as any).aspect).toBe("standard");
+    expect((result[3] as any).aspect).toBe("wide");
+  });
+
+  it("includes all original asset fields alongside the derived aspect", async () => {
+    const testAsset = makeAsset(1920, 1080);
+    (prisma.mediaAsset.findMany as any).mockResolvedValue([testAsset]);
+    const result = await MediaService.listPublicMedia();
+    const item = result[0] as any;
+    expect(item.id).toBe(testAsset.id);
+    expect(item.title).toBe(testAsset.title);
+    expect(item.fileUrl).toBe(testAsset.fileUrl);
+    expect(item.tags).toEqual(testAsset.tags);
+    expect(item.aspect).toBeDefined();
+  });
+
+  it("passes category filter to prisma when provided", async () => {
+    (prisma.mediaAsset.findMany as any).mockResolvedValue([]);
+    await MediaService.listPublicMedia("GALLERY", 10);
+    expect(prisma.mediaAsset.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { category: "GALLERY" }, take: 10 })
+    );
+  });
+
+  it("uses no category filter when category is not provided", async () => {
+    (prisma.mediaAsset.findMany as any).mockResolvedValue([]);
+    await MediaService.listPublicMedia();
+    expect(prisma.mediaAsset.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: {} })
+    );
+  });
+});
+

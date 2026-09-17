@@ -5,10 +5,46 @@ import {
   ConvertToProjectSchema,
   EnquirySource,
   UserRole,
+  PublicEnquirySchema,
 } from "@systrol/types";
 import { requireRoles } from "../../common/rbac/rbac.guard.js";
 
 export async function enquiriesRoutes(fastify: FastifyInstance) {
+  fastify.post(
+    "/public/enquiry",
+    {
+      config: {
+        rateLimit: {
+          max: 10,
+          timeWindow: "1 hour",
+        },
+      },
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const parse = PublicEnquirySchema.safeParse(request.body);
+      if (!parse.success) {
+        return reply.status(400).send({
+          statusCode: 400,
+          error: "Bad Request",
+          message: "Validation failed for public enquiry submission",
+          issues: parse.error.issues,
+        });
+      }
+
+      const { name, company, email, phone, service, message } = parse.data;
+
+      const enquiry = await EnquiriesService.createEnquiry({
+        source: EnquirySource.WEB_RFQ,
+        prospectName: `${name} (${company})`,
+        contactEmail: email,
+        contactPhone: phone,
+        requirement: `[${service}] ${message}`,
+      });
+
+      return reply.status(201).send({ success: true, enquiryId: enquiry.id });
+    }
+  );
+
   fastify.register(async (scope) => {
     scope.addHook("preHandler", scope.verifyJWT);
 

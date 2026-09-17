@@ -13,6 +13,8 @@ interface JobApplicationFormProps {
 export const JobApplicationForm: React.FC<JobApplicationFormProps> = ({ vacancy }) => {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [honeypot, setHoneypot] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -22,17 +24,49 @@ export const JobApplicationForm: React.FC<JobApplicationFormProps> = ({ vacancy 
     message: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
+    if (honeypot) {
       setSubmitted(true);
-    }, 600);
+      return;
+    }
+    setError(null);
+    setSubmitting(true);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://systrol-api.onrender.com";
+      const res = await fetch(`${apiUrl}/api/v1/public/jobs/${vacancy.id}/apply`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          applicantName: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          coverNote: `Experience: ${formData.experience}. LinkedIn: ${formData.linkedin || "N/A"}. ${formData.message}`,
+        }),
+      });
+
+      setSubmitting(false);
+
+      if (res.status === 429) {
+        setError("You have submitted too many applications recently. Please wait before trying again.");
+        return;
+      }
+
+      if (!res.ok) {
+        setError("Application submission failed. Please try again or email us directly.");
+        return;
+      }
+
+      setSubmitted(true);
+    } catch {
+      setSubmitting(false);
+      setError("Network error. Please check your connection and try again.");
+    }
   };
 
   const handleReset = () => {
     setSubmitted(false);
+    setError(null);
     setFormData({
       name: "",
       email: "",
@@ -64,6 +98,16 @@ export const JobApplicationForm: React.FC<JobApplicationFormProps> = ({ vacancy 
 
   return (
     <form onSubmit={handleSubmit} id="apply-form">
+      <input
+        type="text"
+        name="website"
+        value={honeypot}
+        onChange={(e) => setHoneypot(e.target.value)}
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        style={{ display: "none" }}
+      />
       <div className={styles.formGrid}>
         <div className={styles.formGroup}>
           <label className={styles.label} htmlFor="applicant-name">
@@ -152,6 +196,14 @@ export const JobApplicationForm: React.FC<JobApplicationFormProps> = ({ vacancy 
             onChange={(e) => setFormData({ ...formData, message: e.target.value })}
           />
         </div>
+
+        {error && (
+          <div className={styles.formGroupFull}>
+            <p style={{ color: "var(--color-error, #dc2626)", fontSize: "var(--text-sm)", margin: 0 }}>
+              {error}
+            </p>
+          </div>
+        )}
 
         <div className={styles.formGroupFull} style={{ display: "flex", justifyContent: "flex-end", marginTop: "8px" }}>
           <Button
