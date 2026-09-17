@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { resolveGalleryItems } from "@/app/gallery/page";
+import { resolveGalleryItems } from "@/lib/gallery-resolver";
 import { galleryItems } from "@/content/gallery";
 
 describe("resolveGalleryItems", () => {
