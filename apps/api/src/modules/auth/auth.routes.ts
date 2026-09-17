@@ -4,6 +4,7 @@ import { AuthService } from "./auth.service.js";
 import { TotpService } from "../../common/auth/totp.service.js";
 import { UserRole } from "@systrol/types";
 import { env } from "@systrol/config";
+import { AuthRateLimiter } from "../../common/auth/rate-limiter.js";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -29,9 +30,30 @@ export async function authRoutes(fastify: FastifyInstance) {
     }
 
     const { email, password, totpToken } = parseResult.data;
+    const ip = request.ip || (request.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || "127.0.0.1";
+
+    const lockStatus = await AuthRateLimiter.checkLockout(email, ip);
+    if (lockStatus.locked) {
+      reply.header("Retry-After", String(lockStatus.retryAfter || 60));
+      return reply.status(429).send({
+        statusCode: 429,
+        error: "Too Many Requests",
+        message: `Account temporarily locked due to repeated failed attempts. Please retry in ${lockStatus.retryAfter || 60} seconds.`,
+      });
+    }
+
     const user = await AuthService.findUserByEmail(email);
 
     if (!user) {
+      const failStatus = await AuthRateLimiter.recordFailedAttempt(email, ip);
+      if (failStatus.locked) {
+        reply.header("Retry-After", String(failStatus.retryAfter || 60));
+        return reply.status(429).send({
+          statusCode: 429,
+          error: "Too Many Requests",
+          message: `Account temporarily locked due to repeated failed attempts. Please retry in ${failStatus.retryAfter || 60} seconds.`,
+        });
+      }
       return reply.status(401).send({
         statusCode: 401,
         error: "Unauthorized",
@@ -41,6 +63,15 @@ export async function authRoutes(fastify: FastifyInstance) {
 
     const validPassword = await AuthService.verifyPassword(password, user.hashedPassword);
     if (!validPassword) {
+      const failStatus = await AuthRateLimiter.recordFailedAttempt(email, ip);
+      if (failStatus.locked) {
+        reply.header("Retry-After", String(failStatus.retryAfter || 60));
+        return reply.status(429).send({
+          statusCode: 429,
+          error: "Too Many Requests",
+          message: `Account temporarily locked due to repeated failed attempts. Please retry in ${failStatus.retryAfter || 60} seconds.`,
+        });
+      }
       return reply.status(401).send({
         statusCode: 401,
         error: "Unauthorized",
@@ -48,7 +79,6 @@ export async function authRoutes(fastify: FastifyInstance) {
       });
     }
 
-    // Check TOTP if enabled
     if (user.totpEnabled) {
       if (!totpToken) {
         return reply.status(200).send({
@@ -62,6 +92,15 @@ export async function authRoutes(fastify: FastifyInstance) {
         : false;
 
       if (!validTotp) {
+        const failStatus = await AuthRateLimiter.recordFailedAttempt(email, ip);
+        if (failStatus.locked) {
+          reply.header("Retry-After", String(failStatus.retryAfter || 60));
+          return reply.status(429).send({
+            statusCode: 429,
+            error: "Too Many Requests",
+            message: `Account temporarily locked due to repeated failed attempts. Please retry in ${failStatus.retryAfter || 60} seconds.`,
+          });
+        }
         return reply.status(401).send({
           statusCode: 401,
           error: "Unauthorized",
@@ -69,6 +108,8 @@ export async function authRoutes(fastify: FastifyInstance) {
         });
       }
     }
+
+    await AuthRateLimiter.resetAttempts(email, ip);
 
     const tokens = await fastify.issueTokens(user.id, user.role as UserRole, reply);
 
