@@ -37,6 +37,7 @@ export function UploadModal({ isOpen, onClose, onSuccess, token, apiUrl }: Uploa
   const [altText, setAltText] = useState("");
   const [caption, setCaption] = useState("");
   const [category, setCategory] = useState("GALLERY");
+  const [gallerySection, setGallerySection] = useState("DEPLOYMENTS");
   const [tagsInput, setTagsInput] = useState("");
 
   const [isUploading, setIsUploading] = useState(false);
@@ -193,6 +194,7 @@ export function UploadModal({ isOpen, onClose, onSuccess, token, apiUrl }: Uploa
           altText: altText.trim() || undefined,
           caption: caption.trim() || undefined,
           category,
+          gallerySection: category === "GALLERY" ? gallerySection : undefined,
           tags,
           fileUrl: publicUrl,
           s3Key,
@@ -232,6 +234,7 @@ export function UploadModal({ isOpen, onClose, onSuccess, token, apiUrl }: Uploa
     setAltText("");
     setCaption("");
     setCategory("GALLERY");
+    setGallerySection("DEPLOYMENTS");
     setTagsInput("");
     setIsUploading(false);
     onClose();
@@ -522,6 +525,34 @@ export function UploadModal({ isOpen, onClose, onSuccess, token, apiUrl }: Uploa
                 <option value="BRANDING">Branding & Identity</option>
               </select>
             </div>
+
+            {category === "GALLERY" && (
+              <div>
+                <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--text-heading)", marginBottom: "6px" }}>
+                  Gallery Section *
+                </label>
+                <select
+                  value={gallerySection}
+                  onChange={(e) => setGallerySection(e.target.value)}
+                  disabled={isUploading}
+                  style={{
+                    width: "100%",
+                    boxSizing: "border-box",
+                    padding: "8px 12px",
+                    borderRadius: "6px",
+                    border: "1px solid var(--border-subtle)",
+                    backgroundColor: "var(--bg-surface)",
+                    color: "var(--text-heading)",
+                    fontSize: "13px",
+                    outline: "none",
+                  }}
+                >
+                  <option value="WORKPLACE">Workplace & Simulation Labs</option>
+                  <option value="TEAM">Our Team in Action</option>
+                  <option value="DEPLOYMENTS">Onsite Deployments & Commissioning</option>
+                </select>
+              </div>
+            )}
           </div>
 
           <div>
