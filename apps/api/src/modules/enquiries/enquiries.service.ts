@@ -6,12 +6,23 @@ import {
   EnquiryStatus,
   LifecycleStage,
 } from "@systrol/types";
+import { redis } from "../../common/redis.js";
 
 export class EnquiriesService {
-  static async createEnquiry(dto: CreateEnquiryDto) {
+  static async createEnquiry(
+    dto: CreateEnquiryDto & {
+      ctaId?: string | null;
+      pagePath?: string | null;
+      utmSource?: string | null;
+      utmMedium?: string | null;
+      utmCampaign?: string | null;
+      utmContent?: string | null;
+      referrer?: string | null;
+    }
+  ) {
     const year = new Date().getFullYear();
 
-    return prisma.$transaction(async (tx) => {
+    const enquiry = await prisma.$transaction(async (tx) => {
       const count = await tx.enquiry.count({
         where: {
           enquiryCode: { startsWith: `ENQ-${year}` },
@@ -33,6 +44,13 @@ export class EnquiriesService {
           estimatedValue: dto.estimatedValue ? dto.estimatedValue : null,
           assignedToId: dto.assignedToId || null,
           status: EnquiryStatus.OPEN,
+          ctaId: dto.ctaId || null,
+          pagePath: dto.pagePath || null,
+          utmSource: dto.utmSource || null,
+          utmMedium: dto.utmMedium || null,
+          utmCampaign: dto.utmCampaign || null,
+          utmContent: dto.utmContent || null,
+          referrer: dto.referrer || null,
         },
         include: {
           client: true,
@@ -42,6 +60,23 @@ export class EnquiriesService {
         },
       });
     });
+
+    try {
+      await redis.publish(
+        "systrol:notifications:cta",
+        JSON.stringify({
+          type: "ENQUIRY",
+          id: enquiry.id,
+          title: "New Public Enquiry",
+          prospect: enquiry.prospectName,
+          ctaId: enquiry.ctaId,
+          pagePath: enquiry.pagePath,
+          timestamp: enquiry.createdAt.toISOString(),
+        })
+      );
+    } catch {}
+
+    return enquiry;
   }
 
   static async listEnquiries(filters?: {

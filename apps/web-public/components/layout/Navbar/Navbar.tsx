@@ -136,6 +136,11 @@ export const Navbar: React.FC = () => {
                 variant="primary"
                 size="sm"
                 rightIcon={<ArrowUpRight size={16} />}
+                onClick={() => {
+                  import("@/lib/attribution").then(({ trackCtaEvent }) => {
+                    trackCtaEvent({ eventType: "CTA_CLICK", ctaId: "navbar_get_in_touch" });
+                  });
+                }}
               >
                 Get in Touch
               </Button>

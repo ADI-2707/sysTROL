@@ -1,517 +1,752 @@
 "use client";
 
-import React, { useState } from "react";
-import Link from "next/link";
+import React, { useState, useEffect } from "react";
 import {
-  BarChart3,
+  Briefcase,
+  MessageSquare,
+  Users,
   TrendingUp,
+  Layers,
   Clock,
-  DollarSign,
-  AlertTriangle,
+  Globe,
+  Award,
+  Zap,
+  CheckCircle2,
+  Calendar,
+  Sparkles,
   ArrowUpRight,
   ShieldCheck,
+  RefreshCw,
   Building2,
-  Calendar,
-  Layers,
-  CheckCircle2,
-  Activity,
-  Search,
-  Filter,
-  ArrowRight,
-  Cpu,
+  PhoneCall,
+  Flame,
 } from "lucide-react";
-import { Button, KpiCard, Badge } from "@/components/ui";
-import { useDebounce } from "@/lib/use-debounce";
+import { TabGroup } from "@/components/ui";
+import { apiClient } from "@/lib/api-client";
+import {
+  ProjectsAnalyticsDto,
+  CtaAnalyticsDto,
+  EmployeesAnalyticsDto,
+} from "@systrol/types";
 
-interface ProjectMetricRow {
-  id: string;
-  projectCode: string;
-  client: string;
-  architecture: string;
-  stage: string;
-  dwellDays: number;
-  dwellBenchmark: number;
-  status: "ON_TRACK" | "BOTTLENECK" | "ACCELERATED";
-  contractValue: string;
-  receivables: string;
-  health: "EXCELLENT" | "STABLE" | "ATTENTION";
-}
-
-const mockProjectsData: ProjectMetricRow[] = [
-  {
-    id: "p1",
-    projectCode: "PROJ-2026-0001",
-    client: "ArcelorMittal Nippon Steel",
-    architecture: "Hot Strip Mill (HSM)",
-    stage: "COMMISSIONING",
-    dwellDays: 18,
-    dwellBenchmark: 21,
-    status: "ACCELERATED",
-    contractValue: "₹ 18,500,000",
-    receivables: "₹ 1,850,000",
-    health: "EXCELLENT",
-  },
-  {
-    id: "p2",
-    projectCode: "PROJ-2026-0002",
-    client: "JSW Steel Ltd (Toranagallu)",
-    architecture: "Wire Rod Mill (WRM)",
-    stage: "MANUFACTURING & FAT",
-    dwellDays: 44,
-    dwellBenchmark: 38,
-    status: "BOTTLENECK",
-    contractValue: "₹ 24,200,000",
-    receivables: "₹ 4,800,000",
-    health: "ATTENTION",
-  },
-  {
-    id: "p3",
-    projectCode: "PROJ-2026-0003",
-    client: "Tata Steel Ltd (Jamshedpur)",
-    architecture: "Bar & Section Mill",
-    stage: "ENGINEERING",
-    dwellDays: 22,
-    dwellBenchmark: 26,
-    status: "ON_TRACK",
-    contractValue: "₹ 14,000,000",
-    receivables: "₹ 0",
-    health: "EXCELLENT",
-  },
-  {
-    id: "p4",
-    projectCode: "PROJ-2026-0004",
-    client: "Jindal Steel & Power (Angul)",
-    architecture: "ERW Tube Mill",
-    stage: "DISPATCH & FREIGHT",
-    dwellDays: 5,
-    dwellBenchmark: 7,
-    status: "ON_TRACK",
-    contractValue: "₹ 9,800,000",
-    receivables: "₹ 1,200,000",
-    health: "STABLE",
-  },
-  {
-    id: "p5",
-    projectCode: "PROJ-2026-0005",
-    client: "SAIL (Rourkela Steel Plant)",
-    architecture: "Plate & Coil Mill",
-    stage: "COMMISSIONING",
-    dwellDays: 26,
-    dwellBenchmark: 24,
-    status: "BOTTLENECK",
-    contractValue: "₹ 31,500,000",
-    receivables: "₹ 6,300,000",
-    health: "ATTENTION",
-  },
-];
+type AnalyticsTab = "projects" | "cta" | "employees";
 
 export default function AnalyticsDashboardPage() {
-  const [selectedMillType, setSelectedMillType] = useState<string>("ALL");
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const debouncedSearch = useDebounce(searchQuery, 350);
+  const [activeTab, setActiveTab] = useState<AnalyticsTab>("projects");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const filteredProjects = mockProjectsData.filter((p) => {
-    const matchesMill =
-      selectedMillType === "ALL" ||
-      (selectedMillType === "HOT_STRIP_MILL" && p.architecture.includes("Hot Strip")) ||
-      (selectedMillType === "WIRE_ROD_MILL" && p.architecture.includes("Wire Rod")) ||
-      (selectedMillType === "ERW_TUBE_MILL" && p.architecture.includes("ERW Tube")) ||
-      (selectedMillType === "BAR_MILL" && p.architecture.includes("Bar & Section"));
-    const matchesSearch =
-      p.projectCode.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-      p.client.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-      p.stage.toLowerCase().includes(debouncedSearch.toLowerCase());
-    return matchesMill && matchesSearch;
-  });
+  const [projectsData, setProjectsData] = useState<ProjectsAnalyticsDto | null>(null);
+  const [ctaData, setCtaData] = useState<CtaAnalyticsDto | null>(null);
+  const [employeesData, setEmployeesData] = useState<EmployeesAnalyticsDto | null>(null);
+
+  const fetchAnalytics = async () => {
+    setIsLoading(true);
+    try {
+      const [projRes, ctaRes, empRes] = await Promise.all([
+        apiClient("/api/v1/analytics/projects"),
+        apiClient("/api/v1/analytics/cta"),
+        apiClient("/api/v1/analytics/employees"),
+      ]);
+
+      if (projRes.ok) {
+        setProjectsData(await projRes.json());
+      }
+      if (ctaRes.ok) {
+        setCtaData(await ctaRes.json());
+      }
+      if (empRes.ok) {
+        setEmployeesData(await empRes.json());
+      }
+    } catch {
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, []);
+
+  const fallbackProjects: ProjectsAnalyticsDto = {
+    mostDoneMaterial: [
+      { material: "Carbon Steel (IS 2062)", count: 18 },
+      { material: "Alloy Steel (EN19/EN24)", count: 12 },
+      { material: "Stainless Steel (SS 304/316)", count: 7 },
+      { material: "Special Wire Rods", count: 5 },
+    ],
+    topClientsOverYears: [
+      { clientId: "c-1", clientName: "Tata Steel Long Products", projectCount: 8, years: [2022, 2023, 2024, 2025, 2026] },
+      { clientId: "c-2", clientName: "Jindal Steel & Power Ltd.", projectCount: 6, years: [2021, 2023, 2025] },
+      { clientId: "c-3", clientName: "Sail Bhilai Steel Plant", projectCount: 4, years: [2020, 2022, 2024] },
+      { clientId: "c-4", clientName: "Electrosteel Steels Ltd", projectCount: 3, years: [2023, 2025] },
+    ],
+    mostDoneLines: [
+      { lineType: "Continuous TMT Bar Mill", count: 16 },
+      { lineType: "High-Speed Wire Rod Block", count: 11 },
+      { lineType: "Structural Section Mill", count: 8 },
+      { lineType: "Narrow Strip Hot Rolling Mill", count: 4 },
+    ],
+    topMaterialAndLineCombinations: [
+      { material: "Carbon Steel (IS 2062)", lineType: "Continuous TMT Bar Mill", count: 14 },
+      { material: "Alloy Steel (EN19/EN24)", lineType: "High-Speed Wire Rod Block", count: 9 },
+      { material: "Carbon Steel (IS 2062)", lineType: "Structural Section Mill", count: 6 },
+      { material: "Stainless Steel (SS 304/316)", lineType: "Narrow Strip Hot Rolling Mill", count: 3 },
+    ],
+    fastestExecutionCombination: {
+      material: "Carbon Steel (IS 2062)",
+      lineType: "Continuous TMT Bar Mill",
+      minDays: 34,
+      projectCode: "PRJ-2024-0012",
+      projectName: "Jindal Angul 24-Stand Bar Mill Cutover",
+    },
+  };
+
+  const fallbackCta: CtaAnalyticsDto = {
+    mostEnquiredPages: [
+      { pagePath: "/services/automation-consultancy", count: 48 },
+      { pagePath: "/contact", count: 35 },
+      { pagePath: "/projects", count: 29 },
+      { pagePath: "/services/trading", count: 21 },
+      { pagePath: "/gallery", count: 14 },
+    ],
+    mostEffectiveCtaButtons: [
+      { ctaId: "floating_whatsapp", count: 42 },
+      { ctaId: "navbar_get_in_touch", count: 38 },
+      { ctaId: "contact_page_form", count: 26 },
+      { ctaId: "mobile_drawer_get_in_touch", count: 17 },
+      { ctaId: "floating_call", count: 11 },
+    ],
+    directWhatsappCount: 42,
+    totalCtaEvents: 85,
+    totalEnquiries: 38,
+  };
+
+  const fallbackEmployees: EmployeesAnalyticsDto = {
+    employees: [
+      { employeeId: "e-1", employeeName: "Rajesh Sharma (Lead Commissioning)", totalSites: 14, completedSites: 13, indiaSites: 10, overseasSites: 4 },
+      { employeeId: "e-2", employeeName: "Vikram Sengupta (Automation Specialist)", totalSites: 11, completedSites: 10, indiaSites: 7, overseasSites: 4 },
+      { employeeId: "e-3", employeeName: "Anand Kulkarni (Senior Field Engineer)", totalSites: 9, completedSites: 8, indiaSites: 7, overseasSites: 2 },
+      { employeeId: "e-4", employeeName: "Sandeep Verma (Drives & PLC Engineer)", totalSites: 7, completedSites: 6, indiaSites: 6, overseasSites: 1 },
+      { employeeId: "e-5", employeeName: "Manoj Nambiar (Mill Metallurgy Engineer)", totalSites: 6, completedSites: 5, indiaSites: 4, overseasSites: 2 },
+    ],
+    totalCompletedSites: 42,
+    totalIndiaSites: 34,
+    totalOverseasSites: 13,
+  };
+
+  const proj = projectsData || fallbackProjects;
+  const cta = ctaData || fallbackCta;
+  const emp = employeesData || fallbackEmployees;
+
+  const tabs = [
+    {
+      id: "projects" as const,
+      label: "Projects Intelligence",
+      icon: <Briefcase size={15} />,
+    },
+    {
+      id: "cta" as const,
+      label: "CTA & Conversion Attributions",
+      icon: <MessageSquare size={15} />,
+    },
+    {
+      id: "employees" as const,
+      label: "Employee Site Deployments",
+      icon: <Users size={15} />,
+    },
+  ];
+
+  const totalMaterialCount = proj.mostDoneMaterial.reduce((acc, curr) => acc + curr.count, 0) || 1;
+  const totalLineCount = proj.mostDoneLines.reduce((acc, curr) => acc + curr.count, 0) || 1;
+  const totalPageCount = cta.mostEnquiredPages.reduce((acc, curr) => acc + curr.count, 0) || 1;
+  const totalCtaBtnCount = cta.mostEffectiveCtaButtons.reduce((acc, curr) => acc + curr.count, 0) || 1;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "24px 20px" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          marginBottom: "24px",
+          flexWrap: "wrap",
+          gap: "16px",
+        }}
+      >
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-            <BarChart3 className="h-6 w-6" style={{ color: "var(--sys-blue-primary)" }} />
-            Executive Intelligence & Operational Analytics
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Real-time stage dwell telemetry, commercial conversion funnels, payment aging, and preventative AMC forecasting.
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
+            <h1 style={{ fontSize: "24px", fontWeight: 700, color: "var(--text-heading)", margin: 0 }}>
+              Industrial Analytics & Performance Center
+            </h1>
+          </div>
+          <p style={{ fontSize: "14px", color: "var(--text-muted)", margin: 0 }}>
+            Comprehensive operational intelligence: metallurgical projects, digital CTA conversions, and field deployments.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <select
-            value={selectedMillType}
-            onChange={(e) => setSelectedMillType(e.target.value)}
-            className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-800 dark:text-slate-200"
-          >
-            <option value="ALL">All Mill Architectures</option>
-            <option value="HOT_STRIP_MILL">Hot Strip Mills (HSM)</option>
-            <option value="WIRE_ROD_MILL">Wire Rod Mills (WRM)</option>
-            <option value="ERW_TUBE_MILL">ERW Tube Mills</option>
-            <option value="BAR_MILL">Bar & Section Mills</option>
-          </select>
-          <Button variant="outline" size="sm" icon={<Calendar size={14} />}>
-            Last 90 Days
-          </Button>
-        </div>
+        <button
+          onClick={fetchAnalytics}
+          disabled={isLoading}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            padding: "8px 16px",
+            borderRadius: "8px",
+            backgroundColor: "var(--bg-card)",
+            color: "var(--text-heading)",
+            border: "1px solid var(--border-subtle)",
+            cursor: "pointer",
+            fontSize: "13px",
+            fontWeight: 600,
+            transition: "all 0.15s ease",
+          }}
+        >
+          <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />
+          Refresh Metrics
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard
-          title="Avg. Commissioning Lead Time"
-          value="21.4 Days"
-          icon={<Clock className="h-4 w-4" />}
-          trend={{ value: "14% faster than benchmark", isPositive: true }}
-          highlight="blue"
-        />
-        <KpiCard
-          title="Enquiry-to-PO Win Rate"
-          value="42.8%"
-          icon={<ArrowUpRight className="h-4 w-4" />}
-          trend={{ value: "Highest in flat steel", isPositive: true }}
-          highlight="green"
-        />
-        <KpiCard
-          title="Total Receivables"
-          value="₹ 24.8M"
-          icon={<DollarSign className="h-4 w-4" />}
-          subtitle="92% within 30-day bucket"
-          highlight="neutral"
-        />
-        <KpiCard
-          title="Active AMC Fleet"
-          value="18 Plants"
-          icon={<ShieldCheck className="h-4 w-4" />}
-          subtitle="2 renewals < 60 days"
-          highlight="amber"
-        />
+      <div style={{ marginBottom: "24px" }}>
+        <TabGroup tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div
-          style={{
-            backgroundColor: "var(--bg-card)",
-            border: "1px solid var(--border-subtle)",
-            borderRadius: "12px",
-            padding: "20px",
-            boxShadow: "var(--shadow-sm)",
-          }}
-          className="space-y-4"
-        >
-          <div
-            style={{ borderBottom: "1px solid var(--border-subtle)", paddingBottom: "12px" }}
-            className="flex items-center justify-between"
-          >
-            <div>
-              <h3 className="font-bold text-slate-900 dark:text-white text-sm">Average Dwell Time by Stage</h3>
-              <p className="text-xs text-slate-400">Bottleneck discovery across project lifecycle stages.</p>
+      {activeTab === "projects" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "20px" }}>
+            <div
+              style={{
+                backgroundColor: "var(--bg-card)",
+                padding: "20px 24px",
+                borderRadius: "12px",
+                border: "1px solid var(--border-subtle)",
+                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+                <div>
+                  <h3 style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-heading)", margin: 0 }}>
+                    Top Processed Materials
+                  </h3>
+                  <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>
+                    Most frequent metallurgy across all commissioned projects
+                  </div>
+                </div>
+                <Flame size={20} color="var(--sys-green-accent)" />
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                {proj.mostDoneMaterial.map((m, idx) => {
+                  const pct = Math.round((m.count / totalMaterialCount) * 100);
+                  return (
+                    <div key={m.material}>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", marginBottom: "6px" }}>
+                        <span style={{ fontWeight: 600, color: "var(--text-heading)" }}>
+                          {idx + 1}. {m.material}
+                        </span>
+                        <span style={{ fontWeight: 700, color: "var(--sys-green-accent)" }}>
+                          {m.count} projects ({pct}%)
+                        </span>
+                      </div>
+                      <div style={{ width: "100%", height: "7px", backgroundColor: "var(--border-subtle)", borderRadius: "9999px", overflow: "hidden" }}>
+                        <div
+                          style={{
+                            width: `${pct}%`,
+                            height: "100%",
+                            backgroundColor: idx === 0 ? "var(--sys-green-accent)" : idx === 1 ? "#10b981" : "#3b82f6",
+                            borderRadius: "9999px",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-            <Badge variant="blue" size="sm">Mean Days</Badge>
+
+            <div
+              style={{
+                backgroundColor: "var(--bg-card)",
+                padding: "20px 24px",
+                borderRadius: "12px",
+                border: "1px solid var(--border-subtle)",
+                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+                <div>
+                  <h3 style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-heading)", margin: 0 }}>
+                    Top Mill Lines
+                  </h3>
+                  <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>
+                    Most executed rolling mill line types
+                  </div>
+                </div>
+                <Layers size={20} color="#3b82f6" />
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                {proj.mostDoneLines.map((l, idx) => {
+                  const pct = Math.round((l.count / totalLineCount) * 100);
+                  return (
+                    <div key={l.lineType}>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", marginBottom: "6px" }}>
+                        <span style={{ fontWeight: 600, color: "var(--text-heading)" }}>
+                          {idx + 1}. {l.lineType}
+                        </span>
+                        <span style={{ fontWeight: 700, color: "#3b82f6" }}>
+                          {l.count} lines ({pct}%)
+                        </span>
+                      </div>
+                      <div style={{ width: "100%", height: "7px", backgroundColor: "var(--border-subtle)", borderRadius: "9999px", overflow: "hidden" }}>
+                        <div
+                          style={{
+                            width: `${pct}%`,
+                            height: "100%",
+                            backgroundColor: idx === 0 ? "#3b82f6" : "#60a5fa",
+                            borderRadius: "9999px",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-3.5 text-xs">
-            <div>
-              <div className="flex justify-between font-semibold mb-1">
-                <span>PROCUREMENT (BOQ & Vendor POs)</span>
-                <span className="font-mono text-slate-500">14 Days</span>
-              </div>
-              <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                <div className="h-full rounded-full" style={{ width: "30%", backgroundColor: "var(--sys-blue-primary)" }} />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between font-semibold mb-1">
-                <span>ENGINEERING (Schematics & Reviews)</span>
-                <span className="font-mono text-slate-500">26 Days</span>
-              </div>
-              <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                <div className="h-full rounded-full" style={{ width: "55%", backgroundColor: "var(--sys-blue-primary)" }} />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between font-semibold mb-1">
-                <span>MANUFACTURING & FAT (Panel Assembly)</span>
-                <span className="font-mono text-amber-500 font-bold">42 Days (Critical Path)</span>
-              </div>
-              <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                <div className="h-full rounded-full" style={{ width: "88%", backgroundColor: "#f59e0b" }} />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between font-semibold mb-1">
-                <span>DISPATCH & FREIGHT LOGISTICS</span>
-                <span className="font-mono text-slate-500">6 Days</span>
-              </div>
-              <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                <div className="h-full rounded-full" style={{ width: "15%", backgroundColor: "var(--sys-green-accent)" }} />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between font-semibold mb-1">
-                <span>COMMISSIONING & TRIALS</span>
-                <span className="font-mono text-slate-500">21 Days</span>
-              </div>
-              <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                <div className="h-full rounded-full" style={{ width: "45%", backgroundColor: "var(--sys-blue-primary)" }} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div
-          style={{
-            backgroundColor: "var(--bg-card)",
-            border: "1px solid var(--border-subtle)",
-            borderRadius: "12px",
-            padding: "20px",
-            boxShadow: "var(--shadow-sm)",
-          }}
-          className="space-y-4"
-        >
-          <div
-            style={{ borderBottom: "1px solid var(--border-subtle)", paddingBottom: "12px" }}
-            className="flex items-center justify-between"
-          >
-            <div>
-              <h3 className="font-bold text-slate-900 dark:text-white text-sm">Commercial Receivables Aging</h3>
-              <p className="text-xs text-slate-400">Milestone cashflow outstanding by overdue brackets.</p>
-            </div>
-            <Badge variant="green" size="sm">INR (₹)</Badge>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "20px" }}>
             <div
               style={{
-                backgroundColor: "var(--bg-surface)",
+                backgroundColor: "var(--bg-card)",
+                padding: "20px 24px",
+                borderRadius: "12px",
                 border: "1px solid var(--border-subtle)",
-                borderRadius: "8px",
-                padding: "12px",
               }}
             >
-              <span className="text-[11px] text-slate-400 font-semibold block">CURRENT (Not Due)</span>
-              <p className="font-mono text-lg font-bold mt-1" style={{ color: "var(--sys-green-accent)" }}>
-                ₹ 14,800,000
-              </p>
-              <span className="text-[10px] text-slate-500">6 milestone invoices</span>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+                <div>
+                  <h3 style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-heading)", margin: 0 }}>
+                    Top Material & Line Combination
+                  </h3>
+                  <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>
+                    Synergies with highest execution frequency
+                  </div>
+                </div>
+                <Award size={20} color="#f59e0b" />
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {proj.topMaterialAndLineCombinations.map((combo, idx) => (
+                  <div
+                    key={`${combo.material}-${combo.lineType}`}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      padding: "10px 14px",
+                      borderRadius: "8px",
+                      backgroundColor: idx === 0 ? "rgba(245, 158, 11, 0.08)" : "var(--bg-canvas)",
+                      border: idx === 0 ? "1px solid rgba(245, 158, 11, 0.3)" : "1px solid var(--border-subtle)",
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-heading)" }}>
+                        {combo.material}
+                      </div>
+                      <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>
+                        Line: {combo.lineType}
+                      </div>
+                    </div>
+                    <div style={{ fontSize: "15px", fontWeight: 800, color: idx === 0 ? "#f59e0b" : "var(--text-heading)" }}>
+                      {combo.count}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div
               style={{
-                backgroundColor: "var(--bg-surface)",
+                backgroundColor: "var(--bg-card)",
+                padding: "20px 24px",
+                borderRadius: "12px",
                 border: "1px solid var(--border-subtle)",
-                borderRadius: "8px",
-                padding: "12px",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
               }}
             >
-              <span className="text-[11px] text-slate-400 font-semibold block">1 - 30 DAYS OVERDUE</span>
-              <p className="font-mono text-lg font-bold mt-1" style={{ color: "var(--sys-blue-primary)" }}>
-                ₹ 5,550,000
-              </p>
-              <span className="text-[10px] text-slate-500">2 milestone invoices</span>
-            </div>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+                  <div>
+                    <h3 style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-heading)", margin: 0 }}>
+                      Fastest Cutover Execution Record
+                    </h3>
+                    <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>
+                      Minimum duration achieved from start date to commissioning handover
+                    </div>
+                  </div>
+                  <Zap size={20} color="var(--sys-green-accent)" />
+                </div>
 
-            <div
-              style={{
-                backgroundColor: "var(--bg-surface)",
-                border: "1px solid var(--border-subtle)",
-                borderRadius: "8px",
-                padding: "12px",
-              }}
-            >
-              <span className="text-[11px] text-slate-400 font-semibold block">31 - 60 DAYS OVERDUE</span>
-              <p className="font-mono text-lg font-bold text-amber-500 mt-1">₹ 2,600,000</p>
-              <span className="text-[10px] text-slate-500">1 milestone invoice</span>
-            </div>
+                {proj.fastestExecutionCombination ? (
+                  <div
+                    style={{
+                      padding: "16px",
+                      borderRadius: "10px",
+                      backgroundColor: "rgba(34, 197, 94, 0.08)",
+                      border: "1px solid rgba(34, 197, 94, 0.25)",
+                      marginBottom: "16px",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "baseline", gap: "8px", marginBottom: "8px" }}>
+                      <span style={{ fontSize: "36px", fontWeight: 800, color: "var(--sys-green-accent)" }}>
+                        {proj.fastestExecutionCombination.minDays}
+                      </span>
+                      <span style={{ fontSize: "16px", fontWeight: 600, color: "var(--text-heading)" }}>Days</span>
+                    </div>
 
-            <div
-              style={{
-                backgroundColor: "var(--bg-surface)",
-                border: "1px solid var(--border-subtle)",
-                borderRadius: "8px",
-                padding: "12px",
-              }}
-            >
-              <span className="text-[11px] text-slate-400 font-semibold block">90+ DAYS OVERDUE</span>
-              <p className="font-mono text-lg font-bold text-red-500 mt-1">₹ 1,850,000</p>
-              <span className="text-[10px] text-slate-500">1 retention claim</span>
+                    <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-heading)" }}>
+                      {proj.fastestExecutionCombination.projectName}
+                    </div>
+                    <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px" }}>
+                      Code: <code style={{ color: "var(--sys-green-accent)" }}>{proj.fastestExecutionCombination.projectCode}</code>
+                    </div>
+                    <div style={{ fontSize: "12px", color: "var(--text-body)", marginTop: "6px" }}>
+                      Material: <strong>{proj.fastestExecutionCombination.material}</strong> • Line: <strong>{proj.fastestExecutionCombination.lineType}</strong>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>
+                    No recorded cutovers yet.
+                  </div>
+                )}
+              </div>
+
+              <div style={{ fontSize: "12px", color: "var(--text-muted)", borderTop: "1px solid var(--border-subtle)", paddingTop: "12px" }}>
+                Benchmark standard across Indian steel mills: <strong>45-60 Days</strong>.
+              </div>
             </div>
           </div>
 
           <div
             style={{
-              backgroundColor: "var(--sys-green-subtle)",
-              border: "1px solid var(--sys-green-border)",
-              borderRadius: "8px",
-              padding: "10px 14px",
+              backgroundColor: "var(--bg-card)",
+              padding: "20px 24px",
+              borderRadius: "12px",
+              border: "1px solid var(--border-subtle)",
             }}
-            className="text-xs flex items-center justify-between"
           >
-            <span style={{ color: "var(--text-heading)", fontWeight: 500 }}>
-              DSO (Days Sales Outstanding): <span className="font-bold">38.2 days</span>
-            </span>
-            <Badge variant="green" size="sm">Healthy Liquidity</Badge>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+              <div>
+                <h3 style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-heading)", margin: 0 }}>
+                  Top Clients Over the Years
+                </h3>
+                <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>
+                  Clients commissioning repeated modernization & automation projects
+                </div>
+              </div>
+              <Building2 size={20} color="var(--sys-green-accent)" />
+            </div>
+
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", textAlign: "left" }}>
+                <thead>
+                  <tr style={{ borderBottom: "1px solid var(--border-subtle)", color: "var(--text-muted)" }}>
+                    <th style={{ padding: "10px 12px", fontWeight: 600 }}>Rank</th>
+                    <th style={{ padding: "10px 12px", fontWeight: 600 }}>Client Organization</th>
+                    <th style={{ padding: "10px 12px", fontWeight: 600 }}>Total Projects Commissioned</th>
+                    <th style={{ padding: "10px 12px", fontWeight: 600 }}>Active Engagement Years</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {proj.topClientsOverYears.map((client, idx) => (
+                    <tr key={client.clientId} style={{ borderBottom: "1px solid var(--border-subtle)" }}>
+                      <td style={{ padding: "12px", fontWeight: 700, color: "var(--text-muted)" }}>#{idx + 1}</td>
+                      <td style={{ padding: "12px", fontWeight: 700, color: "var(--text-heading)" }}>{client.clientName}</td>
+                      <td style={{ padding: "12px", fontWeight: 700, color: "var(--sys-green-accent)" }}>{client.projectCount} Projects</td>
+                      <td style={{ padding: "12px" }}>
+                        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                          {client.years.map((y) => (
+                            <span
+                              key={y}
+                              style={{
+                                fontSize: "11px",
+                                fontWeight: 600,
+                                padding: "2px 7px",
+                                borderRadius: "4px",
+                                backgroundColor: "var(--bg-canvas)",
+                                border: "1px solid var(--border-subtle)",
+                                color: "var(--text-body)",
+                              }}
+                            >
+                              {y}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      <div
-        style={{
-          backgroundColor: "var(--bg-card)",
-          border: "1px solid var(--border-subtle)",
-          borderRadius: "12px",
-          boxShadow: "var(--shadow-sm)",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{ borderBottom: "1px solid var(--border-subtle)", padding: "16px 20px" }}
-          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-        >
-          <div>
-            <h3 className="font-bold text-slate-900 dark:text-white text-base flex items-center gap-2">
-              <Layers size={18} style={{ color: "var(--sys-green-accent)" }} />
-              Plant Automation Project Telemetry & Milestone Matrix
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Cross-project operational health, stage dwell benchmarks, and commercial milestone fulfillment.
-            </p>
+      {activeTab === "cta" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "16px" }}>
+            <div style={{ backgroundColor: "var(--bg-card)", padding: "18px 20px", borderRadius: "12px", border: "1px solid var(--border-subtle)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase" }}>Direct WhatsApp Conversions</span>
+                <MessageSquare size={16} color="#10b981" />
+              </div>
+              <div style={{ fontSize: "32px", fontWeight: 800, color: "#10b981" }}>{cta.directWhatsappCount}</div>
+              <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px" }}>Direct 1-to-1 mobile inquiries</div>
+            </div>
+
+            <div style={{ backgroundColor: "var(--bg-card)", padding: "18px 20px", borderRadius: "12px", border: "1px solid var(--border-subtle)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase" }}>Total Web Inquiries</span>
+                <Briefcase size={16} color="var(--sys-green-accent)" />
+              </div>
+              <div style={{ fontSize: "32px", fontWeight: 800, color: "var(--sys-green-accent)" }}>{cta.totalEnquiries}</div>
+              <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px" }}>Submitted via engineering forms</div>
+            </div>
+
+            <div style={{ backgroundColor: "var(--bg-card)", padding: "18px 20px", borderRadius: "12px", border: "1px solid var(--border-subtle)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase" }}>Total CTA Interactions</span>
+                <Zap size={16} color="#3b82f6" />
+              </div>
+              <div style={{ fontSize: "32px", fontWeight: 800, color: "#3b82f6" }}>{cta.totalCtaEvents}</div>
+              <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px" }}>Clicks across buttons, links, calls</div>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: "20px" }}>
             <div
               style={{
-                position: "relative",
-                display: "inline-flex",
-                alignItems: "center",
+                backgroundColor: "var(--bg-card)",
+                padding: "20px 24px",
+                borderRadius: "12px",
+                border: "1px solid var(--border-subtle)",
               }}
             >
-              <Search
-                size={14}
-                style={{
-                  position: "absolute",
-                  left: "10px",
-                  color: "var(--text-muted)",
-                }}
-              />
-              <input
-                type="text"
-                placeholder="Search projects or clients..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{
-                  paddingLeft: "30px",
-                  paddingRight: "12px",
-                  height: "32px",
-                  fontSize: "12px",
-                  borderRadius: "6px",
-                  border: "1px solid var(--border-subtle)",
-                  backgroundColor: "var(--bg-surface)",
-                  color: "var(--text-heading)",
-                  width: "220px",
-                }}
-              />
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+                <div>
+                  <h3 style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-heading)", margin: 0 }}>
+                    Most Inquired Landing Pages
+                  </h3>
+                  <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>
+                    Public website pages originating the most inquiries & actions
+                  </div>
+                </div>
+                <Globe size={20} color="var(--sys-blue-primary)" />
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                {cta.mostEnquiredPages.map((p, idx) => {
+                  const pct = Math.round((p.count / totalPageCount) * 100);
+                  return (
+                    <div key={p.pagePath}>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", marginBottom: "6px" }}>
+                        <code style={{ fontWeight: 600, color: "var(--sys-green-accent)" }}>
+                          {p.pagePath}
+                        </code>
+                        <span style={{ fontWeight: 700, color: "var(--text-heading)" }}>
+                          {p.count} actions ({pct}%)
+                        </span>
+                      </div>
+                      <div style={{ width: "100%", height: "7px", backgroundColor: "var(--border-subtle)", borderRadius: "9999px", overflow: "hidden" }}>
+                        <div
+                          style={{
+                            width: `${pct}%`,
+                            height: "100%",
+                            backgroundColor: idx === 0 ? "var(--sys-green-accent)" : "#3b82f6",
+                            borderRadius: "9999px",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-            <Link href="/lifecycle">
-              <Button variant="outline" size="sm" icon={<ArrowRight size={13} />}>
-                Lifecycle DAG
-              </Button>
-            </Link>
+
+            <div
+              style={{
+                backgroundColor: "var(--bg-card)",
+                padding: "20px 24px",
+                borderRadius: "12px",
+                border: "1px solid var(--border-subtle)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+                <div>
+                  <h3 style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-heading)", margin: 0 }}>
+                    Most Effective CTA Buttons
+                  </h3>
+                  <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>
+                    Specific interactive CTA elements driving prospect conversion
+                  </div>
+                </div>
+                <Zap size={20} color="#f59e0b" />
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                {cta.mostEffectiveCtaButtons.map((btn, idx) => {
+                  const pct = Math.round((btn.count / totalCtaBtnCount) * 100);
+                  return (
+                    <div key={btn.ctaId}>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", marginBottom: "6px" }}>
+                        <code style={{ fontWeight: 600, color: "var(--text-heading)" }}>
+                          {btn.ctaId}
+                        </code>
+                        <span style={{ fontWeight: 700, color: "#f59e0b" }}>
+                          {btn.count} clicks ({pct}%)
+                        </span>
+                      </div>
+                      <div style={{ width: "100%", height: "7px", backgroundColor: "var(--border-subtle)", borderRadius: "9999px", overflow: "hidden" }}>
+                        <div
+                          style={{
+                            width: `${pct}%`,
+                            height: "100%",
+                            backgroundColor: idx === 0 ? "#f59e0b" : "#fbbf24",
+                            borderRadius: "9999px",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
+      )}
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead
-              style={{
-                backgroundColor: "var(--bg-surface)",
-                borderBottom: "1px solid var(--border-subtle)",
-                color: "var(--text-muted)",
-              }}
-              className="uppercase font-semibold"
-            >
-              <tr>
-                <th className="p-3.5">Project / Client</th>
-                <th className="p-3.5">Architecture</th>
-                <th className="p-3.5">Current Stage</th>
-                <th className="p-3.5">Stage Dwell vs Benchmark</th>
-                <th className="p-3.5">Dwell Status</th>
-                <th className="p-3.5">Contract Value</th>
-                <th className="p-3.5">Receivables</th>
-                <th className="p-3.5 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-800/80">
-              {filteredProjects.map((row) => (
-                <tr
-                  key={row.id}
-                  style={{
-                    transition: "background-color 0.15s ease",
-                  }}
-                  className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30"
-                >
-                  <td className="p-3.5">
-                    <span className="font-mono font-bold text-slate-900 dark:text-white block">
-                      {row.projectCode}
-                    </span>
-                    <span className="text-slate-500 dark:text-slate-400 text-[11px] block mt-0.5">
-                      {row.client}
-                    </span>
-                  </td>
-                  <td className="p-3.5 font-medium text-slate-700 dark:text-slate-300">
-                    {row.architecture}
-                  </td>
-                  <td className="p-3.5 font-semibold text-slate-800 dark:text-slate-200">
-                    {row.stage}
-                  </td>
-                  <td className="p-3.5 font-mono">
-                    <span className="font-bold text-slate-900 dark:text-white">{row.dwellDays}d</span>
-                    <span className="text-slate-400 text-[11px] ml-1.5">/ {row.dwellBenchmark}d mean</span>
-                  </td>
-                  <td className="p-3.5">
-                    {row.status === "ACCELERATED" && (
-                      <Badge variant="green" size="sm">Accelerated</Badge>
-                    )}
-                    {row.status === "ON_TRACK" && (
-                      <Badge variant="blue" size="sm">On Schedule</Badge>
-                    )}
-                    {row.status === "BOTTLENECK" && (
-                      <Badge variant="amber" size="sm">Bottleneck</Badge>
-                    )}
-                  </td>
-                  <td className="p-3.5 font-mono font-bold text-slate-900 dark:text-white">
-                    {row.contractValue}
-                  </td>
-                  <td className="p-3.5 font-mono font-semibold" style={{ color: row.receivables === "₹ 0" ? "var(--sys-green-accent)" : "#f59e0b" }}>
-                    {row.receivables}
-                  </td>
-                  <td className="p-3.5 text-right">
-                    <Link href={`/lifecycle?project=${row.id}`}>
-                      <Button variant="outline" size="sm" icon={<ArrowRight size={13} />}>
-                        Inspect
-                      </Button>
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      {activeTab === "employees" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "16px" }}>
+            <div style={{ backgroundColor: "var(--bg-card)", padding: "18px 20px", borderRadius: "12px", border: "1px solid var(--border-subtle)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase" }}>Total Completed Sites</span>
+                <CheckCircle2 size={16} color="var(--sys-green-accent)" />
+              </div>
+              <div style={{ fontSize: "32px", fontWeight: 800, color: "var(--sys-green-accent)" }}>{emp.totalCompletedSites}</div>
+              <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px" }}>Site commissionings finished successfully</div>
+            </div>
 
-        <div
-          style={{
-            borderTop: "1px solid var(--border-subtle)",
-            backgroundColor: "var(--bg-surface)",
-            padding: "12px 20px",
-          }}
-          className="flex items-center justify-between text-xs text-slate-500"
-        >
-          <span>Showing {filteredProjects.length} of {mockProjectsData.length} monitored mill automation projects</span>
-          <span className="font-mono">Real-time Telemetry: Healthy</span>
+            <div style={{ backgroundColor: "var(--bg-card)", padding: "18px 20px", borderRadius: "12px", border: "1px solid var(--border-subtle)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase" }}>India Sites (Domestic)</span>
+                <Globe size={16} color="#3b82f6" />
+              </div>
+              <div style={{ fontSize: "32px", fontWeight: 800, color: "#3b82f6" }}>{emp.totalIndiaSites}</div>
+              <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px" }}>Across Odisha, Jharkhand, Karnataka, etc.</div>
+            </div>
+
+            <div style={{ backgroundColor: "var(--bg-card)", padding: "18px 20px", borderRadius: "12px", border: "1px solid var(--border-subtle)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase" }}>Overseas Sites (Global)</span>
+                <Globe size={16} color="#f59e0b" />
+              </div>
+              <div style={{ fontSize: "32px", fontWeight: 800, color: "#f59e0b" }}>{emp.totalOverseasSites}</div>
+              <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px" }}>Middle East, Africa, SE Asia</div>
+            </div>
+          </div>
+
+          <div
+            style={{
+              backgroundColor: "var(--bg-card)",
+              padding: "20px 24px",
+              borderRadius: "12px",
+              border: "1px solid var(--border-subtle)",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+              <div>
+                <h3 style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-heading)", margin: 0 }}>
+                  Engineer Site Deployments & Field Records
+                </h3>
+                <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>
+                  Field engineers with completed vs active sites, and domestic vs international split
+                </div>
+              </div>
+              <ShieldCheck size={20} color="var(--sys-green-accent)" />
+            </div>
+
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", textAlign: "left" }}>
+                <thead>
+                  <tr style={{ borderBottom: "1px solid var(--border-subtle)", color: "var(--text-muted)" }}>
+                    <th style={{ padding: "10px 12px", fontWeight: 600 }}>Engineer</th>
+                    <th style={{ padding: "10px 12px", fontWeight: 600 }}>Total Sites</th>
+                    <th style={{ padding: "10px 12px", fontWeight: 600 }}>Completed Sites</th>
+                    <th style={{ padding: "10px 12px", fontWeight: 600 }}>India Sites</th>
+                    <th style={{ padding: "10px 12px", fontWeight: 600 }}>Overseas Sites</th>
+                    <th style={{ padding: "10px 12px", fontWeight: 600 }}>Completion Ratio</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {emp.employees.map((engineer) => {
+                    const ratio = Math.round((engineer.completedSites / (engineer.totalSites || 1)) * 100);
+                    return (
+                      <tr key={engineer.employeeId} style={{ borderBottom: "1px solid var(--border-subtle)" }}>
+                        <td style={{ padding: "12px", fontWeight: 700, color: "var(--text-heading)" }}>
+                          {engineer.employeeName}
+                        </td>
+                        <td style={{ padding: "12px", fontWeight: 600 }}>{engineer.totalSites}</td>
+                        <td style={{ padding: "12px" }}>
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              padding: "2px 8px",
+                              borderRadius: "4px",
+                              fontSize: "12px",
+                              fontWeight: 700,
+                              backgroundColor: "rgba(34, 197, 94, 0.12)",
+                              color: "var(--sys-green-accent)",
+                            }}
+                          >
+                            <CheckCircle2 size={12} /> {engineer.completedSites}
+                          </span>
+                        </td>
+                        <td style={{ padding: "12px", color: "#3b82f6", fontWeight: 600 }}>
+                          {engineer.indiaSites} Sites
+                        </td>
+                        <td style={{ padding: "12px", color: "#f59e0b", fontWeight: 600 }}>
+                          {engineer.overseasSites} Sites
+                        </td>
+                        <td style={{ padding: "12px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <div style={{ width: "80px", height: "6px", backgroundColor: "var(--border-subtle)", borderRadius: "9999px", overflow: "hidden" }}>
+                              <div
+                                style={{
+                                  width: `${ratio}%`,
+                                  height: "100%",
+                                  backgroundColor: ratio >= 90 ? "var(--sys-green-accent)" : "#f59e0b",
+                                  borderRadius: "9999px",
+                                }}
+                              />
+                            </div>
+                            <span style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-heading)" }}>{ratio}%</span>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

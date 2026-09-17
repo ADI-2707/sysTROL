@@ -53,9 +53,30 @@ export const PublicEnquirySchema = z.object({
   phone: z.string().min(8).max(30).regex(/^[+0-9\s\-()]+$/),
   service: z.string().min(1).max(200),
   message: z.string().min(10).max(2000),
+  ctaId: z.string().optional(),
+  pagePath: z.string().optional(),
+  utmSource: z.string().optional(),
+  utmMedium: z.string().optional(),
+  utmCampaign: z.string().optional(),
+  utmContent: z.string().optional(),
+  referrer: z.string().optional(),
+});
+
+export const PublicCtaEventSchema = z.object({
+  eventType: z.string().min(1).max(50),
+  pagePath: z.string().min(1).max(255),
+  ctaId: z.string().min(1).max(100),
+  utmSource: z.string().optional(),
+  utmMedium: z.string().optional(),
+  utmCampaign: z.string().optional(),
+  utmContent: z.string().optional(),
+  referrer: z.string().optional(),
+  metadata: z.record(z.unknown()).optional(),
 });
 
 export type CreateEnquiryDto = z.infer<typeof CreateEnquirySchema>;
 export type ConvertToProjectDto = z.infer<typeof ConvertToProjectSchema>;
 export type CreateSalesVisitDto = z.infer<typeof CreateSalesVisitSchema>;
 export type PublicEnquiryDto = z.infer<typeof PublicEnquirySchema>;
+export type PublicCtaEventDto = z.infer<typeof PublicCtaEventSchema>;
+
