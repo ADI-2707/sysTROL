@@ -159,8 +159,22 @@
   grid-column: span 2;
 }
 
-@media (max-width: 639px) {
+.fullCard {
+  grid-column: span 3;
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
   .featuredCard {
+    grid-column: span 1;
+  }
+  .fullCard {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 639px) {
+  .featuredCard,
+  .fullCard {
     grid-column: span 1;
   }
 }

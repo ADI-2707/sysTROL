@@ -41,13 +41,20 @@ export const GalleryMosaic: React.FC<GalleryMosaicProps> = ({ items, onSelectIte
     }
   };
 
-  const renderCard = (item: GalleryItem) => {
-    const isFeatured = item.aspect === "featured" || item.aspect === "wide";
+  const renderCard = (item: GalleryItem, index: number, total: number) => {
+    let spanClass = "";
+    if (total === 1) {
+      spanClass = styles.fullCard;
+    } else if (total % 2 !== 0 && index >= total - 3) {
+      spanClass = "";
+    } else if (index % 4 === 0 || index % 4 === 3) {
+      spanClass = styles.featuredCard;
+    }
 
     return (
       <div
         key={item.id}
-        className={`${styles.galleryCard} ${isFeatured ? styles.featuredCard : ""}`}
+        className={`${styles.galleryCard} ${spanClass}`}
         onClick={() => onSelectItem(item)}
         role="button"
         tabIndex={0}
@@ -153,7 +160,7 @@ export const GalleryMosaic: React.FC<GalleryMosaicProps> = ({ items, onSelectIte
 
             <Reveal delay={100}>
               <div className={styles.mosaicGrid}>
-                {workplaceItems.map(renderCard)}
+                {workplaceItems.map((item, idx) => renderCard(item, idx, workplaceItems.length))}
               </div>
             </Reveal>
           </div>
@@ -175,7 +182,7 @@ export const GalleryMosaic: React.FC<GalleryMosaicProps> = ({ items, onSelectIte
 
             <Reveal delay={100}>
               <div className={styles.mosaicGrid}>
-                {teamItems.map(renderCard)}
+                {teamItems.map((item, idx) => renderCard(item, idx, teamItems.length))}
               </div>
             </Reveal>
           </div>
@@ -197,7 +204,7 @@ export const GalleryMosaic: React.FC<GalleryMosaicProps> = ({ items, onSelectIte
 
             <Reveal delay={100}>
               <div className={styles.mosaicGrid}>
-                {deploymentItems.map(renderCard)}
+                {deploymentItems.map((item, idx) => renderCard(item, idx, deploymentItems.length))}
               </div>
             </Reveal>
           </div>

@@ -298,4 +298,79 @@ describe("GalleryMosaic Component", () => {
     scrollToSpy.mockRestore();
     getBoundingClientRectSpy.mockRestore();
   });
+
+  it("assigns fullCard class when a section has exactly 1 item", () => {
+    const singleItem: GalleryItem[] = [
+      {
+        id: "single-1",
+        title: "Solo Lab Shot",
+        category: "workplace",
+        categoryLabel: "Workplace & Labs",
+        location: "Bengaluru",
+        description: "Solo.",
+        image: "/images/gallery/solo.jpg",
+        tags: ["lab"],
+        aspect: "standard",
+      },
+    ];
+
+    render(<GalleryMosaic items={singleItem} onSelectItem={vi.fn()} />);
+
+    const card = screen.getByRole("button", { name: /view solo lab shot/i });
+    expect(card.className).toContain("fullCard");
+  });
+
+  it("applies alternating mosaic rhythm to a 4-item section without consecutive featured spans", () => {
+    const fourItems: GalleryItem[] = Array.from({ length: 4 }, (_, i) => ({
+      id: `wp-${i}`,
+      title: `Mill Equipment ${i}`,
+      category: "workplace" as const,
+      categoryLabel: "Workplace & Labs",
+      location: "Bengaluru",
+      description: `Description ${i}`,
+      image: `/images/gallery/wp-${i}.jpg`,
+      tags: ["lab"],
+      aspect: "standard" as const,
+    }));
+
+    render(<GalleryMosaic items={fourItems} onSelectItem={vi.fn()} />);
+
+    const card0 = screen.getByRole("button", { name: "View Mill Equipment 0" });
+    const card1 = screen.getByRole("button", { name: "View Mill Equipment 1" });
+    const card2 = screen.getByRole("button", { name: "View Mill Equipment 2" });
+    const card3 = screen.getByRole("button", { name: "View Mill Equipment 3" });
+
+    expect(card0.className).toContain("featuredCard");
+    expect(card1.className).not.toContain("featuredCard");
+    expect(card2.className).not.toContain("featuredCard");
+    expect(card3.className).toContain("featuredCard");
+  });
+
+  it("applies clean triplet row for trailing 3 items in odd 5-item section", () => {
+    const fiveItems: GalleryItem[] = Array.from({ length: 5 }, (_, i) => ({
+      id: `wp-${i}`,
+      title: `Mill Equipment ${i}`,
+      category: "workplace" as const,
+      categoryLabel: "Workplace & Labs",
+      location: "Bengaluru",
+      description: `Description ${i}`,
+      image: `/images/gallery/wp-${i}.jpg`,
+      tags: ["lab"],
+      aspect: "standard" as const,
+    }));
+
+    render(<GalleryMosaic items={fiveItems} onSelectItem={vi.fn()} />);
+
+    const card0 = screen.getByRole("button", { name: "View Mill Equipment 0" });
+    const card1 = screen.getByRole("button", { name: "View Mill Equipment 1" });
+    const card2 = screen.getByRole("button", { name: "View Mill Equipment 2" });
+    const card3 = screen.getByRole("button", { name: "View Mill Equipment 3" });
+    const card4 = screen.getByRole("button", { name: "View Mill Equipment 4" });
+
+    expect(card0.className).toContain("featuredCard");
+    expect(card1.className).not.toContain("featuredCard");
+    expect(card2.className).not.toContain("featuredCard");
+    expect(card3.className).not.toContain("featuredCard");
+    expect(card4.className).not.toContain("featuredCard");
+  });
 });
