@@ -10,6 +10,7 @@ vi.mock("@systrol/database", () => ({
       findUnique: vi.fn(),
       update: vi.fn(),
       findMany: vi.fn(),
+      count: vi.fn(),
     },
   },
 }));
@@ -108,6 +109,24 @@ describe("Sales Visits Module Unit & Payload Tests", () => {
         orderBy: { visitDate: "desc" },
       });
       expect(res).toEqual(mockVisits);
+    });
+
+    it("listVisits supports bounded pagination when page and limit are specified", async () => {
+      const mockVisits = [{ id: "v-1", plantLocation: "Bokaro" }];
+      (prisma.salesVisit.findMany as any).mockResolvedValue(mockVisits);
+      (prisma.salesVisit.count as any).mockResolvedValue(1);
+
+      const res = await SalesVisitsService.listVisits({ page: 1, limit: 10 });
+      expect((res as any).data).toEqual(mockVisits);
+      expect((res as any).meta.total).toBe(1);
+      expect((res as any).meta.page).toBe(1);
+      expect((res as any).meta.limit).toBe(10);
+      expect(prisma.salesVisit.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          skip: 0,
+          take: 10,
+        })
+      );
     });
 
     it("getVisitById throws 404 if visit does not exist", async () => {
