@@ -96,11 +96,16 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) =
 
         <div className={styles.footer}>
           <Button
-            href="/contact?cta=mobile_drawer_get_in_touch"
+            href="/contact"
             variant="primary"
             size="md"
             style={{ width: "100%" }}
-            onClick={onClose}
+            onClick={() => {
+              import("@/lib/attribution").then(({ trackCtaEvent }) => {
+                trackCtaEvent({ eventType: "CTA_CLICK", ctaId: "mobile_drawer_get_in_touch" });
+              });
+              onClose();
+            }}
           >
             Get in Touch
           </Button>
