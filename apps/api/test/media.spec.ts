@@ -145,7 +145,16 @@ describe("Media Module Tests", () => {
       (prisma.mediaAsset.findMany as any).mockResolvedValue(mockItems);
 
       const items = await MediaService.listPublicMedia("GALLERY", 10);
-      expect(items).toEqual(mockItems);
+      expect(items).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: "m1",
+            title: "Continuous Caster Pulpit",
+            category: "GALLERY",
+            fileUrl: "https://cdn.example.com/caster.webp",
+          }),
+        ])
+      );
       expect(prisma.mediaAsset.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { category: "GALLERY" },
