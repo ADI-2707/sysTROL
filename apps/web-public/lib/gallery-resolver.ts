@@ -6,7 +6,6 @@ export function resolveGalleryItems(
 ): GalleryItem[] {
   if (!dynamicAssets || dynamicAssets.length === 0) return fallbackItems;
 
-  const categorySeen: Record<string, boolean> = {};
   const dynamicItems: GalleryItem[] = dynamicAssets.map((asset: any) => {
     let cat: "workplace" | "team" | "deployments" = "deployments";
     const fileLower = (asset.fileUrl || "").toLowerCase();
@@ -68,13 +67,7 @@ export function resolveGalleryItems(
       cat = "workplace";
     }
 
-    let aspect: "featured" | "tall" | "wide" | "standard" = asset.aspect || "standard";
-    if (!categorySeen[cat]) {
-      categorySeen[cat] = true;
-      if (aspect === "standard") {
-        aspect = "featured";
-      }
-    }
+    const aspect: "featured" | "tall" | "wide" | "standard" = asset.aspect || "standard";
 
     return {
       id: asset.id,
