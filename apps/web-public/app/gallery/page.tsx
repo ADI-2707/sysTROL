@@ -32,7 +32,13 @@ async function getGalleryItems(): Promise<GalleryItem[]> {
       const titleLower = (asset.title || "").toLowerCase();
       const tags = (asset.tags || []).map((t: string) => t.toLowerCase());
 
-      if (asset.category === "PROJECTS") {
+      if (asset.gallerySection === "WORKPLACE") {
+        cat = "workplace";
+      } else if (asset.gallerySection === "TEAM") {
+        cat = "team";
+      } else if (asset.gallerySection === "DEPLOYMENTS") {
+        cat = "deployments";
+      } else if (asset.category === "PROJECTS") {
         cat = "deployments";
       } else if (
         fileLower.includes("team-") ||
