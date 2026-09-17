@@ -8,6 +8,7 @@ import { PageHero } from "@/components/sections/PageHero/PageHero";
 import { CTASection } from "@/components/sections/CTASection/CTASection";
 import { GalleryClient } from "./GalleryClient";
 import { galleryItems, GalleryItem } from "@/content/gallery";
+import { resolveGalleryItems } from "@/lib/gallery-resolver";
 
 export const revalidate = 60;
 
@@ -23,40 +24,7 @@ async function getGalleryItems(): Promise<GalleryItem[]> {
     const res = await fetch(`${apiUrl}/api/v1/public/media`, { next: { revalidate: 60 } });
     if (!res.ok) return galleryItems;
     const data = await res.json();
-    if (!data.media || data.media.length === 0) return galleryItems;
-
-    const categorySeen: Record<string, boolean> = {};
-    const dynamicItems: GalleryItem[] = data.media.map((asset: any) => {
-      let cat: "workplace" | "team" | "deployments" = "deployments";
-      const tags = (asset.tags || []).map((t: string) => t.toLowerCase());
-      if (tags.some((t: string) => t.includes("team") || t.includes("collaboration") || t.includes("staff"))) {
-        cat = "team";
-      } else if (tags.some((t: string) => t.includes("lab") || t.includes("workplace") || t.includes("station") || t.includes("bench"))) {
-        cat = "workplace";
-      }
-
-      let aspect: "featured" | "tall" | "wide" | "standard" = asset.aspect || "standard";
-      if (!categorySeen[cat]) {
-        categorySeen[cat] = true;
-        if (aspect === "standard") {
-          aspect = "featured";
-        }
-      }
-
-      return {
-        id: asset.id,
-        title: asset.title,
-        category: cat,
-        categoryLabel: cat === "workplace" ? "Workplace & Labs" : cat === "team" ? "Our Team" : "Onsite Deployments",
-        location: "Bengaluru HQ & Global Mill Sites",
-        description: asset.caption || asset.altText || asset.title,
-        image: asset.fileUrl,
-        tags: asset.tags && asset.tags.length > 0 ? asset.tags : ["rolling-mill", "automation"],
-        aspect,
-      };
-    });
-
-    return dynamicItems.length > 0 ? dynamicItems : galleryItems;
+    return resolveGalleryItems(data?.media, galleryItems);
   } catch {
     return galleryItems;
   }

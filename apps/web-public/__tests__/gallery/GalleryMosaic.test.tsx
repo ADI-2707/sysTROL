@@ -191,4 +191,111 @@ describe("GalleryMosaic Component", () => {
     render(<GalleryMosaic items={[]} onSelectItem={vi.fn()} />);
     expect(screen.getAllByRole("button", { name: /^View /i }).length).toBe(galleryItems.length);
   });
+
+  it("does not render empty section block when a category has zero items in all showcase view", () => {
+    const onlyTeamItems: GalleryItem[] = [
+      {
+        id: "team-only-1",
+        title: "Single Team Image",
+        category: "team",
+        categoryLabel: "Our Team",
+        location: "Bengaluru",
+        description: "Team description",
+        image: "/images/gallery/team.jpg",
+        tags: ["team"],
+        aspect: "standard",
+      },
+    ];
+
+    render(<GalleryMosaic items={onlyTeamItems} onSelectItem={vi.fn()} />);
+
+    expect(screen.queryByRole("heading", { name: /our workplace & simulation labs/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /our team in action/i })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /onsite deployments & commissioning/i })).not.toBeInTheDocument();
+  });
+
+  it("renders empty state notice when filtered category has zero items", () => {
+    const onlyTeamItems: GalleryItem[] = [
+      {
+        id: "team-only-1",
+        title: "Single Team Image",
+        category: "team",
+        categoryLabel: "Our Team",
+        location: "Bengaluru",
+        description: "Team description",
+        image: "/images/gallery/team.jpg",
+        tags: ["team"],
+        aspect: "standard",
+      },
+    ];
+
+    render(<GalleryMosaic items={onlyTeamItems} onSelectItem={vi.fn()} />);
+
+    const workplaceBtn = screen.getByRole("button", { name: /our workplace & labs/i });
+    fireEvent.click(workplaceBtn);
+
+    expect(screen.getByText(/no workplace & labs assets found/i)).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /our workplace & simulation labs/i })).not.toBeInTheDocument();
+  });
+
+  it("scrolls to section top smoothly if section is scrolled out of view above viewport", () => {
+    const scrollToSpy = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+    Object.defineProperty(window, "scrollY", { value: 500, writable: true, configurable: true });
+
+    const getBoundingClientRectSpy = vi
+      .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+      .mockReturnValue({
+        top: -150,
+        bottom: 800,
+        left: 0,
+        right: 1000,
+        width: 1000,
+        height: 950,
+        x: 0,
+        y: -150,
+        toJSON: () => {},
+      });
+
+    render(<GalleryMosaic onSelectItem={vi.fn()} />);
+
+    const workplaceBtn = screen.getByRole("button", { name: /our workplace & labs/i });
+    fireEvent.click(workplaceBtn);
+
+    expect(scrollToSpy).toHaveBeenCalledWith({
+      top: 330,
+      behavior: "smooth",
+    });
+
+    scrollToSpy.mockRestore();
+    getBoundingClientRectSpy.mockRestore();
+  });
+
+  it("does not trigger window.scrollTo when section top is already within viewport", () => {
+    const scrollToSpy = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+    Object.defineProperty(window, "scrollY", { value: 500, writable: true, configurable: true });
+
+    const getBoundingClientRectSpy = vi
+      .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+      .mockReturnValue({
+        top: 50,
+        bottom: 800,
+        left: 0,
+        right: 1000,
+        width: 1000,
+        height: 750,
+        x: 0,
+        y: 50,
+        toJSON: () => {},
+      });
+
+    render(<GalleryMosaic onSelectItem={vi.fn()} />);
+
+    const workplaceBtn = screen.getByRole("button", { name: /our workplace & labs/i });
+    fireEvent.click(workplaceBtn);
+
+    expect(scrollToSpy).not.toHaveBeenCalled();
+
+    scrollToSpy.mockRestore();
+    getBoundingClientRectSpy.mockRestore();
+  });
 });

@@ -513,6 +513,12 @@ model AuditLog {
   createdAt  DateTime  @default(now())
 }
 
+enum GallerySection {
+  WORKPLACE
+  TEAM
+  DEPLOYMENTS
+}
+
 enum MediaCategory {
   GALLERY
   PROJECTS
@@ -522,25 +528,27 @@ enum MediaCategory {
 }
 
 model MediaAsset {
-  id           String        @id @default(uuid())
-  title        String
-  altText      String?
-  caption      String?
-  category     MediaCategory @default(GALLERY)
-  tags         String[]      @default([])
-  fileUrl      String
-  s3Key        String        @unique
-  mimeType     String
-  sizeBytes    Int
-  width        Int?
-  height       Int?
-  uploadedById String?
-  uploadedBy   User?         @relation(fields: [uploadedById], references: [id])
-  projectId    String?
-  project      Project?      @relation(fields: [projectId], references: [id])
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id             String          @id @default(uuid())
+  title          String
+  altText        String?
+  caption        String?
+  category       MediaCategory   @default(GALLERY)
+  gallerySection GallerySection?
+  tags           String[]        @default([])
+  fileUrl        String
+  s3Key          String          @unique
+  mimeType       String
+  sizeBytes      Int
+  width          Int?
+  height         Int?
+  uploadedById   String?
+  uploadedBy     User?           @relation(fields: [uploadedById], references: [id])
+  projectId      String?
+  project        Project?        @relation(fields: [projectId], references: [id])
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
   @@index([category])
+  @@index([gallerySection])
   @@index([createdAt])
 }

@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import Image from "next/image";
 import { Container } from "@/components/layout/Container/Container";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { Reveal } from "@/components/ui/Reveal/Reveal";
-import { MapPin, Maximize2, Cpu, Users, Factory, Layers } from "lucide-react";
+import { MapPin, Maximize2, Cpu, Users, Factory, Layers, FolderSearch } from "lucide-react";
 import {
   galleryCategories,
   galleryItems,
@@ -21,11 +21,25 @@ interface GalleryMosaicProps {
 
 export const GalleryMosaic: React.FC<GalleryMosaicProps> = ({ items, onSelectItem }) => {
   const [activeCategory, setActiveCategory] = useState<GalleryCategory>("all");
+  const sectionRef = useRef<HTMLElement>(null);
   const list = items && items.length > 0 ? items : galleryItems;
 
   const workplaceItems = list.filter((i) => i.category === "workplace");
   const teamItems = list.filter((i) => i.category === "team");
   const deploymentItems = list.filter((i) => i.category === "deployments");
+
+  const handleFilterChange = (catId: GalleryCategory) => {
+    setActiveCategory(catId);
+    if (typeof window !== "undefined" && sectionRef.current) {
+      const rect = sectionRef.current.getBoundingClientRect();
+      if (rect.top < 0) {
+        window.scrollTo({
+          top: window.scrollY + rect.top - 20,
+          behavior: "smooth",
+        });
+      }
+    }
+  };
 
   const renderCard = (item: GalleryItem) => {
     const isFeatured = item.aspect === "featured" || item.aspect === "wide";
@@ -79,8 +93,18 @@ export const GalleryMosaic: React.FC<GalleryMosaicProps> = ({ items, onSelectIte
     );
   };
 
+  const renderEmptyState = (categoryName: string) => (
+    <div className={styles.emptyState}>
+      <FolderSearch size={32} color="var(--color-ink-400)" />
+      <span className={styles.emptyStateTitle}>No {categoryName} Assets Found</span>
+      <span className={styles.emptyStateDesc}>
+        Visual records for this category are currently being indexed or updated.
+      </span>
+    </div>
+  );
+
   return (
-    <section className={styles.gallerySection} aria-label="Visual Gallery Showcase">
+    <section ref={sectionRef} className={styles.gallerySection} aria-label="Visual Gallery Showcase">
       <Container size="wide">
         <div className={styles.filterBar}>
           {galleryCategories.map((cat) => {
@@ -96,7 +120,7 @@ export const GalleryMosaic: React.FC<GalleryMosaicProps> = ({ items, onSelectIte
                 className={`${styles.filterButton} ${
                   activeCategory === cat.id ? styles.filterButtonActive : ""
                 }`}
-                onClick={() => setActiveCategory(cat.id)}
+                onClick={() => handleFilterChange(cat.id)}
               >
                 {cat.id === "all" && <Layers size={15} />}
                 {cat.id === "workplace" && <Cpu size={15} />}
@@ -109,7 +133,11 @@ export const GalleryMosaic: React.FC<GalleryMosaicProps> = ({ items, onSelectIte
           })}
         </div>
 
-        {(activeCategory === "all" || activeCategory === "workplace") && (
+        {activeCategory === "workplace" && workplaceItems.length === 0 && renderEmptyState("Workplace & Labs")}
+        {activeCategory === "team" && teamItems.length === 0 && renderEmptyState("Team Culture")}
+        {activeCategory === "deployments" && deploymentItems.length === 0 && renderEmptyState("Onsite Deployments")}
+
+        {((activeCategory === "all" && workplaceItems.length > 0) || (activeCategory === "workplace" && workplaceItems.length > 0)) && (
           <div className={styles.sectionBlock}>
             <Reveal>
               <div className={styles.sectionBlockHeader}>
@@ -131,7 +159,7 @@ export const GalleryMosaic: React.FC<GalleryMosaicProps> = ({ items, onSelectIte
           </div>
         )}
 
-        {(activeCategory === "all" || activeCategory === "team") && (
+        {((activeCategory === "all" && teamItems.length > 0) || (activeCategory === "team" && teamItems.length > 0)) && (
           <div className={styles.sectionBlock}>
             <Reveal>
               <div className={styles.sectionBlockHeader}>
@@ -153,7 +181,7 @@ export const GalleryMosaic: React.FC<GalleryMosaicProps> = ({ items, onSelectIte
           </div>
         )}
 
-        {(activeCategory === "all" || activeCategory === "deployments") && (
+        {((activeCategory === "all" && deploymentItems.length > 0) || (activeCategory === "deployments" && deploymentItems.length > 0)) && (
           <div className={styles.sectionBlock}>
             <Reveal>
               <div className={styles.sectionBlockHeader}>
