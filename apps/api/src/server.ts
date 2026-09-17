@@ -21,6 +21,7 @@ import { commissioningRoutes } from "./modules/commissioning/commissioning.route
 import { trialsAndPostCommRoutes } from "./modules/trials/post-comm.routes.js";
 import { analyticsRoutes } from "./modules/analytics/analytics.routes.js";
 import { mediaRoutes } from "./modules/media/media.routes.js";
+import { ctaRoutes } from "./modules/cta/cta.routes.js";
 
 const logger = createLogger("api-server");
 
@@ -102,6 +103,7 @@ export async function buildServer() {
       await v1.register(trialsAndPostCommRoutes);
       await v1.register(analyticsRoutes);
       await v1.register(mediaRoutes);
+      await v1.register(ctaRoutes);
     },
     { prefix: "/api/v1" }
   );

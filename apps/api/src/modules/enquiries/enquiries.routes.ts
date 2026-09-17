@@ -31,7 +31,21 @@ export async function enquiriesRoutes(fastify: FastifyInstance) {
         });
       }
 
-      const { name, company, email, phone, service, message } = parse.data;
+      const {
+        name,
+        company,
+        email,
+        phone,
+        service,
+        message,
+        ctaId,
+        pagePath,
+        utmSource,
+        utmMedium,
+        utmCampaign,
+        utmContent,
+        referrer,
+      } = parse.data;
 
       const enquiry = await EnquiriesService.createEnquiry({
         source: EnquirySource.WEB_RFQ,
@@ -39,6 +53,13 @@ export async function enquiriesRoutes(fastify: FastifyInstance) {
         contactEmail: email,
         contactPhone: phone,
         requirement: `[${service}] ${message}`,
+        ctaId: ctaId || null,
+        pagePath: pagePath || null,
+        utmSource: utmSource || null,
+        utmMedium: utmMedium || null,
+        utmCampaign: utmCampaign || null,
+        utmContent: utmContent || null,
+        referrer: referrer || null,
       });
 
       return reply.status(201).send({ success: true, enquiryId: enquiry.id });
