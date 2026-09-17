@@ -30,8 +30,9 @@ The Public Web application presents sysTROL's two primary business divisions to 
 ```
 apps/web-public/
 ├── __tests__/                        # Vitest automated test suites
-│   ├── careers/                      # Careers portal filters and job modal tests
-│   ├── gallery/                      # Visual gallery lightbox and filter tests
+│   ├── careers/                      # Careers portal filters, job modal, and application form tests
+│   ├── contact/                      # Contact form API wiring, honeypot, and rate-limit tests
+│   ├── gallery/                      # Visual gallery lightbox, filter, and dynamic item tests
 │   ├── layout/                       # Navbar, drawer, and footer layout tests
 │   └── ui/                           # Badge, Button, Stepper, and Heading component tests
 ├── app/
@@ -104,7 +105,9 @@ All design tokens are defined in `styles/tokens.css` and consumed via standard C
 
 ## Testing
 
-Automated test suites verify navigation layouts, forms, and interactive components:
+Automated test suites cover navigation layouts, interactive components, form submissions, API schema validation, honeypot bot guards, and rate-limit responses:
+
+69 tests passing across 9 test files for `@systrol/web-public`.
 
 ```bash
 # Run unit tests
@@ -134,3 +137,41 @@ pnpm --filter @systrol/web-public build
 # Run production server
 pnpm --filter @systrol/web-public start
 ```
+
+---
+
+## Security and Performance Hardening
+
+Applied as part of the `hardening/public-website` branch:
+
+### Gallery
+
+- Replaced brittle `grid-template-areas` mosaic with `grid-template-columns: repeat(auto-fill, minmax(320px, 1fr))` and explicit `grid-auto-rows`.
+- All gallery images now render with visible height whether sourced from the static fallback or the live API.
+- Featured and wide aspect items automatically span two columns via a `.featuredCard` CSS modifier.
+- `gridArea` field removed from `GalleryItem` type and all static data. Dynamic API items use the `aspect` field derived from stored dimensions.
+
+### Security Headers
+
+All routes served with the following HTTP response headers via `next.config.ts`:
+
+| Header | Value |
+|---|---|
+| `Strict-Transport-Security` | `max-age=63072000; includeSubDomains; preload` |
+| `X-Content-Type-Options` | `nosniff` |
+| `X-Frame-Options` | `DENY` |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=(), payment=()` |
+| `Content-Security-Policy` | Full CSP with `frame-ancestors 'none'` and `form-action 'self'` |
+
+### Image Optimization
+
+- Removed `unoptimized: true`.
+- Configured `remotePatterns` for `jvbwajcypzryqbvmuirv.storage.supabase.co`, `*.amazonaws.com`, and `systrol-api.onrender.com`.
+- Added `formats: ["image/avif", "image/webp"]` and `minimumCacheTTL: 3600`.
+
+### Form Wiring
+
+- `/contact` form: Submits to `POST /api/v1/public/enquiry` with Zod validation, honeypot bot guard, and `429` rate-limit response handling.
+- `/careers/[id]` application form: Submits to `POST /api/v1/public/jobs/:id/apply` with honeypot guard and `429` error message.
+- Both forms replace the previous fake `setTimeout` delays with real API calls.
