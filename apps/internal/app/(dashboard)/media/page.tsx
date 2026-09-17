@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UploadModal } from "./UploadModal";
 import { useAuth } from "@/lib/auth-context";
+import { isTokenValid } from "@/lib/token-utils";
 
 interface MediaAsset {
   id: string;
@@ -61,49 +62,64 @@ export default function MediaPage() {
 
   const fetchAssets = useCallback(async () => {
     setIsLoading(true);
-    try {
-      const params = new URLSearchParams({
-        page: String(page),
-        limit: "18",
-      });
+    const hasValidToken = isTokenValid(token);
 
-      if (activeCategory !== "ALL") {
-        params.append("category", activeCategory);
-      }
-      if (searchQuery.trim()) {
-        params.append("search", searchQuery.trim());
-      }
+    if (hasValidToken && token) {
+      try {
+        const params = new URLSearchParams({
+          page: String(page),
+          limit: "18",
+        });
 
-      const res = await fetch(`${apiUrl}/api/v1/media?${params.toString()}`, {
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setAssets(data.items || []);
-        setTotal(data.total || 0);
-        setTotalPages(data.totalPages || 1);
-      } else {
-        const publicRes = await fetch(`${apiUrl}/api/v1/public/media${activeCategory !== "ALL" ? `?category=${activeCategory}` : ""}`);
-        if (publicRes.ok) {
-          const pubData = await publicRes.json();
-          setAssets(pubData.media || []);
-          setTotal((pubData.media || []).length);
-          setTotalPages(1);
+        if (activeCategory !== "ALL") {
+          params.append("category", activeCategory);
         }
+        if (searchQuery.trim()) {
+          params.append("search", searchQuery.trim());
+        }
+
+        const res = await fetch(`${apiUrl}/api/v1/media?${params.toString()}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setAssets(data.items || []);
+          setTotal(data.total || 0);
+          setTotalPages(data.totalPages || 1);
+          setIsLoading(false);
+          return;
+        }
+      } catch {
+      }
+    }
+
+    try {
+      const publicParams = new URLSearchParams();
+      if (activeCategory !== "ALL") {
+        publicParams.append("category", activeCategory);
+      }
+      const qs = publicParams.toString() ? `?${publicParams.toString()}` : "";
+      const publicRes = await fetch(`${apiUrl}/api/v1/public/media${qs}`);
+      if (publicRes.ok) {
+        const pubData = await publicRes.json();
+        let items: MediaAsset[] = pubData.media || [];
+        if (searchQuery.trim()) {
+          const q = searchQuery.trim().toLowerCase();
+          items = items.filter(
+            (item) =>
+              item.title.toLowerCase().includes(q) ||
+              item.altText?.toLowerCase().includes(q) ||
+              item.tags?.some((tag) => tag.toLowerCase().includes(q))
+          );
+        }
+        setAssets(items);
+        setTotal(items.length);
+        setTotalPages(1);
       }
     } catch {
-      try {
-        const fallbackRes = await fetch(`${apiUrl}/api/v1/public/media${activeCategory !== "ALL" ? `?category=${activeCategory}` : ""}`);
-        if (fallbackRes.ok) {
-          const pubData = await fallbackRes.json();
-          setAssets(pubData.media || []);
-          setTotal((pubData.media || []).length);
-          setTotalPages(1);
-        }
-      } catch {}
     } finally {
       setIsLoading(false);
     }
@@ -120,6 +136,10 @@ export default function MediaPage() {
   };
 
   const handleDelete = async (id: string) => {
+    if (!isTokenValid(token)) {
+      window.alert("Administrative privileges required. Please log in with a valid account to delete assets.");
+      return;
+    }
     if (!window.confirm("Are you sure you want to permanently delete this media asset?")) return;
 
     setDeletingId(id);
@@ -127,7 +147,7 @@ export default function MediaPage() {
       const res = await fetch(`${apiUrl}/api/v1/media/${id}`, {
         method: "DELETE",
         headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -175,7 +195,16 @@ export default function MediaPage() {
           <Button variant="outline" onClick={fetchAssets} disabled={isLoading}>
             <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} style={{ marginRight: "6px" }} /> Refresh
           </Button>
-          <Button variant="accent" onClick={() => setIsUploadOpen(true)}>
+          <Button
+            variant="accent"
+            onClick={() => {
+              if (!isTokenValid(token)) {
+                window.alert("Administrative privileges required. Please log in with a valid account to upload assets.");
+                return;
+              }
+              setIsUploadOpen(true);
+            }}
+          >
             <Upload size={15} style={{ marginRight: "6px" }} /> Upload Media
           </Button>
         </div>
@@ -303,7 +332,16 @@ export default function MediaPage() {
               ? `No assets matching "${searchQuery}". Try adjusting your filters.`
               : "Upload your first high-resolution industrial rolling mill photo to get started."}
           </p>
-          <Button variant="accent" onClick={() => setIsUploadOpen(true)}>
+          <Button
+            variant="accent"
+            onClick={() => {
+              if (!isTokenValid(token)) {
+                window.alert("Administrative privileges required. Please log in with a valid account to upload assets.");
+                return;
+              }
+              setIsUploadOpen(true);
+            }}
+          >
             <Upload size={15} style={{ marginRight: "6px" }} /> Upload First Asset
           </Button>
         </div>
@@ -334,15 +372,33 @@ export default function MediaPage() {
                   position: "relative",
                   width: "100%",
                   height: "170px",
-                  backgroundColor: "#000000",
+                  backgroundColor: "var(--bg-surface)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                   overflow: "hidden",
                 }}
               >
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: "6px",
+                    color: "var(--text-muted)",
+                    fontSize: "11px",
+                  }}
+                >
+                  <ImageIcon size={28} />
+                  <span>Preview unavailable</span>
+                </div>
                 <img
                   src={asset.fileUrl}
                   alt={asset.altText || asset.title}
                   loading="lazy"
                   style={{
+                    position: "absolute",
+                    inset: 0,
                     width: "100%",
                     height: "100%",
                     objectFit: "cover",

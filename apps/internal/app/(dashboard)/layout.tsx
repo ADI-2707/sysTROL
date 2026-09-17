@@ -21,6 +21,7 @@ import { ThemeToggle } from "../theme-toggle";
 import { SysTrolLogo } from "@/components/brand/SysTrolLogo";
 import { useAuth } from "@/lib/auth-context";
 import { canAccessPage, TEAM_LABELS } from "@/lib/permissions";
+import { useBackendKeepAlive } from "@/lib/use-keep-alive";
 
 interface NavItemConfig {
   label: string;
@@ -115,6 +116,9 @@ export default function DashboardLayout({
   const { user, isAuthenticated, isLoading, logout } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [logoutHovered, setLogoutHovered] = useState(false);
+
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://systrol-api.onrender.com";
+  useBackendKeepAlive(apiUrl, user?.token);
 
   useEffect(() => {
     const saved = localStorage.getItem("systrol_sidebar_collapsed");
