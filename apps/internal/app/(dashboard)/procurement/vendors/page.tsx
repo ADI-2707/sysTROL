@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Plus, Building, Star, ExternalLink, ShieldCheck, MapPin } from "lucide-react";
+import { apiClient } from "@/lib/api-client";
 
 interface VendorItem {
   id: string;
@@ -12,14 +13,12 @@ interface VendorItem {
 
 async function getVendors(): Promise<VendorItem[]> {
   try {
-    const apiUrl = process.env.API_URL || "http://localhost:4000";
-    const res = await fetch(`${apiUrl}/api/v1/procurement/vendors`, { cache: "no-store" });
+    const res = await apiClient("/api/v1/procurement/vendors", { cache: "no-store" });
     if (res.ok) {
       const data = await res.json();
       return data.vendors || [];
     }
   } catch {
-    // offline fallback
   }
 
   return [

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Save, Plus, Loader2 } from "lucide-react";
+import { apiClient } from "@/lib/api-client";
 
 function SalesVisitForm() {
   const router = useRouter();
@@ -43,10 +44,8 @@ function SalesVisitForm() {
     };
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-      const res = await fetch(`${apiUrl}/api/v1/sales-visits`, {
+      const res = await apiClient("/api/v1/sales-visits", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 

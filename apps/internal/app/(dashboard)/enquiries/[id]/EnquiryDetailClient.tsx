@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle2, XCircle, ArrowRight, ShieldCheck, Clock, Building, Calendar, Layers, Loader2 } from "lucide-react";
+import { apiClient } from "@/lib/api-client";
 
 interface EnquiryDetailProps {
   enquiry: {
@@ -23,8 +24,8 @@ interface EnquiryDetailProps {
       id: string;
       visitDate: string;
       plantLocation: string;
-      scopeNotes: string;
-      visitedBy: { name: string };
+      scopeNotes?: string;
+      visitedBy?: { name: string };
     }>;
     createdAt: string;
   };
@@ -43,8 +44,7 @@ export function EnquiryDetailClient({ enquiry }: EnquiryDetailProps) {
   const handleQualify = async () => {
     setLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-      const res = await fetch(`${apiUrl}/api/v1/enquiries/${enquiry.id}/qualify`, { method: "POST" });
+      const res = await apiClient(`/api/v1/enquiries/${enquiry.id}/qualify`, { method: "POST" });
       if (res.ok) {
         setStatus("QUALIFIED");
         router.refresh();
@@ -58,10 +58,8 @@ export function EnquiryDetailClient({ enquiry }: EnquiryDetailProps) {
     if (!confirm("Are you sure you want to mark this enquiry as disqualified?")) return;
     setLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-      const res = await fetch(`${apiUrl}/api/v1/enquiries/${enquiry.id}/disqualify`, {
+      const res = await apiClient(`/api/v1/enquiries/${enquiry.id}/disqualify`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reason: "Commercial/technical mismatch" }),
       });
       if (res.ok) {
@@ -77,10 +75,8 @@ export function EnquiryDetailClient({ enquiry }: EnquiryDetailProps) {
     e.preventDefault();
     setLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-      const res = await fetch(`${apiUrl}/api/v1/enquiries/${enquiry.id}/convert`, {
+      const res = await apiClient(`/api/v1/enquiries/${enquiry.id}/convert`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: projectName,
           plantLocation,

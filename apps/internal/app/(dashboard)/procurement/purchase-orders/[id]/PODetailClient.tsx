@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Send, CheckCircle2, Truck, Calendar, DollarSign, Package, Loader2 } from "lucide-react";
+import { apiClient } from "@/lib/api-client";
 
 interface PODetailProps {
   po: {
@@ -33,8 +34,7 @@ export function PODetailClient({ po }: PODetailProps) {
   const handleSendToVendor = async () => {
     setLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-      const res = await fetch(`${apiUrl}/api/v1/procurement/purchase-orders/${po.id}/send`, {
+      const res = await apiClient(`/api/v1/procurement/purchase-orders/${po.id}/send`, {
         method: "POST",
       });
 
@@ -51,10 +51,8 @@ export function PODetailClient({ po }: PODetailProps) {
   const handleUpdateDelivery = async (newStatus: PODetailProps["po"]["status"]) => {
     setLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-      const res = await fetch(`${apiUrl}/api/v1/procurement/purchase-orders/${po.id}/delivery`, {
+      const res = await apiClient(`/api/v1/procurement/purchase-orders/${po.id}/delivery`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           status: newStatus,
           actualDeliveryDate: newStatus === "DELIVERED" || newStatus === "CLOSED" ? new Date().toISOString() : undefined,
