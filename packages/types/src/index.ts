@@ -12,3 +12,4 @@ export * from "./amc.js";
 export * from "./analytics.js";
 export * from "./enquiries.js";
 export * from "./media.js";
+export * from "./common.js";
