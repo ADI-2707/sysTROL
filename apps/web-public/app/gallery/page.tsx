@@ -28,10 +28,56 @@ async function getGalleryItems(): Promise<GalleryItem[]> {
     const categorySeen: Record<string, boolean> = {};
     const dynamicItems: GalleryItem[] = data.media.map((asset: any) => {
       let cat: "workplace" | "team" | "deployments" = "deployments";
+      const fileLower = (asset.fileUrl || "").toLowerCase();
+      const titleLower = (asset.title || "").toLowerCase();
       const tags = (asset.tags || []).map((t: string) => t.toLowerCase());
-      if (tags.some((t: string) => t.includes("team") || t.includes("collaboration") || t.includes("staff"))) {
+
+      if (asset.category === "PROJECTS") {
+        cat = "deployments";
+      } else if (
+        fileLower.includes("team-") ||
+        titleLower.includes("team") ||
+        titleLower.includes("handoff") ||
+        titleLower.includes("inspection") ||
+        titleLower.includes("trial") ||
+        tags.some((t: string) =>
+          t.includes("team") ||
+          t.includes("collaboration") ||
+          t.includes("staff") ||
+          t.includes("engineering-review") ||
+          t.includes("quality-control") ||
+          t.includes("field-engineering") ||
+          t.includes("hot-trial")
+        )
+      ) {
         cat = "team";
-      } else if (tags.some((t: string) => t.includes("lab") || t.includes("workplace") || t.includes("station") || t.includes("bench"))) {
+      } else if (
+        fileLower.includes("workplace-") ||
+        titleLower.includes("lab") ||
+        titleLower.includes("workplace") ||
+        titleLower.includes("station") ||
+        titleLower.includes("bench") ||
+        titleLower.includes("digital twin") ||
+        titleLower.includes("modeling") ||
+        titleLower.includes("hil") ||
+        tags.some((t: string) =>
+          t.includes("lab") ||
+          t.includes("workplace") ||
+          t.includes("station") ||
+          t.includes("bench") ||
+          t.includes("digital-twin") ||
+          t.includes("hil") ||
+          t.includes("simulation") ||
+          t.includes("modeling") ||
+          t.includes("pass-schedules") ||
+          t.includes("thermal-tracking") ||
+          t.includes("gap-control") ||
+          t.includes("servo-valve") ||
+          t.includes("profinet") ||
+          t.includes("opc-ua") ||
+          t.includes("c-sharp-core")
+        )
+      ) {
         cat = "workplace";
       }
 
@@ -56,7 +102,22 @@ async function getGalleryItems(): Promise<GalleryItem[]> {
       };
     });
 
-    return dynamicItems.length > 0 ? dynamicItems : galleryItems;
+    const hasWorkplace = dynamicItems.some((i) => i.category === "workplace");
+    const hasTeam = dynamicItems.some((i) => i.category === "team");
+    const hasDeployments = dynamicItems.some((i) => i.category === "deployments");
+
+    let finalItems = [...dynamicItems];
+    if (!hasWorkplace) {
+      finalItems = [...finalItems, ...galleryItems.filter((i) => i.category === "workplace")];
+    }
+    if (!hasTeam) {
+      finalItems = [...finalItems, ...galleryItems.filter((i) => i.category === "team")];
+    }
+    if (!hasDeployments) {
+      finalItems = [...finalItems, ...galleryItems.filter((i) => i.category === "deployments")];
+    }
+
+    return finalItems.length > 0 ? finalItems : galleryItems;
   } catch {
     return galleryItems;
   }
