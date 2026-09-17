@@ -5,6 +5,7 @@ import {
   PresignMediaInputSchema,
   ConfirmMediaInputSchema,
   UpdateMediaInputSchema,
+  MediaQuerySchema,
   ALLOWED_IMAGE_MIME_TYPES,
   MAX_MEDIA_FILE_SIZE,
 } from "@systrol/types";
@@ -132,9 +133,98 @@ describe("Media Module Tests", () => {
       const invalidRes = ConfirmMediaInputSchema.safeParse({ ...baseInput, gallerySection: "INVALID_SECTION" });
       expect(invalidRes.success).toBe(false);
     });
+
+    it("validates gallerySection field in UpdateMediaInputSchema", () => {
+      const updateWorkplace = UpdateMediaInputSchema.safeParse({ gallerySection: "WORKPLACE" });
+      expect(updateWorkplace.success).toBe(true);
+
+      const updateTeam = UpdateMediaInputSchema.safeParse({ gallerySection: "TEAM" });
+      expect(updateTeam.success).toBe(true);
+
+      const updateDeploy = UpdateMediaInputSchema.safeParse({ gallerySection: "DEPLOYMENTS" });
+      expect(updateDeploy.success).toBe(true);
+
+      const updateNull = UpdateMediaInputSchema.safeParse({ gallerySection: null });
+      expect(updateNull.success).toBe(true);
+
+      const updateInvalid = UpdateMediaInputSchema.safeParse({ gallerySection: "UNKNOWN" });
+      expect(updateInvalid.success).toBe(false);
+    });
+
+    it("validates gallerySection field in MediaQuerySchema", () => {
+      const queryParsed = MediaQuerySchema.safeParse({ gallerySection: "WORKPLACE" });
+      expect(queryParsed.success).toBe(true);
+      if (queryParsed.success) {
+        expect(queryParsed.data.gallerySection).toBe("WORKPLACE");
+      }
+
+      const invalidQuery = MediaQuerySchema.safeParse({ gallerySection: "WRONG" });
+      expect(invalidQuery.success).toBe(false);
+    });
   });
 
   describe("MediaService", () => {
+    it("persists gallerySection when confirming media asset", async () => {
+      const input = {
+        title: "Simulation Lab Testing Bay",
+        category: "GALLERY" as const,
+        gallerySection: "WORKPLACE" as const,
+        fileUrl: "https://example.com/lab.webp",
+        s3Key: "gallery/lab.webp",
+        mimeType: "image/webp" as const,
+        sizeBytes: 250000,
+        tags: ["lab", "simulation"],
+      };
+
+      (prisma.mediaAsset.create as any).mockResolvedValue({
+        id: "m-created",
+        ...input,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const asset = await MediaService.confirmMediaAsset(input, "user-123");
+      expect(prisma.mediaAsset.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            gallerySection: "WORKPLACE",
+          }),
+        })
+      );
+      expect(asset.id).toBe("m-created");
+    });
+
+    it("updates gallerySection in updateMedia", async () => {
+      (prisma.mediaAsset.findUnique as any).mockResolvedValue({ id: "m-existing" });
+      (prisma.mediaAsset.update as any).mockResolvedValue({
+        id: "m-existing",
+        gallerySection: "TEAM",
+      });
+
+      await MediaService.updateMedia("m-existing", { gallerySection: "TEAM" });
+      expect(prisma.mediaAsset.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "m-existing" },
+          data: expect.objectContaining({
+            gallerySection: "TEAM",
+          }),
+        })
+      );
+    });
+
+    it("applies gallerySection filter in listMedia", async () => {
+      (prisma.mediaAsset.findMany as any).mockResolvedValue([]);
+      (prisma.mediaAsset.count as any).mockResolvedValue(0);
+
+      await MediaService.listMedia({ gallerySection: "DEPLOYMENTS" });
+      expect(prisma.mediaAsset.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            gallerySection: "DEPLOYMENTS",
+          }),
+        })
+      );
+    });
     it("generates presigned upload URL and public URL", async () => {
       const result = await MediaService.generatePresignedUploadUrl({
         filename: "furnace-view.jpg",
