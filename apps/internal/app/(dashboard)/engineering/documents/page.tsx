@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Plus, FileText, Download, CheckCircle2, AlertCircle, RefreshCw, Eye } from "lucide-react";
+import { apiClient } from "@/lib/api-client";
 
 interface DocItem {
   id: string;
@@ -15,14 +16,12 @@ interface DocItem {
 
 async function getDocuments(): Promise<DocItem[]> {
   try {
-    const apiUrl = process.env.API_URL || "http://localhost:4000";
-    const res = await fetch(`${apiUrl}/api/v1/engineering/documents`, { cache: "no-store" });
+    const res = await apiClient("/api/v1/engineering/documents", { cache: "no-store" });
     if (res.ok) {
       const data = await res.json();
       return data.documents || [];
     }
   } catch {
-    // offline fallback
   }
 
   return [

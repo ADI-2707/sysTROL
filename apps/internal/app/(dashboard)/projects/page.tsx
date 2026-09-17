@@ -22,11 +22,13 @@ import {
   ProjectItem,
   PREDEFINED_STEP_NAMES,
 } from "@/lib/projects-data";
+import { useDebounce } from "@/lib/use-debounce";
 
 export default function ProjectManagementPage() {
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [activeTab, setActiveTab] = useState<"ONGOING" | "COMMISSIONED">("ONGOING");
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 350);
   const [showModal, setShowModal] = useState(false);
 
   const [newClient, setNewClient] = useState("");
@@ -44,8 +46,8 @@ export default function ProjectManagementPage() {
   const filteredProjects = projects
     .filter((p) => p.status === activeTab)
     .filter((p) => {
-      if (!searchQuery.trim()) return true;
-      const q = searchQuery.toLowerCase();
+      if (!debouncedSearch.trim()) return true;
+      const q = debouncedSearch.toLowerCase();
       return (
         p.clientName.toLowerCase().includes(q) ||
         p.lineName.toLowerCase().includes(q) ||

@@ -22,9 +22,8 @@ export async function salesVisitsRoutes(fastify: FastifyInstance) {
     });
 
     scope.get("/sales-visits", async (request: FastifyRequest, reply: FastifyReply) => {
-      const query = request.query as { enquiryId?: string; projectId?: string };
-      const visits = await SalesVisitsService.listVisits(query);
-      return reply.send({ visits });
+      const result = await SalesVisitsService.listVisits(request.query as any);
+      return reply.send({ visits: (result as any).data || result, meta: (result as any).meta });
     });
 
     scope.get("/sales-visits/:id", async (request: FastifyRequest, reply: FastifyReply) => {

@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { UploadModal } from "./UploadModal";
 import { useAuth } from "@/lib/auth-context";
 import { isTokenValid } from "@/lib/token-utils";
+import { useDebounce } from "@/lib/use-debounce";
 
 interface MediaAsset {
   id: string;
@@ -49,6 +50,7 @@ export default function MediaPage() {
   const token = user?.token;
   const [activeCategory, setActiveCategory] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 350);
   const [assets, setAssets] = useState<MediaAsset[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -74,8 +76,8 @@ export default function MediaPage() {
         if (activeCategory !== "ALL") {
           params.append("category", activeCategory);
         }
-        if (searchQuery.trim()) {
-          params.append("search", searchQuery.trim());
+        if (debouncedSearch.trim()) {
+          params.append("search", debouncedSearch.trim());
         }
 
         const res = await fetch(`${apiUrl}/api/v1/media?${params.toString()}`, {
@@ -106,8 +108,8 @@ export default function MediaPage() {
       if (publicRes.ok) {
         const pubData = await publicRes.json();
         let items: MediaAsset[] = pubData.media || [];
-        if (searchQuery.trim()) {
-          const q = searchQuery.trim().toLowerCase();
+        if (debouncedSearch.trim()) {
+          const q = debouncedSearch.trim().toLowerCase();
           items = items.filter(
             (item) =>
               item.title.toLowerCase().includes(q) ||
@@ -123,7 +125,7 @@ export default function MediaPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [apiUrl, token, page, activeCategory, searchQuery]);
+  }, [apiUrl, token, page, activeCategory, debouncedSearch]);
 
   useEffect(() => {
     fetchAssets();

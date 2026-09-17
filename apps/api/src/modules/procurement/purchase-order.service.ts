@@ -46,20 +46,55 @@ export class PurchaseOrderService {
     });
   }
 
-  static async listPOs(filters?: { vendorId?: string; projectId?: string; status?: PurchaseOrderStatus }) {
-    return prisma.purchaseOrder.findMany({
-      where: {
-        ...(filters?.vendorId ? { vendorId: filters.vendorId } : {}),
-        ...(filters?.projectId ? { projectId: filters.projectId } : {}),
-        ...(filters?.status ? { status: filters.status } : {}),
+  static async listPOs(filters?: {
+    vendorId?: string;
+    projectId?: string;
+    status?: PurchaseOrderStatus;
+    page?: number;
+    limit?: number;
+    search?: string;
+  }) {
+    const page = Math.max(1, Number(filters?.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(filters?.limit) || 20));
+    const skip = (page - 1) * limit;
+
+    const where: any = {
+      ...(filters?.vendorId ? { vendorId: filters.vendorId } : {}),
+      ...(filters?.projectId ? { projectId: filters.projectId } : {}),
+      ...(filters?.status ? { status: filters.status } : {}),
+    };
+
+    if (filters?.search) {
+      where.poNumber = { contains: filters.search, mode: "insensitive" };
+    }
+
+    const [data, total] = await Promise.all([
+      prisma.purchaseOrder.findMany({
+        where,
+        skip,
+        take: limit,
+        include: {
+          vendor: { select: { id: true, name: true, category: true, country: true } },
+          project: { select: { id: true, projectCode: true, name: true } },
+          items: true,
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.purchaseOrder.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit) || 1;
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
       },
-      include: {
-        vendor: { select: { id: true, name: true, category: true, country: true } },
-        project: { select: { id: true, projectCode: true, name: true } },
-        items: true,
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    };
   }
 
   static async getPOById(id: string) {

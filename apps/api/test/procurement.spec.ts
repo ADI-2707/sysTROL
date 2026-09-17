@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { PurchaseOrderService } from "../src/modules/procurement/purchase-order.service.js";
 import { VendorService } from "../src/modules/procurement/vendor.service.js";
+import { BOQService } from "../src/modules/procurement/boq.service.js";
 import { prisma } from "@systrol/database";
 import {
   PurchaseOrderStatus,
@@ -22,9 +23,13 @@ vi.mock("@systrol/database", () => ({
     vendor: {
       findUnique: vi.fn(),
       update: vi.fn(),
+      findMany: vi.fn(),
+      count: vi.fn(),
     },
     bOQItem: {
       updateMany: vi.fn(),
+      findMany: vi.fn(),
+      count: vi.fn(),
     },
   },
 }));
@@ -212,6 +217,59 @@ describe("Procurement Module Unit & Payload Tests", () => {
         where: { id: "vendor-perfect" },
         data: { ratingScore: 5.0 },
       });
+    });
+
+    it("listVendors returns paginated records with total metadata", async () => {
+      const mockVendors = [
+        { id: "v1", name: "Siemens" },
+        { id: "v2", name: "Schneider" },
+      ];
+      (prisma.vendor.findMany as any).mockResolvedValue(mockVendors);
+      (prisma.vendor.count as any).mockResolvedValue(2);
+
+      const res = await VendorService.listVendors({ page: 1, limit: 10 });
+      expect(res.data.length).toBe(2);
+      expect(res.meta.page).toBe(1);
+      expect(res.meta.limit).toBe(10);
+      expect(res.meta.total).toBe(2);
+      expect(res.meta.totalPages).toBe(1);
+    });
+
+    it("listPOs returns paginated purchase orders with calculated offset", async () => {
+      (prisma.purchaseOrder.findMany as any).mockResolvedValue([]);
+      (prisma.purchaseOrder.count as any).mockResolvedValue(50);
+
+      const res = await PurchaseOrderService.listPOs({ page: 2, limit: 20 });
+      expect(res.meta.page).toBe(2);
+      expect(res.meta.limit).toBe(20);
+      expect(res.meta.total).toBe(50);
+      expect(res.meta.totalPages).toBe(3);
+      expect(res.meta.hasNextPage).toBe(true);
+      expect(res.meta.hasPrevPage).toBe(true);
+      expect(prisma.purchaseOrder.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          skip: 20,
+          take: 20,
+        })
+      );
+    });
+
+    it("listBOQItems paginates items for a specific project", async () => {
+      const mockItems = [{ id: "boq-1", description: "PLC Module", quantity: 5 }];
+      (prisma.bOQItem.findMany as any).mockResolvedValue(mockItems);
+      (prisma.bOQItem.count as any).mockResolvedValue(1);
+
+      const res = await BOQService.listBOQItems("proj-1", { page: 1, limit: 10 });
+      expect(res.data).toEqual(mockItems);
+      expect(res.meta.total).toBe(1);
+      expect(res.meta.page).toBe(1);
+      expect(prisma.bOQItem.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { projectId: "proj-1" },
+          skip: 0,
+          take: 10,
+        })
+      );
     });
   });
 });

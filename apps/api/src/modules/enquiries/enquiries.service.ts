@@ -44,26 +44,64 @@ export class EnquiriesService {
     });
   }
 
-  static async listEnquiries(filters?: { status?: string; source?: EnquirySource }) {
-    return prisma.enquiry.findMany({
-      where: {
-        ...(filters?.status ? { status: filters.status } : {}),
-        ...(filters?.source ? { source: filters.source as any } : {}),
+  static async listEnquiries(filters?: {
+    status?: string;
+    source?: EnquirySource;
+    page?: number;
+    limit?: number;
+    search?: string;
+  }) {
+    const page = Math.max(1, Number(filters?.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(filters?.limit) || 20));
+    const skip = (page - 1) * limit;
+
+    const where: any = {
+      ...(filters?.status ? { status: filters.status } : {}),
+      ...(filters?.source ? { source: filters.source as any } : {}),
+    };
+
+    if (filters?.search) {
+      where.OR = [
+        { enquiryCode: { contains: filters.search, mode: "insensitive" } },
+        { requirement: { contains: filters.search, mode: "insensitive" } },
+        { prospectName: { contains: filters.search, mode: "insensitive" } },
+      ];
+    }
+
+    const [data, total] = await Promise.all([
+      prisma.enquiry.findMany({
+        where,
+        skip,
+        take: limit,
+        include: {
+          client: true,
+          assignedTo: {
+            select: { id: true, name: true, email: true },
+          },
+          convertedProject: {
+            select: { id: true, projectCode: true, name: true, currentStage: true },
+          },
+          salesVisits: {
+            select: { id: true, visitDate: true, plantLocation: true },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.enquiry.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit) || 1;
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
       },
-      include: {
-        client: true,
-        assignedTo: {
-          select: { id: true, name: true, email: true },
-        },
-        convertedProject: {
-          select: { id: true, projectCode: true, name: true, currentStage: true },
-        },
-        salesVisits: {
-          select: { id: true, visitDate: true, plantLocation: true },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    };
   }
 
   static async getEnquiryById(id: string) {

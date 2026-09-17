@@ -10,6 +10,7 @@ vi.mock("@systrol/database", () => {
       findMany: vi.fn(),
       findUnique: vi.fn(),
       update: vi.fn(),
+      count: vi.fn(),
     },
     projectStageHistory: {
       create: vi.fn(),
@@ -172,6 +173,75 @@ describe("Projects & 12-Stage Lifecycle Engine Tests", () => {
           }),
         })
       );
+    });
+
+    it("default pagination returns page 1 with 20 limit and total count", async () => {
+      const mockProjects = Array.from({ length: 20 }, (_, i) => ({ id: `p-${i}`, name: `Project ${i}` }));
+      vi.mocked(prisma.project.findMany).mockResolvedValue(mockProjects as any);
+      vi.mocked(prisma.project.count).mockResolvedValue(45);
+
+      const result = await ProjectsService.listProjects();
+      expect(result.data.length).toBe(20);
+      expect(result.meta.page).toBe(1);
+      expect(result.meta.limit).toBe(20);
+      expect(result.meta.total).toBe(45);
+      expect(result.meta.totalPages).toBe(3);
+      expect(result.meta.hasNextPage).toBe(true);
+      expect(result.meta.hasPrevPage).toBe(false);
+      expect(prisma.project.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          skip: 0,
+          take: 20,
+        })
+      );
+    });
+
+    it("custom page and limit calculate correct skip offset", async () => {
+      vi.mocked(prisma.project.findMany).mockResolvedValue([]);
+      vi.mocked(prisma.project.count).mockResolvedValue(100);
+
+      await ProjectsService.listProjects({ page: 3, limit: 15 });
+      expect(prisma.project.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          skip: 30,
+          take: 15,
+        })
+      );
+    });
+
+    it("requesting page beyond total count returns empty data with totalPages", async () => {
+      vi.mocked(prisma.project.findMany).mockResolvedValue([]);
+      vi.mocked(prisma.project.count).mockResolvedValue(10);
+
+      const result = await ProjectsService.listProjects({ page: 5, limit: 10 });
+      expect(result.data).toEqual([]);
+      expect(result.meta.totalPages).toBe(1);
+      expect(result.meta.hasNextPage).toBe(false);
+      expect(result.meta.hasPrevPage).toBe(true);
+    });
+
+    it("decoupled getProjectById excludes large subresource arrays from include", async () => {
+      vi.mocked(prisma.project.findUnique).mockResolvedValue({
+        id: "proj-100",
+        name: "Steel Plant Mill Drive",
+        client: { id: "c-1", name: "JSW" },
+        createdBy: { id: "u-1", name: "Admin" },
+        stageHistory: [],
+      } as any);
+
+      const project = await ProjectsService.getProjectById("proj-100");
+      expect(project.id).toBe("proj-100");
+      expect(prisma.project.findUnique).toHaveBeenCalledWith({
+        where: { id: "proj-100" },
+        include: {
+          client: true,
+          createdBy: { select: { id: true, name: true } },
+          stageHistory: {
+            include: { changedBy: { select: { id: true, name: true } } },
+            orderBy: { changedAt: "desc" },
+          },
+        },
+      });
     });
   });
 });

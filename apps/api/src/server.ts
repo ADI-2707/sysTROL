@@ -37,7 +37,6 @@ export async function buildServer() {
       "http://localhost:3001",
       "https://systrol.vercel.app",
       "https://systrolops.vercel.app",
-      /\.vercel\.app$/,
     ],
     credentials: true,
   });

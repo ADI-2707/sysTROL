@@ -28,9 +28,8 @@ export async function enquiriesRoutes(fastify: FastifyInstance) {
     });
 
     scope.get("/enquiries", async (request: FastifyRequest, reply: FastifyReply) => {
-      const query = request.query as { status?: string; source?: EnquirySource };
-      const enquiries = await EnquiriesService.listEnquiries(query);
-      return reply.send({ enquiries });
+      const result = await EnquiriesService.listEnquiries(request.query as any);
+      return reply.send({ enquiries: (result as any).data || result, meta: (result as any).meta });
     });
 
     scope.get("/enquiries/:id", async (request: FastifyRequest, reply: FastifyReply) => {

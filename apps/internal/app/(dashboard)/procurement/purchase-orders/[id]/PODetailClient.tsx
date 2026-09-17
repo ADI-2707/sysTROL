@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Send, CheckCircle2, Truck, Calendar, DollarSign, Package } from "lucide-react";
+import { ArrowLeft, Send, CheckCircle2, Truck, Calendar, DollarSign, Package, Loader2 } from "lucide-react";
+import { apiClient } from "@/lib/api-client";
 
 interface PODetailProps {
   po: {
@@ -33,8 +34,7 @@ export function PODetailClient({ po }: PODetailProps) {
   const handleSendToVendor = async () => {
     setLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-      const res = await fetch(`${apiUrl}/api/v1/procurement/purchase-orders/${po.id}/send`, {
+      const res = await apiClient(`/api/v1/procurement/purchase-orders/${po.id}/send`, {
         method: "POST",
       });
 
@@ -51,10 +51,8 @@ export function PODetailClient({ po }: PODetailProps) {
   const handleUpdateDelivery = async (newStatus: PODetailProps["po"]["status"]) => {
     setLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-      const res = await fetch(`${apiUrl}/api/v1/procurement/purchase-orders/${po.id}/delivery`, {
+      const res = await apiClient(`/api/v1/procurement/purchase-orders/${po.id}/delivery`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           status: newStatus,
           actualDeliveryDate: newStatus === "DELIVERED" || newStatus === "CLOSED" ? new Date().toISOString() : undefined,
@@ -128,10 +126,11 @@ export function PODetailClient({ po }: PODetailProps) {
                   fontWeight: 600,
                   fontSize: "14px",
                   cursor: loading ? "not-allowed" : "pointer",
+                  opacity: loading ? 0.65 : 1,
                 }}
               >
-                <Send size={15} />
-                <span>Send to Vendor</span>
+                {loading ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
+                <span>{loading ? "Sending..." : "Send to Vendor"}</span>
               </button>
             )}
 
@@ -151,10 +150,11 @@ export function PODetailClient({ po }: PODetailProps) {
                   fontWeight: 600,
                   fontSize: "14px",
                   cursor: loading ? "not-allowed" : "pointer",
+                  opacity: loading ? 0.65 : 1,
                 }}
               >
-                <Truck size={15} />
-                <span>Mark Delivered</span>
+                {loading ? <Loader2 size={15} className="animate-spin" /> : <Truck size={15} />}
+                <span>{loading ? "Updating..." : "Mark Delivered"}</span>
               </button>
             )}
 
@@ -174,10 +174,11 @@ export function PODetailClient({ po }: PODetailProps) {
                   fontWeight: 600,
                   fontSize: "14px",
                   cursor: loading ? "not-allowed" : "pointer",
+                  opacity: loading ? 0.65 : 1,
                 }}
               >
-                <CheckCircle2 size={15} />
-                <span>Close PO & Rate Vendor</span>
+                {loading ? <Loader2 size={15} className="animate-spin" /> : <CheckCircle2 size={15} />}
+                <span>{loading ? "Closing..." : "Close PO & Rate Vendor"}</span>
               </button>
             )}
           </div>

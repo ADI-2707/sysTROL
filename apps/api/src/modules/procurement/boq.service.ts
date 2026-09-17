@@ -19,16 +19,38 @@ export class BOQService {
     );
   }
 
-  static async listBOQItems(projectId: string) {
-    return prisma.bOQItem.findMany({
-      where: { projectId },
-      include: {
-        purchaseOrder: {
-          select: { id: true, poNumber: true, status: true },
+  static async listBOQItems(projectId: string, params?: { page?: number; limit?: number }) {
+    const page = Math.max(1, Number(params?.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(params?.limit) || 20));
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await Promise.all([
+      prisma.bOQItem.findMany({
+        where: { projectId },
+        skip,
+        take: limit,
+        include: {
+          purchaseOrder: {
+            select: { id: true, poNumber: true, status: true },
+          },
         },
+        orderBy: { id: "asc" },
+      }),
+      prisma.bOQItem.count({ where: { projectId } }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit) || 1;
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
       },
-      orderBy: { id: "asc" },
-    });
+    };
   }
 
   static async updateBOQItem(id: string, dto: Partial<CreateBOQItemDto>) {

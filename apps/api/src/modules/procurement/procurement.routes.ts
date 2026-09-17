@@ -14,11 +14,9 @@ export async function procurementRoutes(fastify: FastifyInstance) {
   fastify.register(async (scope) => {
     scope.addHook("preHandler", scope.verifyJWT);
 
-    // --- Vendors ---
     scope.get("/procurement/vendors", async (request: FastifyRequest, reply: FastifyReply) => {
-      const query = request.query as { category?: string; country?: string };
-      const vendors = await VendorService.listVendors(query);
-      return reply.send({ vendors });
+      const result = await VendorService.listVendors(request.query as any);
+      return reply.send({ vendors: result.data || result, meta: result.meta });
     });
 
     scope.post("/procurement/vendors", async (request: FastifyRequest, reply: FastifyReply) => {
@@ -59,11 +57,10 @@ export async function procurementRoutes(fastify: FastifyInstance) {
       return reply.send({ ratingScore: rating });
     });
 
-    // --- BOQ ---
     scope.get("/procurement/boq/:projectId", async (request: FastifyRequest, reply: FastifyReply) => {
       const { projectId } = request.params as { projectId: string };
-      const items = await BOQService.listBOQItems(projectId);
-      return reply.send({ items });
+      const result = await BOQService.listBOQItems(projectId, request.query as any);
+      return reply.send({ items: result.data || result, meta: result.meta });
     });
 
     scope.post("/procurement/boq/:projectId", async (request: FastifyRequest, reply: FastifyReply) => {
@@ -97,11 +94,9 @@ export async function procurementRoutes(fastify: FastifyInstance) {
       return reply.send({ item: updated });
     });
 
-    // --- Purchase Orders ---
     scope.get("/procurement/purchase-orders", async (request: FastifyRequest, reply: FastifyReply) => {
-      const query = request.query as { vendorId?: string; projectId?: string; status?: PurchaseOrderStatus };
-      const purchaseOrders = await PurchaseOrderService.listPOs(query);
-      return reply.send({ purchaseOrders });
+      const result = await PurchaseOrderService.listPOs(request.query as any);
+      return reply.send({ purchaseOrders: result.data || result, meta: result.meta });
     });
 
     scope.post("/procurement/purchase-orders", async (request: FastifyRequest, reply: FastifyReply) => {
