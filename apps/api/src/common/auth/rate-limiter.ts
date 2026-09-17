@@ -88,10 +88,10 @@ export class AuthRateLimiter {
 
   static async resetAttempts(email: string, ip: string): Promise<void> {
     const key = makeKey(email, ip);
+    memoryStore.delete(key);
     try {
       await redis.del(key);
     } catch {
-      memoryStore.delete(key);
     }
   }
 
