@@ -138,6 +138,13 @@ model Enquiry {
   convertedProjectId String?        @unique
   convertedProject   Project?       @relation(fields: [convertedProjectId], references: [id])
   status             String         @default("OPEN")
+  ctaId              String?
+  pagePath           String?
+  utmSource          String?
+  utmMedium          String?
+  utmCampaign        String?
+  utmContent         String?
+  referrer           String?
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
   salesVisits        SalesVisit[]
@@ -257,6 +264,8 @@ model Project {
   plantLocation        String
   country              String              @default("India")
   millType             String
+  material             String?
+  lineType             String?
   standCount           Int
   currentStage         LifecycleStage      @default(ENQUIRY)
   createdById          String
@@ -550,5 +559,26 @@ model MediaAsset {
 
   @@index([category])
   @@index([gallerySection])
+  @@index([createdAt])
+}
+
+model CtaEvent {
+  id          String   @id @default(uuid())
+  eventType   String
+  pagePath    String
+  ctaId       String
+  ipHash      String?
+  userAgent   String?
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  utmContent  String?
+  referrer    String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([eventType])
+  @@index([pagePath])
+  @@index([ctaId])
   @@index([createdAt])
 }
