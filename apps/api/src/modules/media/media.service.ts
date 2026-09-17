@@ -63,6 +63,7 @@ export class MediaService {
         altText: input.altText || null,
         caption: input.caption || null,
         category: input.category,
+        gallerySection: input.gallerySection || null,
         tags: input.tags || [],
         fileUrl: input.fileUrl,
         s3Key: input.s3Key,
@@ -92,6 +93,9 @@ export class MediaService {
     const where: any = {};
     if (query.category) {
       where.category = query.category;
+    }
+    if (query.gallerySection) {
+      where.gallerySection = query.gallerySection;
     }
     if (query.projectId) {
       where.projectId = query.projectId;
@@ -164,6 +168,7 @@ export class MediaService {
         ...(input.altText !== undefined ? { altText: input.altText } : {}),
         ...(input.caption !== undefined ? { caption: input.caption } : {}),
         ...(input.category !== undefined ? { category: input.category } : {}),
+        ...(input.gallerySection !== undefined ? { gallerySection: input.gallerySection } : {}),
         ...(input.tags !== undefined ? { tags: input.tags } : {}),
         ...(input.projectId !== undefined ? { projectId: input.projectId } : {}),
       },
@@ -209,6 +214,7 @@ export class MediaService {
         altText: true,
         caption: true,
         category: true,
+        gallerySection: true,
         tags: true,
         fileUrl: true,
         width: true,

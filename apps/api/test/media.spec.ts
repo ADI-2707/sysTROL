@@ -109,6 +109,29 @@ describe("Media Module Tests", () => {
       const result = ConfirmMediaInputSchema.safeParse(input);
       expect(result.success).toBe(true);
     });
+
+    it("validates gallerySection field in ConfirmMediaInputSchema", () => {
+      const baseInput = {
+        title: "Simulation Lab Testing Bay",
+        category: "GALLERY" as const,
+        fileUrl: "https://example.com/lab.webp",
+        s3Key: "gallery/lab.webp",
+        mimeType: "image/webp" as const,
+        sizeBytes: 250000,
+      };
+
+      const workplaceRes = ConfirmMediaInputSchema.safeParse({ ...baseInput, gallerySection: "WORKPLACE" });
+      expect(workplaceRes.success).toBe(true);
+
+      const teamRes = ConfirmMediaInputSchema.safeParse({ ...baseInput, gallerySection: "TEAM" });
+      expect(teamRes.success).toBe(true);
+
+      const deployRes = ConfirmMediaInputSchema.safeParse({ ...baseInput, gallerySection: "DEPLOYMENTS" });
+      expect(deployRes.success).toBe(true);
+
+      const invalidRes = ConfirmMediaInputSchema.safeParse({ ...baseInput, gallerySection: "INVALID_SECTION" });
+      expect(invalidRes.success).toBe(false);
+    });
   });
 
   describe("MediaService", () => {
