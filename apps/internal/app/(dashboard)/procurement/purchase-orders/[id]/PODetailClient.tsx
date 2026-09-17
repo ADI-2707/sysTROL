@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Send, CheckCircle2, Truck, Calendar, DollarSign, Package } from "lucide-react";
+import { ArrowLeft, Send, CheckCircle2, Truck, Calendar, DollarSign, Package, Loader2 } from "lucide-react";
 
 interface PODetailProps {
   po: {
@@ -128,10 +128,11 @@ export function PODetailClient({ po }: PODetailProps) {
                   fontWeight: 600,
                   fontSize: "14px",
                   cursor: loading ? "not-allowed" : "pointer",
+                  opacity: loading ? 0.65 : 1,
                 }}
               >
-                <Send size={15} />
-                <span>Send to Vendor</span>
+                {loading ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
+                <span>{loading ? "Sending..." : "Send to Vendor"}</span>
               </button>
             )}
 
@@ -151,10 +152,11 @@ export function PODetailClient({ po }: PODetailProps) {
                   fontWeight: 600,
                   fontSize: "14px",
                   cursor: loading ? "not-allowed" : "pointer",
+                  opacity: loading ? 0.65 : 1,
                 }}
               >
-                <Truck size={15} />
-                <span>Mark Delivered</span>
+                {loading ? <Loader2 size={15} className="animate-spin" /> : <Truck size={15} />}
+                <span>{loading ? "Updating..." : "Mark Delivered"}</span>
               </button>
             )}
 
@@ -174,10 +176,11 @@ export function PODetailClient({ po }: PODetailProps) {
                   fontWeight: 600,
                   fontSize: "14px",
                   cursor: loading ? "not-allowed" : "pointer",
+                  opacity: loading ? 0.65 : 1,
                 }}
               >
-                <CheckCircle2 size={15} />
-                <span>Close PO & Rate Vendor</span>
+                {loading ? <Loader2 size={15} className="animate-spin" /> : <CheckCircle2 size={15} />}
+                <span>{loading ? "Closing..." : "Close PO & Rate Vendor"}</span>
               </button>
             )}
           </div>

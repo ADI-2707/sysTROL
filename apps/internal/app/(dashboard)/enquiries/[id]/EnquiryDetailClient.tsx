@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, CheckCircle2, XCircle, ArrowRight, ShieldCheck, Clock, Building, Calendar, Layers } from "lucide-react";
+import { ArrowLeft, CheckCircle2, XCircle, ArrowRight, ShieldCheck, Clock, Building, Calendar, Layers, Loader2 } from "lucide-react";
 
 interface EnquiryDetailProps {
   enquiry: {
@@ -172,11 +172,12 @@ export function EnquiryDetailClient({ enquiry }: EnquiryDetailProps) {
                       color: "#10b981",
                       fontSize: "13px",
                       fontWeight: 600,
-                      cursor: "pointer",
+                      cursor: loading ? "not-allowed" : "pointer",
+                      opacity: loading ? 0.65 : 1,
                     }}
                   >
-                    <CheckCircle2 size={15} />
-                    <span>Qualify Enquiry</span>
+                    {loading ? <Loader2 size={15} className="animate-spin" /> : <CheckCircle2 size={15} />}
+                    <span>{loading ? "Processing..." : "Qualify Enquiry"}</span>
                   </button>
                 )}
 
@@ -194,7 +195,8 @@ export function EnquiryDetailClient({ enquiry }: EnquiryDetailProps) {
                     color: "#ffffff",
                     fontSize: "13px",
                     fontWeight: 600,
-                    cursor: "pointer",
+                    cursor: loading ? "not-allowed" : "pointer",
+                    opacity: loading ? 0.65 : 1,
                   }}
                 >
                   <Layers size={15} />
@@ -215,11 +217,12 @@ export function EnquiryDetailClient({ enquiry }: EnquiryDetailProps) {
                     color: "#ef4444",
                     fontSize: "13px",
                     fontWeight: 600,
-                    cursor: "pointer",
+                    cursor: loading ? "not-allowed" : "pointer",
+                    opacity: loading ? 0.65 : 1,
                   }}
                 >
-                  <XCircle size={15} />
-                  <span>Disqualify</span>
+                  {loading ? <Loader2 size={15} className="animate-spin" /> : <XCircle size={15} />}
+                  <span>{loading ? "Processing..." : "Disqualify"}</span>
                 </button>
               </>
             )}
@@ -500,9 +503,14 @@ export function EnquiryDetailClient({ enquiry }: EnquiryDetailProps) {
                     color: "#ffffff",
                     fontWeight: 600,
                     cursor: loading ? "not-allowed" : "pointer",
+                    opacity: loading ? 0.65 : 1,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
                   }}
                 >
-                  {loading ? "Converting..." : "Confirm Conversion"}
+                  {loading ? <Loader2 size={14} className="animate-spin" /> : null}
+                  <span>{loading ? "Converting..." : "Confirm Conversion"}</span>
                 </button>
               </div>
             </form>

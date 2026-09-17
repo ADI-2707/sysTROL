@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Save, Plus } from "lucide-react";
+import { ArrowLeft, Save, Plus, Loader2 } from "lucide-react";
 
 function SalesVisitForm() {
   const router = useRouter();
@@ -276,10 +276,11 @@ function SalesVisitForm() {
               fontSize: "14px",
               fontWeight: 600,
               cursor: loading ? "not-allowed" : "pointer",
+              opacity: loading ? 0.65 : 1,
               border: "none",
             }}
           >
-            <Save size={16} />
+            {loading ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
             <span>{loading ? "Recording..." : "Save Visit"}</span>
           </button>
         </div>
