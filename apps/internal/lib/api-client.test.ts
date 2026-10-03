@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { apiClient, silentRefreshToken, getStoredSession, updateStoredToken } from "./api-client.js";
+import { SYSTROL_SESSION_STORAGE_KEY, setStoredSession } from "./auth-storage.js";
 
 describe("apiClient & silentRefreshToken unit tests", () => {
   const originalFetch = global.fetch;
@@ -18,7 +19,7 @@ describe("apiClient & silentRefreshToken unit tests", () => {
     const validToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
       btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 })) +
       ".signature";
-    localStorage.setItem("systrol_user", JSON.stringify({ token: validToken, user: { id: "1" } }));
+    setStoredSession({ token: validToken, user: { id: "1", email: "a@b.com", name: "A", role: "ADMIN", team: "L", designation: "D" } });
 
     const mockFetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({ ok: true }), { status: 200 }));
     global.fetch = mockFetch;
@@ -49,7 +50,7 @@ describe("apiClient & silentRefreshToken unit tests", () => {
     const expiredToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
       btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) - 100 })) +
       ".sig";
-    localStorage.setItem("systrol_user", JSON.stringify({ token: expiredToken, user: { id: "u1" } }));
+    setStoredSession({ token: expiredToken, user: { id: "u1", email: "a@b.com", name: "A", role: "ADMIN", team: "L", designation: "D" } });
 
     const newAccessToken = "newToken999";
 
@@ -121,7 +122,7 @@ describe("apiClient & silentRefreshToken unit tests", () => {
   });
 
   it("purges stored session and throws error when refresh request fails", async () => {
-    localStorage.setItem("systrol_user", JSON.stringify({ token: "invalid", user: { id: "1" } }));
+    setStoredSession({ token: "invalid", user: { id: "1", email: "a@b.com", name: "A", role: "ADMIN", team: "L", designation: "D" } });
 
     const mockFetch = vi.fn().mockImplementation((url: string) => {
       if (url.includes("/api/v1/auth/refresh")) {
@@ -133,7 +134,8 @@ describe("apiClient & silentRefreshToken unit tests", () => {
     global.fetch = mockFetch;
 
     await expect(apiClient("/api/v1/sensitive-data")).rejects.toThrow("Session expired");
-    expect(localStorage.getItem("systrol_user")).toBeNull();
+    expect(localStorage.getItem(SYSTROL_SESSION_STORAGE_KEY)).toBeNull();
+    expect(getStoredSession()).toBeNull();
   });
 
   it("does not loop refresh for login endpoint returning 401", async () => {

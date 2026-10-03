@@ -1,4 +1,11 @@
 import { isTokenValid } from "./token-utils.js";
+import {
+  getStoredSession,
+  updateStoredToken,
+  clearStoredSession,
+} from "./auth-storage.js";
+
+export { getStoredSession, updateStoredToken, clearStoredSession };
 
 const DEFAULT_API_URL = process.env.NEXT_PUBLIC_API_URL || "https://systrol-api.onrender.com";
 
@@ -19,29 +26,6 @@ function processQueue(error: any, token: string | null = null) {
   failedQueue = [];
 }
 
-export function getStoredSession(): { token?: string; user?: any } | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = localStorage.getItem("systrol_user");
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
-
-export function updateStoredToken(newToken: string): void {
-  if (typeof window === "undefined") return;
-  try {
-    const session = getStoredSession();
-    if (session) {
-      session.token = newToken;
-      localStorage.setItem("systrol_user", JSON.stringify(session));
-    }
-  } catch {
-  }
-}
-
 export async function silentRefreshToken(): Promise<string> {
   const apiUrl = DEFAULT_API_URL;
   const res = await fetch(`${apiUrl}/api/v1/auth/refresh`, {
@@ -51,9 +35,7 @@ export async function silentRefreshToken(): Promise<string> {
   });
 
   if (!res.ok) {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("systrol_user");
-    }
+    clearStoredSession();
     throw new Error("Session expired. Please log in again.");
   }
 
@@ -63,7 +45,7 @@ export async function silentRefreshToken(): Promise<string> {
     throw new Error("Malformed refresh response");
   }
 
-  updateStoredToken(newAccessToken);
+  updateStoredToken(newAccessToken, data.refreshToken);
   return newAccessToken;
 }
 
