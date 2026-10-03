@@ -1,0 +1,59 @@
+import { describe, it, expect, beforeEach } from "vitest";
+import {
+  SYSTROL_SESSION_STORAGE_KEY,
+  getStoredSession,
+  setStoredSession,
+  clearStoredSession,
+  updateStoredToken,
+} from "./auth-storage.js";
+
+describe("auth-storage unit tests", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("returns null when no session is present", () => {
+    expect(getStoredSession()).toBeNull();
+  });
+
+  it("stores and retrieves a valid session", () => {
+    const session = {
+      token: "access-token-123",
+      refreshToken: "refresh-token-456",
+      user: {
+        id: "usr-1",
+        email: "admin@systrol.com",
+        name: "Admin User",
+        role: "SUPER_ADMIN",
+        team: "LEADERSHIP",
+        designation: "Executive",
+      },
+    };
+    setStoredSession(session);
+    const retrieved = getStoredSession();
+    expect(retrieved).toEqual(session);
+    expect(localStorage.getItem(SYSTROL_SESSION_STORAGE_KEY)).toBe(JSON.stringify(session));
+  });
+
+  it("handles corrupted non-JSON storage content safely", () => {
+    localStorage.setItem(SYSTROL_SESSION_STORAGE_KEY, "invalid-json-string{");
+    expect(getStoredSession()).toBeNull();
+  });
+
+  it("clears stored session and legacy key", () => {
+    localStorage.setItem(SYSTROL_SESSION_STORAGE_KEY, JSON.stringify({ token: "test" }));
+    localStorage.setItem("systrol_user", JSON.stringify({ token: "legacy" }));
+    clearStoredSession();
+    expect(localStorage.getItem(SYSTROL_SESSION_STORAGE_KEY)).toBeNull();
+    expect(localStorage.getItem("systrol_user")).toBeNull();
+    expect(getStoredSession()).toBeNull();
+  });
+
+  it("updates stored token and optional refresh token", () => {
+    setStoredSession({ token: "old-token", refreshToken: "old-refresh" });
+    updateStoredToken("new-token", "new-refresh");
+    const updated = getStoredSession();
+    expect(updated?.token).toBe("new-token");
+    expect(updated?.refreshToken).toBe("new-refresh");
+  });
+});
