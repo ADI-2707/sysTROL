@@ -31,9 +31,14 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          pnpm version-packages
-          if [ -n "$(git status --porcelain)" ]; then
-            git add .
-            git commit -m "chore(release): version packages [skip ci]"
-            git push origin main
+          CHANGESETS=$(find .changeset -maxdepth 1 -name "*.md" ! -name "README.md")
+          if [ -n "$CHANGESETS" ]; then
+            pnpm version-packages
+            if [ -n "$(git status --porcelain)" ]; then
+              git add .
+              git commit -m "chore(release): version packages [skip ci]"
+              git push origin main
+            fi
+          else
+            echo "No changesets found. Skipping version bump."
           fi
