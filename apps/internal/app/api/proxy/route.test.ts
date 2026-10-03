@@ -188,4 +188,46 @@ describe("BFF Proxy Route Unit & Scenario Tests", () => {
       expect(calledInit.method).toBe(method);
     }
   });
+
+  it("Scenario 3.7: strips content-encoding, content-length, and transfer-encoding to prevent ERR_CONTENT_DECODING_FAILED", async () => {
+    const upstreamHeaders = new Headers();
+    upstreamHeaders.set("Content-Type", "application/json");
+    upstreamHeaders.set("Content-Encoding", "gzip");
+    upstreamHeaders.set("Content-Length", "42");
+    upstreamHeaders.set("Transfer-Encoding", "chunked");
+    upstreamHeaders.set("Connection", "keep-alive");
+    upstreamHeaders.set("X-Custom-Header", "preserved-value");
+
+    const mockFetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ data: "uncompressed body" }), {
+        status: 200,
+        headers: upstreamHeaders,
+      })
+    );
+    global.fetch = mockFetch;
+
+    const req = new NextRequest("http://localhost:3001/api/proxy/v1/dashboard", {
+      method: "GET",
+      headers: {
+        "accept-encoding": "gzip, deflate, br",
+      },
+    });
+
+    const res = await handleProxy(req, {
+      params: Promise.resolve({ path: ["v1", "dashboard"] }),
+    });
+
+    expect(res.status).toBe(200);
+
+    const [, calledInit] = mockFetch.mock.calls[0];
+    expect(calledInit.headers.get("accept-encoding")).toBeNull();
+
+    expect(res.headers.get("content-encoding")).toBeNull();
+    expect(res.headers.get("content-length")).toBeNull();
+    expect(res.headers.get("transfer-encoding")).toBeNull();
+    expect(res.headers.get("connection")).toBeNull();
+
+    expect(res.headers.get("content-type")).toBe("application/json");
+    expect(res.headers.get("x-custom-header")).toBe("preserved-value");
+  });
 });

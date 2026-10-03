@@ -12,7 +12,7 @@ async function handleProxy(req: NextRequest, { params }: { params: Promise<{ pat
   const forwardHeaders = new Headers();
   req.headers.forEach((value, key) => {
     const lower = key.toLowerCase();
-    if (lower !== "host" && lower !== "content-length") {
+    if (lower !== "host" && lower !== "content-length" && lower !== "accept-encoding") {
       forwardHeaders.set(key, value);
     }
   });
@@ -42,10 +42,19 @@ async function handleProxy(req: NextRequest, { params }: { params: Promise<{ pat
       redirect: "manual",
     });
 
+    const STRIPPED_RESPONSE_HEADERS = new Set([
+      "set-cookie",
+      "content-encoding",
+      "content-length",
+      "transfer-encoding",
+      "connection",
+      "keep-alive",
+    ]);
+
     const resHeaders = new Headers();
     upstreamRes.headers.forEach((value, key) => {
       const lower = key.toLowerCase();
-      if (lower !== "set-cookie") {
+      if (!STRIPPED_RESPONSE_HEADERS.has(lower)) {
         resHeaders.set(key, value);
       }
     });
