@@ -34,38 +34,49 @@ async function handleProxy(req: NextRequest, { params }: { params: Promise<{ pat
     }
   }
 
-  const upstreamRes = await fetch(targetUrl, {
-    method: req.method,
-    headers: forwardHeaders,
-    body,
-    redirect: "manual",
-  });
+  try {
+    const upstreamRes = await fetch(targetUrl, {
+      method: req.method,
+      headers: forwardHeaders,
+      body,
+      redirect: "manual",
+    });
 
-  const resHeaders = new Headers();
-  upstreamRes.headers.forEach((value, key) => {
-    const lower = key.toLowerCase();
-    if (lower !== "set-cookie") {
-      resHeaders.set(key, value);
+    const resHeaders = new Headers();
+    upstreamRes.headers.forEach((value, key) => {
+      const lower = key.toLowerCase();
+      if (lower !== "set-cookie") {
+        resHeaders.set(key, value);
+      }
+    });
+
+    const response = new NextResponse(upstreamRes.body, {
+      status: upstreamRes.status,
+      statusText: upstreamRes.statusText,
+      headers: resHeaders,
+    });
+
+    const rawSetCookies = typeof upstreamRes.headers.getSetCookie === "function"
+      ? upstreamRes.headers.getSetCookie()
+      : [upstreamRes.headers.get("set-cookie")].filter(Boolean);
+
+    for (const cookieStr of rawSetCookies) {
+      if (cookieStr) {
+        response.headers.append("set-cookie", cleanSetCookieHeader(cookieStr));
+      }
     }
-  });
 
-  const response = new NextResponse(upstreamRes.body, {
-    status: upstreamRes.status,
-    statusText: upstreamRes.statusText,
-    headers: resHeaders,
-  });
-
-  const rawSetCookies = typeof upstreamRes.headers.getSetCookie === "function"
-    ? upstreamRes.headers.getSetCookie()
-    : [upstreamRes.headers.get("set-cookie")].filter(Boolean);
-
-  for (const cookieStr of rawSetCookies) {
-    if (cookieStr) {
-      response.headers.append("set-cookie", cleanSetCookieHeader(cookieStr));
-    }
+    return response;
+  } catch (error: any) {
+    return NextResponse.json(
+      {
+        statusCode: 502,
+        error: "Bad Gateway",
+        message: error?.message || "Upstream service unreachable",
+      },
+      { status: 502 }
+    );
   }
-
-  return response;
 }
 
 export const GET = handleProxy;

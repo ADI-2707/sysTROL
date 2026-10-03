@@ -166,4 +166,50 @@ describe("apiClient & silentRefreshToken unit tests", () => {
     expect(res.status).toBe(401);
     expect(mockFetch).toHaveBeenCalledTimes(1);
   });
+
+  it("Scenario 4.7: purges session and throws on malformed 200 refresh payload", async () => {
+    setStoredSession({ token: "expired", user: { id: "1", email: "a@b.com", name: "A", role: "ADMIN", team: "L", designation: "D" } });
+
+    let eventFired = false;
+    const listener = () => {
+      eventFired = true;
+    };
+    window.addEventListener("systrol:session_expired", listener);
+
+    const mockFetch = vi.fn().mockImplementation((url: string) => {
+      if (url.includes("/auth/refresh")) {
+        return Promise.resolve(new Response(JSON.stringify({ unexpected: "data" }), { status: 200 }));
+      }
+      return Promise.resolve(new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 }));
+    });
+    global.fetch = mockFetch;
+
+    await expect(apiClient("/api/v1/projects")).rejects.toThrow("Malformed refresh response");
+    expect(getStoredSession()).toBeNull();
+    expect(eventFired).toBe(true);
+
+    window.removeEventListener("systrol:session_expired", listener);
+  });
+
+  it("Scenario 4.8: cleanly rejects all queued concurrent requests if refresh fails", async () => {
+    setStoredSession({ token: "expired", user: { id: "1", email: "a@b.com", name: "A", role: "ADMIN", team: "L", designation: "D" } });
+
+    const mockFetch = vi.fn().mockImplementation((url: string) => {
+      if (url.includes("/auth/refresh")) {
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            resolve(new Response(JSON.stringify({ error: "Session expired" }), { status: 401 }));
+          }, 30);
+        });
+      }
+      return Promise.resolve(new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 }));
+    });
+    global.fetch = mockFetch;
+
+    const p1 = apiClient("/api/v1/call1");
+    const p2 = apiClient("/api/v1/call2");
+
+    await expect(p1).rejects.toThrow("Session expired");
+    await expect(p2).rejects.toThrow("Session expired");
+  });
 });

@@ -56,4 +56,16 @@ describe("auth-storage unit tests", () => {
     expect(updated?.token).toBe("new-token");
     expect(updated?.refreshToken).toBe("new-refresh");
   });
+
+  it("Scenario 1.4: safely catches QuotaExceededError or storage exceptions without throwing", () => {
+    const originalSetItem = localStorage.setItem;
+    localStorage.setItem = vi.fn().mockImplementation(() => {
+      throw new DOMException("QuotaExceededError", "QuotaExceededError");
+    });
+
+    expect(() => setStoredSession({ token: "test" })).not.toThrow();
+    expect(() => updateStoredToken("test")).not.toThrow();
+
+    localStorage.setItem = originalSetItem;
+  });
 });

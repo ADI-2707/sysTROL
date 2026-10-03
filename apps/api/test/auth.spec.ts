@@ -451,5 +451,47 @@ describe("Auth Module Unit & Payload Tests", () => {
       expect(data.error).toBe("Unauthorized");
       expect(data.message).toBe("No refresh token provided");
     });
+
+    it("Scenario 2.7: safely handles Redis lookup errors without crashing the server", async () => {
+      (redis.keys as any).mockRejectedValueOnce(new Error("Redis connection failure"));
+
+      const res = await server.inject({
+        method: "POST",
+        url: "/api/v1/auth/refresh",
+        headers: {
+          "content-type": "application/json",
+        },
+        payload: {
+          refreshToken: "redis-offline-token",
+        },
+      });
+
+      expect(res.statusCode).toBe(401);
+      const data = JSON.parse(res.body);
+      expect(data.error).toBe("Unauthorized");
+      expect(data.message).toBe("Invalid or expired refresh token");
+    });
+
+    it("Scenario 2.8: returns 401 Unauthorized if user was deleted from database after token issuance", async () => {
+      (redis.keys as any).mockResolvedValueOnce(["refresh:usr-deleted:valid-token"]);
+      (redis.get as any).mockResolvedValueOnce("OPERATOR");
+      (prisma.user.findUnique as any).mockResolvedValueOnce(null);
+
+      const res = await server.inject({
+        method: "POST",
+        url: "/api/v1/auth/refresh",
+        headers: {
+          "content-type": "application/json",
+        },
+        payload: {
+          refreshToken: "valid-token",
+        },
+      });
+
+      expect(res.statusCode).toBe(401);
+      const data = JSON.parse(res.body);
+      expect(data.error).toBe("Unauthorized");
+      expect(data.message).toBe("User no longer exists");
+    });
   });
 });

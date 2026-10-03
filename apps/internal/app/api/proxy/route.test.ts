@@ -142,4 +142,50 @@ describe("BFF Proxy Route Unit & Scenario Tests", () => {
       expect(res.status).toBe(statusCode);
     }
   });
+
+  it("Scenario 3.5: handles upstream network crash/fetch failure with 502 Bad Gateway", async () => {
+    global.fetch = vi.fn().mockRejectedValue(new Error("Connection refused"));
+
+    const req = new NextRequest("http://localhost:3001/api/proxy/v1/projects", {
+      method: "GET",
+    });
+
+    const res = await handleProxy(req, {
+      params: Promise.resolve({ path: ["v1", "projects"] }),
+    });
+
+    expect(res.status).toBe(502);
+    const data = await res.json();
+    expect(data.statusCode).toBe(502);
+    expect(data.error).toBe("Bad Gateway");
+    expect(data.message).toContain("Connection refused");
+  });
+
+  it("Scenario 3.6: forwards DELETE and PUT requests with proper HTTP methods", async () => {
+    for (const method of ["DELETE", "PUT"]) {
+      const mockFetch = vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ ok: true }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        })
+      );
+      global.fetch = mockFetch;
+
+      const req = new NextRequest("http://localhost:3001/api/proxy/v1/items/42", {
+        method,
+        headers: { "content-type": "application/json" },
+        body: method === "PUT" ? JSON.stringify({ name: "updated" }) : undefined,
+      });
+
+      const res = await handleProxy(req, {
+        params: Promise.resolve({ path: ["v1", "items", "42"] }),
+      });
+
+      expect(res.status).toBe(200);
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [calledUrl, calledInit] = mockFetch.mock.calls[0];
+      expect(calledUrl).toContain("/api/v1/items/42");
+      expect(calledInit.method).toBe(method);
+    }
+  });
 });
