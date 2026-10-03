@@ -86,9 +86,13 @@ sysTrol/
    - Standardized limit/offset pagination with hard upper bounds (max 100) and total count metadata across all internal endpoints.
    - Heavy relational subresources (drawings, review notes, inspection batches) are decoupled from primary project queries to optimize memory and throughput.
 
-4. **Resilient Client-Side Fetching & Silent Token Refresh**:
-   - Authenticated API client (`apps/internal/lib/api-client.ts`) intercepts `401` errors, requests token renewals silently, and queues concurrent requests to avoid stampedes.
-   - Graceful session invalidation on permanent token expiry.
+4. **Backend-For-Frontend (BFF) Proxy & Dual-Mode Auth Hardening**:
+   - Next.js server-side catch-all proxy route (`/api/proxy/[...path]`) relays requests from `systrolops.vercel.app` to `systrol-api.onrender.com`.
+   - Converts cross-origin API calls into 100% same-origin requests, eliminating third-party cookie restrictions in privacy-focused browsers (Chrome Privacy Sandbox, Brave Shields, Safari ITP).
+   - Upstream `Set-Cookie` headers are rewritten into first-party cookies (`SameSite=Lax`, `Path=/`, `HttpOnly`, `Secure`).
+   - Dual-mode refresh token support: `/api/v1/auth/refresh` accepts tokens via HTTP-only cookie or JSON body payload (`{ refreshToken }`).
+   - Fastify empty-body defense: prevents `400 Bad Request` (`FST_ERR_CTP_EMPTY_JSON_BODY`) when requests specify `application/json` without a body.
+   - Synchronized session storage under single canonical key (`systrol_user_session`) with graceful expiry redirection to `/login?session_expired=1`.
 
 5. **Input Debouncing & Mutation Locking**:
    - `useDebounce` hook (350ms) prevents excessive network calls on fast keystrokes across Media, Project, Employee, and Analytics search inputs.
