@@ -148,102 +148,185 @@ export default async function PostingsListPage() {
             </tr>
           </thead>
           <tbody>
-            {postings.map((job) => {
-              const badge = getStatusBadge(job.status);
-              return (
-                <tr
-                  key={job.id}
+            {postings.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={6}
                   style={{
-                    borderBottom: "1px solid var(--border-color)",
-                    transition: "background-color 0.15s ease",
+                    padding: "64px 24px",
+                    textAlign: "center",
+                    backgroundColor: "var(--bg-secondary)",
                   }}
                 >
-                  <td style={{ padding: "16px 20px" }}>
-                    <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>{job.title}</div>
-                    <div style={{ fontSize: "12px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", marginTop: "2px" }}>
-                      /{job.slug}
-                    </div>
-                  </td>
-                  <td style={{ padding: "16px 20px", color: "var(--text-secondary)" }}>
-                    {job.department}
-                  </td>
-                  <td style={{ padding: "16px 20px" }}>
-                    <span
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      maxWidth: "440px",
+                      margin: "0 auto",
+                    }}
+                  >
+                    <div
                       style={{
-                        display: "inline-block",
-                        padding: "3px 10px",
-                        borderRadius: "999px",
-                        fontSize: "12px",
-                        fontWeight: 600,
-                        backgroundColor: badge.bg,
-                        color: badge.text,
-                        border: `1px solid ${badge.border}`,
+                        width: "48px",
+                        height: "48px",
+                        borderRadius: "12px",
+                        backgroundColor: "var(--bg-card)",
+                        border: "1px solid var(--border-color)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: "var(--text-muted)",
+                        marginBottom: "16px",
                       }}
                     >
-                      {job.status}
-                    </span>
-                  </td>
-                  <td style={{ padding: "16px 20px" }}>
+                      <Briefcase size={24} />
+                    </div>
+
+                    <h3
+                      style={{
+                        fontSize: "16px",
+                        fontWeight: 600,
+                        color: "var(--text-primary)",
+                        margin: "0 0 8px 0",
+                      }}
+                    >
+                      No current jobs posted
+                    </h3>
+
+                    <p
+                      style={{
+                        fontSize: "14px",
+                        color: "var(--text-secondary)",
+                        lineHeight: "1.5",
+                        margin: "0 0 20px 0",
+                      }}
+                    >
+                      There are currently no job openings published to the public website. Create a new posting to publish vacancies.
+                    </p>
+
                     <Link
-                      href={`/careers-admin/postings/${job.id}/applications`}
+                      href="/careers-admin/postings/new"
                       style={{
                         display: "inline-flex",
                         alignItems: "center",
-                        gap: "6px",
-                        color: "var(--accent-blue)",
+                        gap: "8px",
+                        backgroundColor: "var(--accent-green)",
+                        color: "#ffffff",
                         fontWeight: 600,
+                        fontSize: "13.5px",
+                        padding: "9px 18px",
+                        borderRadius: "6px",
+                        textDecoration: "none",
+                        transition: "opacity 0.2s ease",
                       }}
                     >
-                      <Users size={15} />
-                      <span>{job._count?.applications ?? 0} candidates</span>
+                      <Plus size={15} />
+                      <span>Create New Posting</span>
                     </Link>
-                  </td>
-                  <td style={{ padding: "16px 20px", color: "var(--text-muted)", fontSize: "13px" }}>
-                    {job.publishedAt ? new Date(job.publishedAt).toLocaleDateString() : "Draft"}
-                  </td>
-                  <td style={{ padding: "16px 20px", textAlign: "right" }}>
-                    <div style={{ display: "inline-flex", gap: "10px", alignItems: "center" }}>
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              postings.map((job) => {
+                const badge = getStatusBadge(job.status);
+                return (
+                  <tr
+                    key={job.id}
+                    style={{
+                      borderBottom: "1px solid var(--border-color)",
+                      transition: "background-color 0.15s ease",
+                    }}
+                  >
+                    <td style={{ padding: "16px 20px" }}>
+                      <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>{job.title}</div>
+                      <div style={{ fontSize: "12px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", marginTop: "2px" }}>
+                        /{job.slug}
+                      </div>
+                    </td>
+                    <td style={{ padding: "16px 20px", color: "var(--text-secondary)" }}>
+                      {job.department}
+                    </td>
+                    <td style={{ padding: "16px 20px" }}>
+                      <span
+                        style={{
+                          display: "inline-block",
+                          padding: "3px 10px",
+                          borderRadius: "999px",
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          backgroundColor: badge.bg,
+                          color: badge.text,
+                          border: `1px solid ${badge.border}`,
+                        }}
+                      >
+                        {job.status}
+                      </span>
+                    </td>
+                    <td style={{ padding: "16px 20px" }}>
                       <Link
-                        href={`/careers-admin/postings/${job.id}/edit`}
+                        href={`/careers-admin/postings/${job.id}/applications`}
                         style={{
-                          padding: "6px 12px",
-                          borderRadius: "4px",
-                          backgroundColor: "var(--bg-card)",
-                          border: "1px solid var(--border-color)",
-                          color: "var(--text-primary)",
-                          fontSize: "12px",
                           display: "inline-flex",
                           alignItems: "center",
-                          gap: "4px",
+                          gap: "6px",
+                          color: "var(--accent-blue)",
+                          fontWeight: 600,
                         }}
                       >
-                        <Edit size={13} />
-                        <span>Edit</span>
+                        <Users size={15} />
+                        <span>{job._count?.applications ?? 0} candidates</span>
                       </Link>
-                      <a
-                        href={`http://localhost:3000/careers/${job.slug || job.id}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{
-                          padding: "6px 12px",
-                          borderRadius: "4px",
-                          backgroundColor: "var(--bg-card)",
-                          border: "1px solid var(--border-color)",
-                          color: "var(--text-secondary)",
-                          fontSize: "12px",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "4px",
-                        }}
-                      >
-                        <ExternalLink size={13} />
-                        <span>View</span>
-                      </a>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+                    </td>
+                    <td style={{ padding: "16px 20px", color: "var(--text-muted)", fontSize: "13px" }}>
+                      {job.publishedAt ? new Date(job.publishedAt).toLocaleDateString() : "Draft"}
+                    </td>
+                    <td style={{ padding: "16px 20px", textAlign: "right" }}>
+                      <div style={{ display: "inline-flex", gap: "10px", alignItems: "center" }}>
+                        <Link
+                          href={`/careers-admin/postings/${job.id}/edit`}
+                          style={{
+                            padding: "6px 12px",
+                            borderRadius: "4px",
+                            backgroundColor: "var(--bg-card)",
+                            border: "1px solid var(--border-color)",
+                            color: "var(--text-primary)",
+                            fontSize: "12px",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
+                          }}
+                        >
+                          <Edit size={13} />
+                          <span>Edit</span>
+                        </Link>
+                        <a
+                          href={`http://localhost:3000/careers/${job.slug || job.id}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{
+                            padding: "6px 12px",
+                            borderRadius: "4px",
+                            backgroundColor: "var(--bg-card)",
+                            border: "1px solid var(--border-color)",
+                            color: "var(--text-secondary)",
+                            fontSize: "12px",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
+                          }}
+                        >
+                          <ExternalLink size={13} />
+                          <span>View</span>
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>
