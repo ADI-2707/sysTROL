@@ -13,9 +13,12 @@
     "db:generate": "pnpm --filter @systrol/database generate",
     "db:migrate": "pnpm --filter @systrol/database migrate:deploy",
     "db:seed": "pnpm --filter @systrol/database seed",
-    "media:migrate": "tsx scripts/migrate-media.ts"
+    "media:migrate": "tsx scripts/migrate-media.ts",
+    "changeset": "changeset",
+    "version-packages": "changeset version"
   },
   "devDependencies": {
+    "@changesets/cli": "^3.0.3",
     "@playwright/test": "1.50.1",
     "@typescript-eslint/eslint-plugin": "8.23.0",
     "@typescript-eslint/parser": "8.23.0",

@@ -96,7 +96,7 @@ export default function LoginPage() {
               border: "1px solid var(--sys-green-border)",
             }}
           >
-            PORTAL v2.4
+            PORTAL {process.env.NEXT_PUBLIC_APP_VERSION || "v2.4.0"}
           </span>
         </div>
       </header>

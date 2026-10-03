@@ -22,8 +22,20 @@ import { trialsAndPostCommRoutes } from "./modules/trials/post-comm.routes.js";
 import { analyticsRoutes } from "./modules/analytics/analytics.routes.js";
 import { mediaRoutes } from "./modules/media/media.routes.js";
 import { ctaRoutes } from "./modules/cta/cta.routes.js";
+import fs from "node:fs";
 
 const logger = createLogger("api-server");
+
+function getApiVersion(): string {
+  try {
+    const pkgPath = new URL("../package.json", import.meta.url);
+    if (fs.existsSync(pkgPath)) {
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
+      if (pkg.version) return pkg.version;
+    }
+  } catch {}
+  return "2.4.0";
+}
 
 export async function buildServer() {
   const server = Fastify({
@@ -85,7 +97,7 @@ export async function buildServer() {
     return {
       service: "sysTROL Industrial Engineering API",
       status: "ONLINE",
-      version: "2.4.0",
+      version: getApiVersion(),
       timestamp: new Date().toISOString(),
       health: "/api/v1/health",
       publicJobs: "/api/v1/public/jobs",
