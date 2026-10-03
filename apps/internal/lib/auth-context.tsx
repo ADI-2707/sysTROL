@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { EmployeeTeam } from "./permissions";
 import { isTokenValid } from "./token-utils";
+import { getStoredSession, setStoredSession, clearStoredSession, StoredSession } from "./auth-storage";
 
 export interface AuthUser {
   id: string;
@@ -52,14 +53,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem("systrol_user_session");
+      const stored = getStoredSession();
       if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed?.token && !isTokenValid(parsed.token)) {
-          parsed.token = undefined;
-          localStorage.setItem("systrol_user_session", JSON.stringify(parsed));
+        if (stored.token && !isTokenValid(stored.token)) {
+          stored.token = undefined;
+          setStoredSession(stored);
         }
-        setUser(parsed);
+        setUser(stored as unknown as AuthUser);
       }
     } catch {
       setUser(null);
@@ -68,15 +68,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
+  useEffect(() => {
+    const handleExpired = () => {
+      setUser(null);
+      clearStoredSession();
+      router.push("/login?session_expired=1");
+    };
+
+    window.addEventListener("systrol:session_expired", handleExpired);
+    return () => {
+      window.removeEventListener("systrol:session_expired", handleExpired);
+    };
+  }, [router]);
+
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     const normalizedEmail = email.trim().toLowerCase();
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://systrol-api.onrender.com";
+      const loginUrl = typeof window !== "undefined"
+        ? "/api/proxy/v1/auth/login"
+        : `${process.env.API_URL || "https://systrol-api.onrender.com"}/api/v1/auth/login`;
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 12000);
 
-      const res = await fetch(`${apiUrl}/api/v1/auth/login`, {
+      const res = await fetch(loginUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: normalizedEmail, password }),
@@ -98,7 +113,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           isSeededSuperAdmin: normalizedEmail === "admin@systrol.com",
         };
         setUser(authedUser);
-        localStorage.setItem("systrol_user_session", JSON.stringify(authedUser));
+        setStoredSession({
+          ...authedUser,
+          token: data.accessToken,
+          refreshToken: data.refreshToken,
+          user: {
+            id: authedUser.id,
+            email: authedUser.email,
+            name: authedUser.name,
+            role: authedUser.role,
+            team: authedUser.team,
+            designation: authedUser.designation,
+            baseLocation: authedUser.baseLocation,
+            isSeededSuperAdmin: authedUser.isSeededSuperAdmin,
+          },
+        });
         return { success: true };
       }
 
@@ -116,7 +145,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (defaultAccount && expectedPass === password) {
       setUser(defaultAccount.user);
-      localStorage.setItem("systrol_user_session", JSON.stringify(defaultAccount.user));
+      setStoredSession(defaultAccount.user as unknown as StoredSession);
       return { success: true };
     }
 
@@ -133,7 +162,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isSeededSuperAdmin: isSuper,
       };
       setUser(guestUser);
-      localStorage.setItem("systrol_user_session", JSON.stringify(guestUser));
+      setStoredSession(guestUser as unknown as StoredSession);
       return { success: true };
     }
 
@@ -142,7 +171,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("systrol_user_session");
+    clearStoredSession();
     router.push("/login");
   };
 

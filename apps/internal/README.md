@@ -35,7 +35,10 @@ The Internal application is an operational portal engineered for field engineers
   - Tablet Rail (768px to 1024px): Automatically collapses navigation to a compact 60px icon rail to maximize screen space for complex tables and workflows.
   - Laptop & Ultrawide: Fluid, centered container layouts with max-width scaling.
 - Client Resilience & Security:
-  - Authenticated API Client (`lib/api-client.ts`): Intercepts `401 Unauthorized` responses, initiates silent token refresh, queues concurrent requests, and retries seamlessly.
+  - Backend-For-Frontend (BFF) Proxy (`app/api/proxy/[...path]/route.ts`): Relays client API requests server-to-server to Render, eliminating third-party cookie blocking and converting all auth cookies to first-party same-origin cookies (`SameSite=Lax; Path=/; HttpOnly; Secure`).
+  - Centralized Auth Storage (`lib/auth-storage.ts`): Enforces a single canonical session key (`systrol_user_session`) across `auth-context.tsx` and `api-client.ts`, preventing session desynchronization.
+  - Authenticated API Client (`lib/api-client.ts`): Automatically resolves relative paths through the BFF proxy, intercepts `401 Unauthorized` responses, initiates silent token refresh with body token fallback, queues concurrent calls, and dispatches `systrol:session_expired` on failure.
+  - Graceful Session Eviction: Listens for session expiration events, cleanly purges local storage, and redirects the user to `/login?session_expired=1` with an informative warning banner.
   - Input Debouncing: `useDebounce` hook prevents network congestion on rapid search inputs across Media, Projects, Employees, and Analytics.
   - Action Mutation Locking: Prevents double-click duplicate mutations on purchase order status changes, enquiry conversions, and sales visit creation.
   - Global Error Boundaries: Root and dashboard `error.tsx` error boundaries, custom `not-found.tsx` 404 pages, and skeleton `loading.tsx` states.
@@ -47,6 +50,11 @@ The Internal application is an operational portal engineered for field engineers
 ```
 apps/internal/
 ├── app/
+│   ├── api/
+│   │   └── proxy/
+│   │       ├── [...path]/route.ts    # Catch-all BFF proxy route handler with cookie relay
+│   │       ├── proxy-helpers.ts      # Cookie header cleaning and formatting utilities
+│   │       └── route.test.ts         # Proxy unit and scenario tests
 │   ├── (dashboard)/
 │   │   ├── dashboard/                # Central operations dashboard with KPI telemetry and charts
 │   │   ├── projects/                 # Project management with Ongoing & Commissioned cards
@@ -57,7 +65,7 @@ apps/internal/
 │   │   ├── error.tsx                 # Dashboard-scoped error boundary
 │   │   ├── loading.tsx               # Dashboard route transition loading skeleton
 │   │   └── layout.tsx                # Dashboard shell with responsive gate and topbar profile
-│   ├── login/                        # Dedicated enterprise login page
+│   ├── login/                        # Dedicated enterprise login page with expiration banner
 │   ├── error.tsx                     # Root application error boundary
 │   ├── not-found.tsx                 # Custom 404 handler
 │   ├── globals.css                   # Core layout reset, responsive media queries, table styling

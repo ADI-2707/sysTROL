@@ -15,6 +15,16 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("session_expired") === "1") {
+        setSessionExpired(true);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
@@ -167,6 +177,27 @@ export default function LoginPage() {
             >
               <AlertCircle size={16} style={{ flexShrink: 0 }} />
               <span>{error}</span>
+            </div>
+          )}
+
+          {sessionExpired && !error && (
+            <div
+              data-testid="session-expired-banner"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                padding: "10px 14px",
+                borderRadius: "8px",
+                backgroundColor: "rgba(245, 158, 11, 0.1)",
+                border: "1px solid rgba(245, 158, 11, 0.3)",
+                color: "#d97706",
+                fontSize: "13px",
+                marginBottom: "20px",
+              }}
+            >
+              <AlertCircle size={16} style={{ flexShrink: 0 }} />
+              <span>Your session has expired. Please sign in again to continue.</span>
             </div>
           )}
 

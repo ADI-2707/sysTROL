@@ -29,6 +29,9 @@ The API application is structured as a modular monolith providing high-throughpu
 - File Storage: S3-compatible object storage (MinIO in development, Supabase/AWS S3 in production) via `@aws-sdk/client-s3`
 - Authentication & Security Architecture:
   - Fastify JWT (`@fastify/jwt`) with access and refresh token rotation
+  - Dual-Mode Refresh Tokens: `/api/v1/auth/refresh` accepts tokens via HTTP-only cookies or JSON body payloads (`{ refreshToken }`), ensuring seamless fallback when browsers or environments restrict cross-domain cookies
+  - Token Response Payloads: Both `/api/v1/auth/login` and `/api/v1/auth/refresh` return `{ accessToken, refreshToken, user }` in the JSON response in addition to setting the cookie
+  - Fastify Empty-Body JSON Defense: Custom JSON content-type parser converts empty or whitespace-only bodies with `application/json` headers into `{}` cleanly, preventing `400 Bad Request` (`FST_ERR_CTP_EMPTY_JSON_BODY`) errors
   - Password hashing with `bcryptjs`
   - Two-factor authentication (TOTP) using `otplib` and QR code generation
   - Partitioned, HTTP-only, `SameSite=None; Secure` refresh cookies for resilient cross-domain auth
