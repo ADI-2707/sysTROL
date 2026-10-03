@@ -122,6 +122,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         totpEnabled: user.totpEnabled,
       },
       accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
     });
   });
 
@@ -130,7 +131,6 @@ export async function authRoutes(fastify: FastifyInstance) {
       const result = await fastify.refreshTokens(request, reply);
       return reply.send(result);
     } catch {
-      // reply already sent in refreshTokens
     }
   });
 

@@ -30,7 +30,7 @@ declare module "fastify" {
     refreshTokens: (
       request: FastifyRequest,
       reply: FastifyReply
-    ) => Promise<{ accessToken: string }>;
+    ) => Promise<{ accessToken: string; refreshToken: string }>;
   }
   interface FastifyRequest {
     auditBefore?: unknown;
@@ -190,8 +190,8 @@ async function jwtPluginAsync(fastify: FastifyInstance) {
       }
 
       const role = (foundRole || user.role) as UserRole;
-      const { accessToken } = await fastify.issueTokens(user.id, role, reply);
-      return { accessToken };
+      const tokens = await fastify.issueTokens(user.id, role, reply);
+      return { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken };
     }
   );
 }

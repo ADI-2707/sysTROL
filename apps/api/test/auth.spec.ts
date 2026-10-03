@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from "vitest";
+import { buildServer } from "../src/server.js";
 import { AuthService } from "../src/modules/auth/auth.service.js";
 import { TotpService } from "../src/common/auth/totp.service.js";
 import { AuthRateLimiter } from "../src/common/auth/rate-limiter.js";
@@ -308,6 +309,147 @@ describe("Auth Module Unit & Payload Tests", () => {
       expect(cookieConfig.secure).toBe(true);
       expect(cookieConfig.partitioned).toBe(true);
       expect(cookieConfig.httpOnly).toBe(true);
+    });
+  });
+
+  describe("Dual-Mode Token Refresh & Empty Body Defense", () => {
+    let server: any;
+
+    beforeAll(async () => {
+      server = await buildServer();
+      await server.ready();
+    });
+
+    afterAll(async () => {
+      await server.close();
+    });
+
+    it("Scenario 2.1: refreshes token with valid cookie", async () => {
+      (redis.keys as any).mockResolvedValueOnce(["refresh:usr-1:cookie-token-123"]);
+      (redis.get as any).mockResolvedValueOnce("ADMIN");
+      (prisma.user.findUnique as any).mockResolvedValueOnce({
+        id: "usr-1",
+        email: "admin@systrol.com",
+        role: "ADMIN",
+      });
+
+      const res = await server.inject({
+        method: "POST",
+        url: "/api/v1/auth/refresh",
+        headers: {
+          cookie: "refreshToken=cookie-token-123",
+        },
+      });
+
+      expect(res.statusCode).toBe(200);
+      const data = JSON.parse(res.body);
+      expect(data.accessToken).toBeDefined();
+      expect(data.refreshToken).toBeDefined();
+    });
+
+    it("Scenario 2.2: refreshes token with valid body payload and no cookie", async () => {
+      (redis.keys as any).mockResolvedValueOnce(["refresh:usr-2:body-token-456"]);
+      (redis.get as any).mockResolvedValueOnce("OPERATOR");
+      (prisma.user.findUnique as any).mockResolvedValueOnce({
+        id: "usr-2",
+        email: "operator@systrol.com",
+        role: "OPERATOR",
+      });
+
+      const res = await server.inject({
+        method: "POST",
+        url: "/api/v1/auth/refresh",
+        headers: {
+          "content-type": "application/json",
+        },
+        payload: {
+          refreshToken: "body-token-456",
+        },
+      });
+
+      expect(res.statusCode).toBe(200);
+      const data = JSON.parse(res.body);
+      expect(data.accessToken).toBeDefined();
+      expect(data.refreshToken).toBeDefined();
+    });
+
+    it("Scenario 2.3: refreshes token with empty JSON body {} and valid cookie", async () => {
+      (redis.keys as any).mockResolvedValueOnce(["refresh:usr-1:cookie-token-789"]);
+      (redis.get as any).mockResolvedValueOnce("ADMIN");
+      (prisma.user.findUnique as any).mockResolvedValueOnce({
+        id: "usr-1",
+        email: "admin@systrol.com",
+        role: "ADMIN",
+      });
+
+      const res = await server.inject({
+        method: "POST",
+        url: "/api/v1/auth/refresh",
+        headers: {
+          "content-type": "application/json",
+          cookie: "refreshToken=cookie-token-789",
+        },
+        payload: "{}",
+      });
+
+      expect(res.statusCode).toBe(200);
+      const data = JSON.parse(res.body);
+      expect(data.accessToken).toBeDefined();
+      expect(data.refreshToken).toBeDefined();
+    });
+
+    it("Scenario 2.4: returns 401 Unauthorized (never 400 Bad Request) on empty JSON body without cookie", async () => {
+      const res = await server.inject({
+        method: "POST",
+        url: "/api/v1/auth/refresh",
+        headers: {
+          "content-type": "application/json",
+        },
+        payload: "",
+      });
+
+      expect(res.statusCode).toBe(401);
+      const data = JSON.parse(res.body);
+      expect(data.error).toBe("Unauthorized");
+      expect(data.message).toBe("No refresh token provided");
+    });
+
+    it("Scenario 2.5: returns 401 Unauthorized for expired or non-existent refresh token", async () => {
+      (redis.keys as any).mockResolvedValueOnce([]);
+
+      const res = await server.inject({
+        method: "POST",
+        url: "/api/v1/auth/refresh",
+        headers: {
+          "content-type": "application/json",
+        },
+        payload: {
+          refreshToken: "expired-token",
+        },
+      });
+
+      expect(res.statusCode).toBe(401);
+      const data = JSON.parse(res.body);
+      expect(data.error).toBe("Unauthorized");
+      expect(data.message).toBe("Invalid or expired refresh token");
+    });
+
+    it("Scenario 2.6: returns 401 Unauthorized when malformed/empty refresh token is sent", async () => {
+      const res = await server.inject({
+        method: "POST",
+        url: "/api/v1/auth/refresh",
+        headers: {
+          "content-type": "application/json",
+        },
+        payload: {
+          refreshToken: "",
+        },
+      });
+
+      expect(res.statusCode).toBe(401);
+      const data = JSON.parse(res.body);
+      expect(data.error).toBe("Unauthorized");
+      expect(data.message).toBe("No refresh token provided");
     });
   });
 });

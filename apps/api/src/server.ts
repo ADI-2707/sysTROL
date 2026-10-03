@@ -42,7 +42,20 @@ export async function buildServer() {
     credentials: true,
   });
 
-  // 2. Cookie
+  server.addContentTypeParser("application/json", { parseAs: "string" }, (req, body, done) => {
+    if (!body || typeof body !== "string" || body.trim() === "") {
+      done(null, {});
+      return;
+    }
+    try {
+      const json = JSON.parse(body);
+      done(null, json);
+    } catch (err: any) {
+      err.statusCode = 400;
+      done(err, undefined);
+    }
+  });
+
   await server.register(cookie);
 
   // 3. JWT Plugin
