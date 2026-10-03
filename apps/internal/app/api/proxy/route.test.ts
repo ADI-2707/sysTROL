@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { NextRequest } from "next/server";
-import { cleanSetCookieHeader, handleProxy } from "./[...path]/route.js";
+import { cleanSetCookieHeader } from "./proxy-helpers.js";
+import { GET as handleProxy } from "./[...path]/route.js";
 
 describe("BFF Proxy Route Unit & Scenario Tests", () => {
   const originalFetch = global.fetch;

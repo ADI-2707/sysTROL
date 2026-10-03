@@ -130,7 +130,7 @@ async function jwtPluginAsync(fastify: FastifyInstance) {
     async function (
       request: FastifyRequest,
       reply: FastifyReply
-    ): Promise<{ accessToken: string }> {
+    ): Promise<{ accessToken: string; refreshToken: string }> {
       const rawToken =
         request.cookies?.refreshToken ||
         (request.body as { refreshToken?: string } | undefined)?.refreshToken;

@@ -1,23 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cleanSetCookieHeader } from "../proxy-helpers.js";
 
 const TARGET_API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "https://systrol-api.onrender.com";
 
-export function cleanSetCookieHeader(cookieValue: string): string {
-  const parts = cookieValue.split(";").map((p) => p.trim());
-  const filtered = parts.filter((part) => {
-    const lower = part.toLowerCase();
-    return !lower.startsWith("domain=") && !lower.startsWith("samesite=") && !lower.startsWith("partitioned");
-  });
-  filtered.push("Path=/");
-  filtered.push("SameSite=Lax");
-  filtered.push("HttpOnly");
-  if (process.env.NODE_ENV === "production" || cookieValue.toLowerCase().includes("secure")) {
-    filtered.push("Secure");
-  }
-  return filtered.join("; ");
-}
-
-export async function handleProxy(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
+async function handleProxy(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
   const { path } = await params;
   const joinedPath = Array.isArray(path) ? path.join("/") : "";
   const search = req.nextUrl.search || "";
