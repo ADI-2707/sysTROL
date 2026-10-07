@@ -12,8 +12,14 @@ import {
   Mail,
   Briefcase,
   Lock,
+  Activity,
+  Database,
+  Server,
+  RefreshCw,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { canAccessAuditLogs } from "@/lib/permissions";
+import { apiClient } from "@/lib/api-client";
 import { ThemeToggle } from "../../theme-toggle";
 
 export default function SettingsPage() {
@@ -24,6 +30,23 @@ export default function SettingsPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [statusMessage, setStatusMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const isAdmin = canAccessAuditLogs(user);
+  const [diagData, setDiagData] = useState<any>(null);
+  const [diagLoading, setDiagLoading] = useState(false);
+
+  const runDiagnostics = async () => {
+    setDiagLoading(true);
+    try {
+      const res = await apiClient("/api/v1/health/deep");
+      const data = await res.json();
+      setDiagData(data);
+    } catch {
+      setDiagData({ status: "degraded", checks: { database: { status: "down" }, redis: { status: "down" } } });
+    } finally {
+      setDiagLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -385,6 +408,114 @@ export default function SettingsPage() {
           <ThemeToggle />
         </div>
       </div>
+
+      {isAdmin && (
+        <div
+          style={{
+            backgroundColor: "var(--bg-card)",
+            borderRadius: "12px",
+            border: "1px solid var(--border-subtle)",
+            padding: "24px",
+            boxShadow: "var(--shadow-card)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "18px",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <Activity size={20} color="var(--sys-blue-primary)" />
+              <div>
+                <h2 style={{ fontSize: "17px", fontWeight: 700, color: "var(--text-heading)", margin: 0 }}>
+                  Infrastructure Health & Diagnostics
+                </h2>
+                <div style={{ fontSize: "12.5px", color: "var(--text-muted)", marginTop: "2px" }}>
+                  Live connectivity probes and subsystem latency metrics (Super Admin Restricted).
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={runDiagnostics}
+              disabled={diagLoading}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "8px 16px",
+                borderRadius: "6px",
+                backgroundColor: "var(--sys-blue-primary)",
+                color: "#ffffff",
+                border: "none",
+                fontSize: "13px",
+                fontWeight: 600,
+                cursor: diagLoading ? "not-allowed" : "pointer",
+              }}
+            >
+              <RefreshCw size={14} className={diagLoading ? "spin" : ""} />
+              <span>{diagLoading ? "Probing Subsystems..." : "Run Health Diagnostics"}</span>
+            </button>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+            <div
+              style={{
+                backgroundColor: "var(--bg-canvas)",
+                padding: "16px",
+                borderRadius: "8px",
+                border: "1px solid var(--border-subtle)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                <Database size={17} color="var(--sys-blue-primary)" />
+                <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-heading)" }}>
+                  Neon Serverless PostgreSQL
+                </span>
+              </div>
+              <div
+                style={{
+                  fontSize: "14px",
+                  fontWeight: 700,
+                  color: diagData?.checks?.database?.status === "up" ? "#10b981" : diagData ? "#ef4444" : "var(--text-muted)",
+                }}
+              >
+                {diagData?.checks?.database?.status === "up" ? "HEALTHY (ONLINE)" : diagData ? "DEGRADED / DOWN" : "PENDING PROBE"}
+              </div>
+              <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px", fontFamily: "var(--font-mono)" }}>
+                Region: AWS ap-southeast-1 | Latency: {diagData?.checks?.database?.latencyMs ?? "--"} ms
+              </div>
+            </div>
+
+            <div
+              style={{
+                backgroundColor: "var(--bg-canvas)",
+                padding: "16px",
+                borderRadius: "8px",
+                border: "1px solid var(--border-subtle)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                <Server size={17} color="var(--sys-blue-primary)" />
+                <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-heading)" }}>
+                  Upstash Distributed Redis
+                </span>
+              </div>
+              <div
+                style={{
+                  fontSize: "14px",
+                  fontWeight: 700,
+                  color: diagData?.checks?.redis?.status === "up" ? "#10b981" : diagData ? "#ef4444" : "var(--text-muted)",
+                }}
+              >
+                {diagData?.checks?.redis?.status === "up" ? "HEALTHY (ONLINE)" : diagData ? "DEGRADED / DOWN" : "PENDING PROBE"}
+              </div>
+              <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px", fontFamily: "var(--font-mono)" }}>
+                Protocol: TLS Enabled | Latency: {diagData?.checks?.redis?.latencyMs ?? "--"} ms
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
