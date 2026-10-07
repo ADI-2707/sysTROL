@@ -94,7 +94,6 @@ export async function buildServer() {
   // 7. Audit interceptor
   await server.register(auditPlugin);
 
-  // Root & Health endpoints
   server.get("/", async () => {
     return {
       service: "sysTROL Industrial Engineering API",
@@ -103,14 +102,6 @@ export async function buildServer() {
       timestamp: new Date().toISOString(),
       health: "/api/v1/health",
       publicJobs: "/api/v1/public/jobs",
-    };
-  });
-
-  server.get("/api/v1/health", async () => {
-    return {
-      status: "ok",
-      environment: env.NODE_ENV,
-      timestamp: Date.now(),
     };
   });
 
