@@ -59,7 +59,7 @@ jobs:
             ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
 
       - name: Run Unit Tests
-        run: pnpm --filter @systrol/api test && pnpm --filter @systrol/web-public test
+        run: pnpm --filter @systrol/api test && pnpm --filter @systrol/web-public test && pnpm --filter @systrol/internal test
 
       - name: Build All Packages & Apps
         env:
