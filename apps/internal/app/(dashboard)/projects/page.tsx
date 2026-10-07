@@ -21,6 +21,7 @@ import {
   saveProjects,
   ProjectItem,
   PREDEFINED_STEP_NAMES,
+  syncProjectToApi,
 } from "@/lib/projects-data";
 import { useDebounce } from "@/lib/use-debounce";
 
@@ -89,6 +90,7 @@ export default function ProjectManagementPage() {
     setNewClient("");
     setNewLine("");
     setNewLocation("");
+    syncProjectToApi(newProject);
   };
 
   return (

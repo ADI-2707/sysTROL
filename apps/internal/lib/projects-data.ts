@@ -1,3 +1,5 @@
+import { apiClient } from "./api-client.js";
+
 export interface ProjectLifecycleStep {
   id: string;
   title: string;
@@ -182,4 +184,38 @@ export function updateProject(updated: ProjectItem): void {
     all[index] = updated;
     saveProjects(all);
   }
+}
+
+export async function syncProjectToApi(project: ProjectItem): Promise<void> {
+  try {
+    await apiClient("/api/v1/projects", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: project.name,
+        clientName: project.clientName,
+        lineName: project.lineName,
+        location: project.location,
+        status: project.status,
+        contractValue: project.contractValue,
+        startDate: project.startDate,
+        targetCutoverDate: project.targetCutoverDate,
+      }),
+    });
+  } catch {}
+}
+
+export async function syncStepStatusToApi(
+  projectId: string,
+  stepId: string,
+  status: "PENDING" | "IN_PROGRESS" | "COMPLETED",
+  notes?: string
+): Promise<void> {
+  try {
+    await apiClient(`/api/v1/projects/${projectId}/steps/${stepId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status, notes }),
+    });
+  } catch {}
 }

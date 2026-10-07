@@ -30,6 +30,7 @@ import {
   ProjectLifecycleStep,
   ProjectEmployee,
   INITIAL_COMPANY_EMPLOYEES,
+  syncStepStatusToApi,
 } from "@/lib/projects-data";
 
 export default function ProjectDetailPage() {
@@ -114,6 +115,7 @@ export default function ProjectDetailPage() {
 
     setProject(updatedProject);
     updateProject(updatedProject);
+    syncStepStatusToApi(project.id, stepId, newStatus);
   };
 
   const handleOpenAddSubStep = (order: number) => {
