@@ -110,6 +110,13 @@ sysTrol/
    - Tablet viewports (768px to 1024px) automatically collapse sidebar navigation to a compact 60px rail.
    - Laptops and ultrawide screens feature balanced spacing and fluid container scaling.
 
+9. **Observability, Health Telemetry & Audit Compliance**:
+   - Deep Dependency Diagnostics: `/api/v1/health/deep` inspects PostgreSQL query latency, Redis ping connectivity, and heap memory usage, reporting degraded status (HTTP 503) when sub-services are down.
+   - Topbar System Health Beacon: Real-time visual status indicator and diagnostic modal for authorized Super Administrators.
+   - In-Portal Audit Trail Ledger: Immutable `/audit-logs` administrative ledger with entity filtering, paginated event lists, and side-by-side JSON mutation diff inspection drawer.
+   - Synthetic Uptime Keep-Alive: Automated GitHub Actions cron probe (`uptime-monitor.yml`) running every 10 minutes to prevent Render free-tier cold sleep and alert on downtime.
+   - Offline Development Resilience: Redis offline queue suppression and in-memory token failover preventing local development stalls when container infrastructure is not running.
+
 ---
 
 ## Technology Stack
@@ -237,9 +244,10 @@ pnpm --filter @systrol/web-public test
 ```
 
 Current Test Metrics:
-- `@systrol/api`: 128 tests passing across 12 test suites.
-- `@systrol/internal`: 16 tests passing across 4 test suites.
-- Total: 144 automated tests passing with zero regressions.
+- `@systrol/api`: 150 tests passing across 14 test suites.
+- `@systrol/internal`: 63 tests passing across 14 test suites.
+- `@systrol/web-public`: 124 tests passing across 13 test suites.
+- Total: 337 automated tests passing across 41 test suites with zero regressions.
 
 ---
 

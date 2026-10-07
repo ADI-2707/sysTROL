@@ -27,14 +27,17 @@ The Internal application is an operational portal engineered for field engineers
   - Light Mode: Clean high-contrast surfaces (`#FFFFFF`, `#F8FAFC`, `#F1F5F9`) with slate borders (`#E2E8F0`).
   - Industrial Mechanical Rocker Toggle: Tactile 3D rocker switch (`theme-toggle.tsx`) with grooved grip ridges, realistic tilt animation, luminescent micro-LED indicator (amber for light, cyan for dark), and ARIA switch accessibility.
 - Navigation Shell:
-  - Streamlined 5-Item Navigation: Dashboard, Project Management, Employee Management, Analytics, Settings.
+  - Streamlined Navigation: Dashboard, Project Management, Employee Management, Analytics, Settings, and an Audit Trail compliance ledger for Super Administrators.
   - Interactive Official sysTROL Logo: In collapsed state, the left mark (gear and globe) and right mark (bulb and connecting nodes) meet side-by-side to form a unified circular emblem. Clicking expands the sidebar to display the full brand typography (`sysTROL`) and tagline (`Engineering Redefined`).
-  - Topbar User Profile: Avatar initials, live green status beacon, user name, team badge (e.g. `Leadership`), and designation mounted directly in the header bar.
+  - Topbar User Profile & Health Beacon: Avatar initials, user name, team badge (e.g. `Leadership`), and designation alongside a real-time System Health Beacon displaying dependency status and latency with diagnostic inspection.
 - Responsive Workstation Architecture:
   - Mobile Lock Screen (< 768px): Restricts access on small screens with an exclusive workstation lock screen: "Please open in desktop to operate the internal tool".
   - Tablet Rail (768px to 1024px): Automatically collapses navigation to a compact 60px icon rail to maximize screen space for complex tables and workflows.
   - Laptop & Ultrawide: Fluid, centered container layouts with max-width scaling.
-- Client Resilience & Security:
+- Client Resilience & Observability:
+  - System Health Beacon (`components/health/SystemHealthBeacon.tsx`): Real-time topbar beacon polling `/api/v1/health/deep` every 30s. Displays healthy (green), degraded (amber), or offline (red) status, with a Super Admin diagnostic modal displaying PostgreSQL, Redis, and memory telemetry.
+  - Audit Trail Explorer (`app/(dashboard)/audit-logs/page.tsx`): Dedicated administrative ledger rendering immutable state mutations, entity filters, pagination, and a sliding side-by-side JSON diff drawer (`DiffViewerDrawer.tsx`).
+  - Settings Diagnostics Panel: Integrated infrastructure telemetry cards on the Settings page for Super Administrators with manual probe triggers.
   - Backend-For-Frontend (BFF) Proxy (`app/api/proxy/[...path]/route.ts`): Relays client API requests server-to-server to Render, eliminating third-party cookie blocking and converting all auth cookies to first-party same-origin cookies (`SameSite=Lax; Path=/; HttpOnly; Secure`).
   - Centralized Auth Storage (`lib/auth-storage.ts`): Enforces a single canonical session key (`systrol_user_session`) across `auth-context.tsx` and `api-client.ts`, preventing session desynchronization.
   - Authenticated API Client (`lib/api-client.ts`): Automatically resolves relative paths through the BFF proxy, intercepts `401 Unauthorized` responses, initiates silent token refresh with body token fallback, queues concurrent calls, and dispatches `systrol:session_expired` on failure.
@@ -164,7 +167,7 @@ pnpm --filter @systrol/internal typecheck
 # Lint source files
 pnpm --filter @systrol/internal lint
 
-# Run automated tests (16 tests across 4 test suites)
+# Run automated tests (63 tests across 14 test suites)
 pnpm --filter @systrol/internal test
 
 # Build production bundle

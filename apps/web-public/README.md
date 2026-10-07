@@ -175,3 +175,33 @@ All routes served with the following HTTP response headers via `next.config.ts`:
 - `/contact` form: Submits to `POST /api/v1/public/enquiry` with Zod validation, honeypot bot guard, and `429` rate-limit response handling.
 - `/careers/[id]` application form: Submits to `POST /api/v1/public/jobs/:id/apply` with honeypot guard and `429` error message.
 - Both forms replace the previous fake `setTimeout` delays with real API calls.
+
+### Edge Health Probe
+
+- `/api/health`: Lightweight HTTP GET edge health route returning `{ status: "ok" }` with current timestamp and service identifier for synthetic monitoring and liveness probes.
+
+### Content Security Policy (CSP) Modes
+
+- Development Mode: Allows `'unsafe-eval'` and localhost port connections for Next.js Fast Refresh and React DevTools.
+- Production Mode: Enforces strict zero-eval Content Security Policy, preventing script injection while ensuring fast, secure edge delivery.
+
+---
+
+## Development and Testing Scripts
+
+```bash
+# Start development server on port 3000
+pnpm --filter @systrol/web-public dev
+
+# Type-check TypeScript sources
+pnpm --filter @systrol/web-public typecheck
+
+# Lint source files
+pnpm --filter @systrol/web-public lint
+
+# Run automated tests (124 tests across 13 test suites)
+pnpm --filter @systrol/web-public test
+
+# Build production bundle
+pnpm --filter @systrol/web-public build
+```

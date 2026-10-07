@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cleanSetCookieHeader } from "../proxy-helpers.js";
 
-const TARGET_API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "https://systrol-api.onrender.com";
+const DEFAULT_API_URL =
+  process.env.NODE_ENV === "development"
+    ? "http://localhost:4000"
+    : "https://systrol-api.onrender.com";
+
+const TARGET_API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL;
 
 async function handleProxy(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
   const { path } = await params;

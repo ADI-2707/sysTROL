@@ -5,13 +5,23 @@ const pkg = JSON.parse(fs.readFileSync(new URL("./package.json", import.meta.url
 
 const supabaseHostname = "jvbwajcypzryqbvmuirv.storage.supabase.co";
 
+const isDev = process.env.NODE_ENV === "development";
+
+const scriptSrc = isDev
+  ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
+  : "script-src 'self' 'unsafe-inline'";
+
+const connectSrc = isDev
+  ? "connect-src 'self' http://localhost:4000 http://localhost:3000 ws: wss: https://systrol-api.onrender.com"
+  : "connect-src 'self' https://systrol-api.onrender.com";
+
 const cspDirectives = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  scriptSrc,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   `img-src 'self' data: blob: https://${supabaseHostname} https://*.amazonaws.com https://*.vercel-insights.com`,
-  "connect-src 'self' https://systrol-api.onrender.com",
+  connectSrc,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

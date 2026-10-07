@@ -20,7 +20,7 @@ export const TEAM_LABELS: Record<EmployeeTeam, string> = {
 };
 
 export const PAGE_ACCESS_RULES: Record<EmployeeTeam, string[]> = {
-  LEADERSHIP: ["/dashboard", "/projects", "/employees", "/media", "/careers-admin", "/analytics", "/cta", "/settings"],
+  LEADERSHIP: ["/dashboard", "/projects", "/employees", "/media", "/careers-admin", "/analytics", "/cta", "/audit-logs", "/settings"],
   COMMISSIONING: ["/dashboard", "/projects", "/media", "/analytics", "/cta", "/settings"],
   HR_ACCOUNTS: ["/dashboard", "/projects", "/employees", "/media", "/careers-admin", "/analytics", "/settings"],
   SALES: ["/dashboard", "/projects", "/media", "/analytics", "/cta", "/settings"],
@@ -41,4 +41,8 @@ export function isSeededSuperAdmin(user: { email?: string; id?: string; isSeeded
 
 export function canCreateEmployee(user: { email?: string; id?: string; isSeededSuperAdmin?: boolean } | null | undefined): boolean {
   return isSeededSuperAdmin(user);
+}
+
+export function canAccessAuditLogs(user: { email?: string; id?: string; isSeededSuperAdmin?: boolean; role?: string } | null | undefined): boolean {
+  return isSeededSuperAdmin(user) || user?.role === "SUPER_ADMIN";
 }

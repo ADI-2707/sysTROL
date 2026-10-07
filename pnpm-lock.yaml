@@ -249,6 +249,9 @@ importers:
         specifier: 3.24.2
         version: 3.24.2
     devDependencies:
+      '@types/node':
+        specifier: 22.13.4
+        version: 22.13.4
       typescript:
         specifier: 5.7.2
         version: 5.7.2
@@ -278,6 +281,9 @@ importers:
         specifier: 9.6.0
         version: 9.6.0
     devDependencies:
+      '@types/node':
+        specifier: 22.13.4
+        version: 22.13.4
       typescript:
         specifier: 5.7.2
         version: 5.7.2
@@ -301,6 +307,9 @@ importers:
         specifier: 19.0.0
         version: 19.0.0(react@19.0.0)
     devDependencies:
+      '@types/react':
+        specifier: 19.0.8
+        version: 19.0.8
       typescript:
         specifier: 5.7.2
         version: 5.7.2

@@ -22,6 +22,8 @@ import { trialsAndPostCommRoutes } from "./modules/trials/post-comm.routes.js";
 import { analyticsRoutes } from "./modules/analytics/analytics.routes.js";
 import { mediaRoutes } from "./modules/media/media.routes.js";
 import { ctaRoutes } from "./modules/cta/cta.routes.js";
+import { healthRoutes } from "./modules/health/health.routes.js";
+import { auditRoutes } from "./modules/audit/audit.routes.js";
 import fs from "node:fs";
 
 const logger = createLogger("api-server");
@@ -92,7 +94,6 @@ export async function buildServer() {
   // 7. Audit interceptor
   await server.register(auditPlugin);
 
-  // Root & Health endpoints
   server.get("/", async () => {
     return {
       service: "sysTROL Industrial Engineering API",
@@ -104,17 +105,9 @@ export async function buildServer() {
     };
   });
 
-  server.get("/api/v1/health", async () => {
-    return {
-      status: "ok",
-      environment: env.NODE_ENV,
-      timestamp: Date.now(),
-    };
-  });
-
-  // API v1 prefix routes
   await server.register(
     async (v1) => {
+      await v1.register(healthRoutes);
       await v1.register(authRoutes);
       await v1.register(careersRoutes);
       await v1.register(enquiriesRoutes);
@@ -129,6 +122,7 @@ export async function buildServer() {
       await v1.register(analyticsRoutes);
       await v1.register(mediaRoutes);
       await v1.register(ctaRoutes);
+      await v1.register(auditRoutes);
     },
     { prefix: "/api/v1" }
   );

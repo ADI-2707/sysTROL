@@ -1,0 +1,34 @@
+name: Synthetic Uptime & Health Monitor
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  uptime-probe:
+    name: Synthetic Health Check & Warm-up
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Probe Public Corporate Web Platform
+        run: curl -sSf -m 15 https://systrol.vercel.app/api/health > /dev/null
+
+      - name: Probe Internal Operations Portal
+        run: curl -sSf -m 15 https://systrolops.vercel.app/login > /dev/null
+
+      - name: Probe API Liveness & Prevent Cold Start
+        run: curl -sSf -m 45 https://systrol-api.onrender.com/api/v1/health > /dev/null
+
+      - name: Probe Deep Subsystems Health
+        run: curl -sSf -m 45 https://systrol-api.onrender.com/api/v1/health/deep > /dev/null
+
+      - name: Dispatch Webhook Alert on Incident
+        if: failure() && env.ALERT_WEBHOOK != ''
+        env:
+          ALERT_WEBHOOK: ${{ secrets.DISCORD_ALERT_WEBHOOK || secrets.OPS_ALERT_WEBHOOK }}
+        run: |
+          curl -H "Content-Type: application/json" \
+            -X POST \
+            -d '{"content": "🚨 **sysTROL Health Incident**: One or more production edge probes failed. Check Render API and Vercel services immediately."}' \
+            "$ALERT_WEBHOOK"
