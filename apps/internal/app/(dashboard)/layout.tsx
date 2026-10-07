@@ -22,9 +22,10 @@ import {
 import { ThemeToggle } from "../theme-toggle";
 import { SysTrolLogo } from "@/components/brand/SysTrolLogo";
 import { useAuth } from "@/lib/auth-context";
-import { canAccessPage, TEAM_LABELS } from "@/lib/permissions";
+import { canAccessPage, canAccessAuditLogs, TEAM_LABELS } from "@/lib/permissions";
 import { useBackendKeepAlive } from "@/lib/use-keep-alive";
 import { apiClient } from "@/lib/api-client";
+import { SystemHealthBeacon } from "@/components/health/SystemHealthBeacon";
 
 interface NavItemConfig {
   label: string;
@@ -210,11 +211,17 @@ export default function DashboardLayout({
     { label: "Media CMS", href: "/media", icon: <ImageIcon size={17} /> },
     { label: "Careers & Jobs", href: "/careers-admin/postings", icon: <FileText size={17} /> },
     { label: "Analytics", href: "/analytics", icon: <BarChart3 size={17} /> },
+    ...(canAccessAuditLogs(user)
+      ? [{ label: "Audit Trail", href: "/audit-logs", icon: <ShieldAlert size={17} /> }]
+      : []),
     { label: "Settings", href: "/settings", icon: <Settings size={17} /> },
   ];
 
   const visibleNavItems = navItems.filter((item) => canAccessPage(user?.team, item.href));
-  const isAuthorized = canAccessPage(user?.team, pathname);
+  const isAuthorized =
+    pathname === "/audit-logs" || pathname.startsWith("/audit-logs/")
+      ? canAccessAuditLogs(user)
+      : canAccessPage(user?.team, pathname);
 
   if (isLoading) {
     return (
@@ -546,7 +553,8 @@ export default function DashboardLayout({
             </span>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <SystemHealthBeacon />
             <ThemeToggle />
             <div
               data-testid="topbar-user-profile"
