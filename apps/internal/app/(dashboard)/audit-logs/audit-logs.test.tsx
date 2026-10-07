@@ -94,4 +94,98 @@ describe("AuditLogsPage Tests", () => {
     expect(await screen.findByText("Mutation Audit Record")).toBeDefined();
     expect(screen.getByText("State Delta (Before / After Snapshot)")).toBeDefined();
   });
+
+  it("renders both tab buttons for Internal Ops Governance and Public Web Telemetry", async () => {
+    mockUseAuth.mockReturnValue({
+      user: { email: "admin@systrol.com", role: "SUPER_ADMIN", isSeededSuperAdmin: true },
+    });
+
+    mockApiClient.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [],
+        pagination: { total: 0, totalPages: 1, page: 1, limit: 15 },
+      }),
+    });
+
+    render(<AuditLogsPage />);
+
+    expect(screen.getByText("Internal Ops Governance")).toBeDefined();
+    expect(screen.getByText("Public Web Telemetry")).toBeDefined();
+  });
+
+  it("switches to Public Web Telemetry tab and displays latency monitoring banner and telemetry feed", async () => {
+    mockUseAuth.mockReturnValue({
+      user: { email: "admin@systrol.com", role: "SUPER_ADMIN", isSeededSuperAdmin: true },
+    });
+
+    mockApiClient.mockImplementation(async (url: string) => {
+      if (url.includes("/metrics/latency")) {
+        return {
+          ok: true,
+          json: async () => ({
+            totalSamples: 150,
+            avgMs: 12.5,
+            medianMs: 10.2,
+            p95Ms: 24.1,
+            p99Ms: 38.6,
+            minMs: 2.5,
+            maxMs: 65.0,
+            recentSamples: [10, 12, 14, 15, 11, 13],
+          }),
+        };
+      }
+      if (url.includes("/cta/metrics")) {
+        return {
+          ok: true,
+          json: async () => ({
+            totalEvents: 500,
+            events24h: 95,
+            events7d: 420,
+          }),
+        };
+      }
+      if (url.includes("/cta/feed")) {
+        return {
+          ok: true,
+          json: async () => ({
+            ctaEvents: [
+              {
+                id: "cta-evt-1",
+                eventType: "CLICK",
+                pagePath: "/solutions/rolling-mill-automation",
+                ctaId: "quote-cta",
+                ipAddress: "203.0.113.195",
+                referrer: "https://google.com",
+                utmSource: "google",
+                utmMedium: "cpc",
+                createdAt: new Date().toISOString(),
+              },
+            ],
+            totalCtaEvents: 1,
+            totalEnquiries: 1,
+            page: 1,
+            limit: 15,
+          }),
+        };
+      }
+      return {
+        ok: true,
+        json: async () => ({
+          items: [],
+          pagination: { total: 0, totalPages: 1, page: 1, limit: 15 },
+        }),
+      };
+    });
+
+    render(<AuditLogsPage />);
+
+    const publicTab = screen.getByText("Public Web Telemetry");
+    fireEvent.click(publicTab);
+
+    expect(await screen.findByText("API Latency & Telemetry Diagnostics")).toBeDefined();
+    expect(await screen.findByText("203.0.113.195")).toBeDefined();
+    expect(screen.getAllByText("quote-cta").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("/solutions/rolling-mill-automation")).toBeDefined();
+  });
 });
