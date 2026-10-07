@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import { prisma } from "@systrol/database";
 import { redis } from "../../common/redis.js";
 import { env } from "@systrol/config";
+import { latencyTracker } from "../../common/metrics/latency-tracker.js";
 
 export async function healthRoutes(fastify: FastifyInstance) {
   fastify.get("/health", async (_request: FastifyRequest, reply: FastifyReply) => {
@@ -10,6 +11,10 @@ export async function healthRoutes(fastify: FastifyInstance) {
       environment: env.NODE_ENV,
       timestamp: Date.now(),
     });
+  });
+
+  fastify.get("/metrics/latency", async (_request: FastifyRequest, reply: FastifyReply) => {
+    return reply.status(200).send(latencyTracker.getMetrics());
   });
 
   fastify.get("/health/deep", async (_request: FastifyRequest, reply: FastifyReply) => {
