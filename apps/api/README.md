@@ -155,6 +155,14 @@ apps/api/
 - `GET /api/v1/analytics/aging`: Aging telemetry for open enquiries and procurement orders
 - `GET /api/v1/analytics/amc-forecast`: 12-month revenue forecast for AMC contracts
 
+### System Health and Deep Diagnostics (`/api/v1/health`)
+- `GET /api/v1/health`: Shallow liveness probe returning HTTP 200 with service environment and timestamp.
+- `GET /api/v1/health/deep`: Deep dependency probe evaluating PostgreSQL latency (`SELECT 1`), Redis ping connectivity, and heap memory usage. Returns HTTP 200 with healthy state when all dependencies respond, or HTTP 503 with degraded state and dependency details if any sub-service is down.
+
+### Audit Trail and Compliance (`/api/v1/audit-logs`)
+- `GET /api/v1/audit-logs`: Query immutable administrative audit logs with pagination (`page`, `limit`), entity type filtering, and chronological sorting. Restricted to `SUPER_ADMIN` role.
+- `GET /api/v1/audit-logs/:id`: Fetch single audit event with recorded state mutation diff payload. Restricted to `SUPER_ADMIN` role.
+
 ---
 
 ## Environment Configuration
@@ -189,7 +197,7 @@ pnpm --filter @systrol/api dev:worker
 # Type-check TypeScript sources
 pnpm --filter @systrol/api typecheck
 
-# Run automated tests (128 passing tests across 12 test suites)
+# Run automated tests (150 passing tests across 14 test suites)
 pnpm --filter @systrol/api test
 
 # Build production bundle with tsup
