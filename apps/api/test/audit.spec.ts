@@ -196,5 +196,19 @@ describe("Audit Logs Module & Service Tests", () => {
       const data = JSON.parse(res.body);
       expect(data.id).toBe("log-101");
     });
+
+    it("ignores public routes and does not create audit log for public events", async () => {
+      await server.inject({
+        method: "POST",
+        url: "/api/v1/public/cta-event",
+        payload: {
+          eventType: "CLICK",
+          pagePath: "/services",
+          ctaId: "hero-cta",
+        },
+      });
+
+      expect(prisma.auditLog.create).not.toHaveBeenCalled();
+    });
   });
 });
