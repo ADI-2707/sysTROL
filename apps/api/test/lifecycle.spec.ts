@@ -6,11 +6,22 @@ import { prisma } from "@systrol/database";
 
 vi.mock("@systrol/database", () => {
   const mPrisma = {
+    clientCompany: {
+      findFirst: vi.fn(),
+      create: vi.fn(),
+    },
     project: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
+      create: vi.fn(),
       update: vi.fn(),
       count: vi.fn(),
+    },
+    commissioningStep: {
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      createMany: vi.fn(),
     },
     projectStageHistory: {
       create: vi.fn(),
@@ -240,6 +251,99 @@ describe("Projects & 12-Stage Lifecycle Engine Tests", () => {
             include: { changedBy: { select: { id: true, name: true } } },
             orderBy: { changedAt: "desc" },
           },
+        },
+      });
+    });
+
+    it("createProject creates client if needed, initializes project and default 12 commissioning steps", async () => {
+      vi.mocked(prisma.clientCompany.findFirst).mockResolvedValue(null);
+      vi.mocked(prisma.clientCompany.create).mockResolvedValue({
+        id: "client-auto-1",
+        name: "JSW Steel",
+        country: "India",
+        sector: "Steel & Metallurgy",
+        contactEmail: "contact@jswsteel.com",
+        contactPhone: null,
+      } as any);
+      vi.mocked(prisma.project.count).mockResolvedValue(4);
+      vi.mocked(prisma.project.create).mockResolvedValue({
+        id: "proj-created-1",
+        projectCode: "PROJ-2026-0005",
+        name: "JSW Steel Wire Rod Mill",
+        clientId: "client-auto-1",
+        plantLocation: "Toranagallu",
+        country: "India",
+        millType: "Rolling Mill",
+        standCount: 10,
+        currentStage: LifecycleStage.ENQUIRY,
+        createdById: "user-lead-1",
+        startDate: new Date("2026-02-01"),
+        targetCutoverDate: new Date("2026-08-01"),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as any);
+      vi.mocked(prisma.commissioningStep.createMany).mockResolvedValue({ count: 12 } as any);
+      vi.mocked(prisma.projectStageHistory.create).mockResolvedValue({} as any);
+      vi.mocked(prisma.project.findUnique).mockResolvedValue({
+        id: "proj-created-1",
+        name: "JSW Steel Wire Rod Mill",
+        client: { id: "client-auto-1", name: "JSW Steel" },
+        steps: [{ id: "step-1", title: "Enquiry", status: "IN_PROGRESS" }],
+        createdBy: { id: "user-lead-1", name: "Lead", email: "lead@systrol.com" },
+      } as any);
+
+      const created = await ProjectsService.createProject(
+        {
+          name: "JSW Steel Wire Rod Mill",
+          clientName: "JSW Steel",
+          location: "Toranagallu",
+        },
+        "user-lead-1"
+      );
+
+      expect(prisma.clientCompany.create).toHaveBeenCalled();
+      expect(prisma.project.create).toHaveBeenCalled();
+      expect(prisma.commissioningStep.createMany).toHaveBeenCalledWith({
+        data: expect.arrayContaining([
+          expect.objectContaining({ title: "Enquiry", status: "IN_PROGRESS" }),
+          expect.objectContaining({ title: "Sales visit", status: "PENDING" }),
+        ]),
+      });
+      expect(created?.id).toBe("proj-created-1");
+    });
+
+    it("updateStepStatus updates step and returns previous and current states for audit diff", async () => {
+      const existingStep = {
+        id: "step-uuid-1",
+        projectId: "proj-created-1",
+        title: "Enquiry",
+        stepType: "COMMISSIONING",
+        status: "IN_PROGRESS",
+        order: 100,
+        description: null,
+      };
+
+      const updatedStep = {
+        ...existingStep,
+        status: "COMPLETED",
+        description: "Enquiry verified and approved",
+      };
+
+      vi.mocked(prisma.commissioningStep.findFirst).mockResolvedValue(existingStep as any);
+      vi.mocked(prisma.commissioningStep.update).mockResolvedValue(updatedStep as any);
+
+      const result = await ProjectsService.updateStepStatus("proj-created-1", "step-uuid-1", {
+        status: "COMPLETED",
+        notes: "Enquiry verified and approved",
+      });
+
+      expect(result.previous.status).toBe("IN_PROGRESS");
+      expect(result.current.status).toBe("COMPLETED");
+      expect(prisma.commissioningStep.update).toHaveBeenCalledWith({
+        where: { id: "step-uuid-1" },
+        data: {
+          status: "COMPLETED",
+          description: "Enquiry verified and approved",
         },
       });
     });

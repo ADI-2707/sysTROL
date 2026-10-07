@@ -62,6 +62,15 @@ export async function ctaRoutes(fastify: FastifyInstance) {
       }
     );
 
+    scope.get(
+      "/cta/metrics",
+      { preHandler: [requireRoles(...ALLOWED_CTA_ROLES)] },
+      async (_request: FastifyRequest, reply: FastifyReply) => {
+        const result = await CtaService.getCtaMetrics();
+        return reply.send(result);
+      }
+    );
+
     scope.patch(
       "/cta/enquiries/:id/status",
       { preHandler: [requireRoles(...ALLOWED_CTA_ROLES)] },

@@ -113,7 +113,10 @@ sysTrol/
 9. **Observability, Health Telemetry & Audit Compliance**:
    - Deep Dependency Diagnostics: `/api/v1/health/deep` inspects PostgreSQL query latency, Redis ping connectivity, and heap memory usage, reporting degraded status (HTTP 503) when sub-services are down.
    - Topbar System Health Beacon: Real-time visual status indicator and diagnostic modal for authorized Super Administrators.
-   - In-Portal Audit Trail Ledger: Immutable `/audit-logs` administrative ledger with entity filtering, paginated event lists, and side-by-side JSON mutation diff inspection drawer.
+   - Dual-Channel Audit & Telemetry Ledger: Dedicated `/audit-logs` portal featuring two tabbed registers:
+     - Internal Ops Governance: Immutable administrative ledger with entity filtering, server-side pagination, and side-by-side JSON mutation diff inspection drawer (`DiffViewerDrawer`).
+     - Public Web Telemetry: Dedicated clickstream feed tracking visitor CTA interactions, IP addresses, page paths, and UTM campaigns.
+   - Zero-Overhead Latency Metrics Monitoring: In-memory rolling circular buffer tracking the latest 1,000 response durations in Node.js memory (<8 KB RAM), computing average, median, p95, and p99 percentiles without database load or server spikes.
    - Synthetic Uptime Keep-Alive: Automated GitHub Actions cron probe (`uptime-monitor.yml`) running every 10 minutes to prevent Render free-tier cold sleep and alert on downtime.
    - Offline Development Resilience: Redis offline queue suppression and in-memory token failover preventing local development stalls when container infrastructure is not running.
 

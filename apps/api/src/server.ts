@@ -24,6 +24,7 @@ import { mediaRoutes } from "./modules/media/media.routes.js";
 import { ctaRoutes } from "./modules/cta/cta.routes.js";
 import { healthRoutes } from "./modules/health/health.routes.js";
 import { auditRoutes } from "./modules/audit/audit.routes.js";
+import { latencyTracker } from "./common/metrics/latency-tracker.js";
 import fs from "node:fs";
 
 const logger = createLogger("api-server");
@@ -93,6 +94,11 @@ export async function buildServer() {
 
   // 7. Audit interceptor
   await server.register(auditPlugin);
+
+  server.addHook("onResponse", (request, reply, done) => {
+    latencyTracker.recordLatency(reply.elapsedTime);
+    done();
+  });
 
   server.get("/", async () => {
     return {

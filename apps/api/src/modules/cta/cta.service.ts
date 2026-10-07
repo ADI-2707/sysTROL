@@ -66,10 +66,33 @@ export class CtaService {
     };
   }
 
-  static async listCtaFeed(options?: { limit?: number; page?: number }) {
+  static async listCtaFeed(options?: {
+    limit?: number;
+    page?: number;
+    pagePath?: string;
+    ctaId?: string;
+    search?: string;
+  }) {
     const limit = Math.min(100, Math.max(1, Number(options?.limit) || 30));
     const page = Math.max(1, Number(options?.page) || 1);
     const skip = (page - 1) * limit;
+
+    const ctaWhere: Record<string, unknown> = {};
+    if (options?.pagePath && options.pagePath !== "ALL") {
+      ctaWhere.pagePath = options.pagePath;
+    }
+    if (options?.ctaId && options.ctaId !== "ALL") {
+      ctaWhere.ctaId = options.ctaId;
+    }
+    if (options?.search && options.search.trim()) {
+      const q = options.search.trim();
+      ctaWhere.OR = [
+        { pagePath: { contains: q, mode: "insensitive" } },
+        { ctaId: { contains: q, mode: "insensitive" } },
+        { ipHash: { contains: q, mode: "insensitive" } },
+        { referrer: { contains: q, mode: "insensitive" } },
+      ];
+    }
 
     const [enquiries, ctaEvents, totalEnquiries, totalCtaEvents] = await Promise.all([
       prisma.enquiry.findMany({
@@ -84,12 +107,15 @@ export class CtaService {
         },
       }),
       prisma.ctaEvent.findMany({
+        where: Object.keys(ctaWhere).length > 0 ? ctaWhere : undefined,
         take: limit,
         skip,
         orderBy: { createdAt: "desc" },
       }),
       prisma.enquiry.count(),
-      prisma.ctaEvent.count(),
+      prisma.ctaEvent.count({
+        where: Object.keys(ctaWhere).length > 0 ? ctaWhere : undefined,
+      }),
     ]);
 
     return {
@@ -99,6 +125,23 @@ export class CtaService {
       totalCtaEvents,
       page,
       limit,
+    };
+  }
+
+  static async getCtaMetrics() {
+    const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    const [totalEvents, events24h, events7d] = await Promise.all([
+      prisma.ctaEvent.count(),
+      prisma.ctaEvent.count({ where: { createdAt: { gte: since24h } } }),
+      prisma.ctaEvent.count({ where: { createdAt: { gte: since7d } } }),
+    ]);
+
+    return {
+      totalEvents,
+      events24h,
+      events7d,
     };
   }
 
