@@ -12,7 +12,6 @@ async function auditInterceptorPlugin(fastify: FastifyInstance) {
       return payload;
     }
 
-    // If request failed with 4xx or 5xx, do not log successful mutation
     if (reply.statusCode >= 400) {
       return payload;
     }
@@ -27,11 +26,9 @@ async function auditInterceptorPlugin(fastify: FastifyInstance) {
 
     const actorId = request.user?.sub || "system";
     const pathSegments = request.url.split("?")[0].split("/").filter(Boolean);
-    // e.g. /api/v1/projects/:id -> entityType: "projects"
     const entityType = pathSegments.find((s) => !["api", "v1", "public", "admin"].includes(s)) || "unknown";
     const params = (request.params as Record<string, string>) || {};
-    const entityId = params.id || params.slug || params.code || "root";
-
+    
     let afterData: unknown = null;
     if (typeof payload === "string") {
       try {
@@ -43,14 +40,24 @@ async function auditInterceptorPlugin(fastify: FastifyInstance) {
       afterData = payload;
     }
 
+    const entityId =
+      params.stepId ||
+      params.id ||
+      params.slug ||
+      params.code ||
+      (afterData && typeof afterData === "object" && "id" in (afterData as any) ? (afterData as any).id : "root");
+
     const diff = {
       before: request.auditBefore ?? null,
       after: afterData,
     };
 
-    const projectId = params.projectId || (request.body as Record<string, string> | undefined)?.projectId || undefined;
+    const projectId =
+      params.projectId ||
+      (entityType === "projects" && params.id ? params.id : undefined) ||
+      (request.body as Record<string, string> | undefined)?.projectId ||
+      ((afterData as any)?.projectId || (entityType === "projects" && (afterData as any)?.id ? (afterData as any).id : undefined));
 
-    // Asynchronously log without blocking response
     setImmediate(async () => {
       try {
         await prisma.auditLog.create({

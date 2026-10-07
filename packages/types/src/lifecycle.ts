@@ -67,3 +67,26 @@ export const DeviateStageSchema = z.object({
 
 export type AdvanceStageDto = z.infer<typeof AdvanceStageSchema>;
 export type DeviateStageDto = z.infer<typeof DeviateStageSchema>;
+
+export const CreateProjectSchema = z.object({
+  name: z.string().min(1),
+  clientName: z.string().min(1),
+  lineName: z.string().optional(),
+  location: z.string().min(1),
+  country: z.string().optional().default("India"),
+  millType: z.string().optional().default("Rolling Mill"),
+  standCount: z.number().int().optional().default(10),
+  status: z.enum(["ONGOING", "COMMISSIONED"]).optional().default("ONGOING"),
+  contractValue: z.string().optional(),
+  startDate: z.string().optional(),
+  targetCutoverDate: z.string().optional(),
+});
+
+export type CreateProjectDto = z.infer<typeof CreateProjectSchema>;
+
+export const UpdateStepStatusSchema = z.object({
+  status: z.enum(["PENDING", "IN_PROGRESS", "COMPLETED"]),
+  notes: z.string().optional(),
+});
+
+export type UpdateStepStatusDto = z.infer<typeof UpdateStepStatusSchema>;

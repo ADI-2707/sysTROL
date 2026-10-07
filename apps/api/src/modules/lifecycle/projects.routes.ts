@@ -1,5 +1,10 @@
 import { FastifyInstance } from "fastify";
-import { AdvanceStageSchema, DeviateStageSchema } from "@systrol/types";
+import {
+  AdvanceStageSchema,
+  DeviateStageSchema,
+  CreateProjectSchema,
+  UpdateStepStatusSchema,
+} from "@systrol/types";
 import { ProjectsService } from "./projects.service.js";
 
 export async function projectsRoutes(fastify: FastifyInstance) {
@@ -7,6 +12,35 @@ export async function projectsRoutes(fastify: FastifyInstance) {
 
   fastify.get("/projects", async (request) => {
     return ProjectsService.listProjects(request.query as any);
+  });
+
+  fastify.post("/projects", {
+    preHandler: [
+      fastify.authorize(["ADMIN", "SUPER_ADMIN", "PROJECT_MANAGER", "COMMISSIONING_LEAD"]),
+    ],
+    handler: async (request) => {
+      const parsed = CreateProjectSchema.parse(request.body || {});
+      return ProjectsService.createProject(parsed, request.user.sub);
+    },
+  });
+
+  fastify.patch("/projects/:id/steps/:stepId", {
+    preHandler: [
+      fastify.authorize([
+        "ADMIN",
+        "SUPER_ADMIN",
+        "PROJECT_MANAGER",
+        "COMMISSIONING_LEAD",
+        "FIELD_ENGINEER",
+      ]),
+    ],
+    handler: async (request) => {
+      const { id, stepId } = request.params as { id: string; stepId: string };
+      const parsed = UpdateStepStatusSchema.parse(request.body || {});
+      const result = await ProjectsService.updateStepStatus(id, stepId, parsed);
+      request.auditBefore = result.previous;
+      return result.current;
+    },
   });
 
   fastify.get("/projects/:id", async (request) => {
