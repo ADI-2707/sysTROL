@@ -9,8 +9,10 @@ const defaultApiUrl = isDev ? "http://localhost:4000" : "https://systrol-api.onr
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   transpilePackages: ["@systrol/types"],
-  webpack: (config) => {
-    config.resolve.symlinks = false;
+  webpack: (config, { dev }) => {
+    if (dev && process.platform === "win32" && !process.env.VERCEL) {
+      config.resolve.symlinks = false;
+    }
     config.resolve.extensionAlias = {
       ".js": [".ts", ".tsx", ".js", ".jsx"],
       ".mjs": [".mts", ".mjs"],
