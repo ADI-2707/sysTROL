@@ -17,8 +17,11 @@ async function auditInterceptorPlugin(fastify: FastifyInstance) {
       return payload;
     }
 
-    // Skip auth endpoints like login/refresh to avoid logging credentials or token payloads
-    if (request.url.includes("/auth/login") || request.url.includes("/auth/refresh")) {
+    if (
+      request.url.includes("/auth/login") ||
+      request.url.includes("/auth/refresh") ||
+      request.url.includes("/public/")
+    ) {
       return payload;
     }
 
