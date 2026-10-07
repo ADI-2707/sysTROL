@@ -12,7 +12,7 @@ export interface AuditLogItem {
   projectId?: string | null;
   diff?: { before: any; after: any } | null;
   createdAt: string;
-  project?: { id: string; code: string; name: string } | null;
+  project?: { id: string; projectCode?: string; code?: string; name: string } | null;
 }
 
 interface DiffViewerDrawerProps {
@@ -131,7 +131,7 @@ export function DiffViewerDrawer({ log, onClose }: DiffViewerDrawerProps) {
               <div style={{ gridColumn: "1 / -1" }}>
                 <div style={{ color: "var(--text-muted)", fontSize: "11px", marginBottom: "3px" }}>Associated Project</div>
                 <div style={{ fontWeight: 600, color: "var(--sys-blue-primary)" }}>
-                  {log.project.code} - {log.project.name}
+                  {log.project.projectCode || log.project.code} - {log.project.name}
                 </div>
               </div>
             )}

@@ -36,7 +36,7 @@ describe("Audit Logs Module & Service Tests", () => {
           projectId: "p-101",
           diff: { before: null, after: { name: "Hot Mill Revamp" } },
           createdAt: new Date("2026-10-01T10:00:00Z"),
-          project: { id: "p-101", code: "PRJ-HOT-01", name: "Hot Mill Revamp" },
+          project: { id: "p-101", projectCode: "PRJ-HOT-01", name: "Hot Mill Revamp" },
         },
       ];
 

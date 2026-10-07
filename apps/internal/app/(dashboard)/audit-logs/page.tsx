@@ -279,7 +279,7 @@ export default function AuditLogsPage() {
                       {item.entityId.slice(0, 10)}
                     </td>
                     <td style={{ padding: "10px 14px", color: "var(--text-body)" }}>
-                      {item.project ? `${item.project.code}` : "--"}
+                      {item.project ? `${item.project.projectCode || (item.project as any).code}` : "--"}
                     </td>
                     <td style={{ padding: "10px 14px", textAlign: "right" }}>
                       <button

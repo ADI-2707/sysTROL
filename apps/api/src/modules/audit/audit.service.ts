@@ -55,7 +55,7 @@ export class AuditService {
           project: {
             select: {
               id: true,
-              code: true,
+              projectCode: true,
               name: true,
             },
           },
@@ -82,7 +82,7 @@ export class AuditService {
         project: {
           select: {
             id: true,
-            code: true,
+            projectCode: true,
             name: true,
           },
         },

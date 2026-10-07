@@ -138,7 +138,7 @@ export class DAGEngine {
     });
 
     const path: string[] = [];
-    let curr = endNode;
+    let curr: string | null = endNode;
     while (curr) {
       path.unshift(curr);
       curr = prev.get(curr) || null;
