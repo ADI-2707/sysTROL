@@ -33,8 +33,14 @@ export function LatencyMonitoringBanner() {
         apiClient("/api/v1/metrics/latency"),
         apiClient("/api/v1/cta/metrics"),
       ]);
-      setLatency(latRes);
-      setCtaMetrics(ctaRes);
+      if (latRes.ok) {
+        const latData = await latRes.json();
+        setLatency(latData);
+      }
+      if (ctaRes.ok) {
+        const ctaData = await ctaRes.json();
+        setCtaMetrics(ctaData);
+      }
     } catch {
       setLatency({
         totalSamples: 120,
