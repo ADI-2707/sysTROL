@@ -21,7 +21,11 @@ export function resolveApiUrl(endpoint: string): string {
     }
     return `/api/proxy${cleanEndpoint}`;
   }
-  const baseUrl = process.env.API_URL || "https://systrol-api.onrender.com";
+  const defaultApiUrl =
+    process.env.NODE_ENV === "development"
+      ? "http://localhost:4000"
+      : "https://systrol-api.onrender.com";
+  const baseUrl = process.env.API_URL || defaultApiUrl;
   return `${baseUrl}${cleanEndpoint}`;
 }
 
