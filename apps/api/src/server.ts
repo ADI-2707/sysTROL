@@ -22,6 +22,7 @@ import { trialsAndPostCommRoutes } from "./modules/trials/post-comm.routes.js";
 import { analyticsRoutes } from "./modules/analytics/analytics.routes.js";
 import { mediaRoutes } from "./modules/media/media.routes.js";
 import { ctaRoutes } from "./modules/cta/cta.routes.js";
+import { healthRoutes } from "./modules/health/health.routes.js";
 import fs from "node:fs";
 
 const logger = createLogger("api-server");
@@ -112,9 +113,9 @@ export async function buildServer() {
     };
   });
 
-  // API v1 prefix routes
   await server.register(
     async (v1) => {
+      await v1.register(healthRoutes);
       await v1.register(authRoutes);
       await v1.register(careersRoutes);
       await v1.register(enquiriesRoutes);
