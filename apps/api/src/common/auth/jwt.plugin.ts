@@ -37,6 +37,8 @@ declare module "fastify" {
   }
 }
 
+const memoryRefreshTokens = new Map<string, { userId: string; role: UserRole; expiresAt: number }>();
+
 async function jwtPluginAsync(fastify: FastifyInstance) {
   if (!fastify.hasPlugin("@fastify/cookie")) {
     await fastify.register(fastifyCookie);
@@ -109,7 +111,11 @@ async function jwtPluginAsync(fastify: FastifyInstance) {
       try {
         await redis.set(refreshKey, role, "EX", refreshTtl);
       } catch (redisErr) {
-        // In local mode if Redis is temporarily unreachable
+        memoryRefreshTokens.set(refreshToken, {
+          userId,
+          role,
+          expiresAt: Date.now() + refreshTtl * 1000,
+        });
       }
 
       reply.setCookie("refreshToken", refreshToken, {
@@ -144,7 +150,6 @@ async function jwtPluginAsync(fastify: FastifyInstance) {
         throw new Error("No refresh token provided");
       }
 
-      // Search keys matching refresh:*:{rawToken}
       let foundUserId: string | null = null;
       let foundRole: UserRole | null = null;
       let matchingKey: string | null = null;
@@ -159,7 +164,15 @@ async function jwtPluginAsync(fastify: FastifyInstance) {
           foundRole = (storedRole as UserRole) || null;
         }
       } catch (redisErr) {
-        // Fallback: decode user from db
+      }
+
+      if (!foundUserId) {
+        const fallbackSession = memoryRefreshTokens.get(rawToken);
+        if (fallbackSession && fallbackSession.expiresAt > Date.now()) {
+          foundUserId = fallbackSession.userId;
+          foundRole = fallbackSession.role;
+          memoryRefreshTokens.delete(rawToken);
+        }
       }
 
       if (!foundUserId) {

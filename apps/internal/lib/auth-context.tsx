@@ -89,7 +89,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ? "/api/proxy/v1/auth/login"
         : `${process.env.API_URL || "https://systrol-api.onrender.com"}/api/v1/auth/login`;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 12000);
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
 
       const res = await fetch(loginUrl, {
         method: "POST",
