@@ -23,6 +23,7 @@ import { analyticsRoutes } from "./modules/analytics/analytics.routes.js";
 import { mediaRoutes } from "./modules/media/media.routes.js";
 import { ctaRoutes } from "./modules/cta/cta.routes.js";
 import { healthRoutes } from "./modules/health/health.routes.js";
+import { auditRoutes } from "./modules/audit/audit.routes.js";
 import fs from "node:fs";
 
 const logger = createLogger("api-server");
@@ -130,6 +131,7 @@ export async function buildServer() {
       await v1.register(analyticsRoutes);
       await v1.register(mediaRoutes);
       await v1.register(ctaRoutes);
+      await v1.register(auditRoutes);
     },
     { prefix: "/api/v1" }
   );
