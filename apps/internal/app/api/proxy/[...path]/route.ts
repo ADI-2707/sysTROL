@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cleanSetCookieHeader } from "../proxy-helpers.js";
+import { cleanSetCookieHeader, parseCookieAttributes } from "../proxy-helpers.js";
 
 const DEFAULT_API_URL =
   process.env.NODE_ENV === "development"
@@ -77,6 +77,8 @@ async function handleProxy(req: NextRequest, { params }: { params: Promise<{ pat
     for (const cookieStr of rawSetCookies) {
       if (cookieStr) {
         response.headers.append("set-cookie", cleanSetCookieHeader(cookieStr));
+        const parsed = parseCookieAttributes(cookieStr);
+        response.cookies.set(parsed);
       }
     }
 
