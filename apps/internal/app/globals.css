@@ -283,11 +283,23 @@ td {
   max-width: 900px;
 }
 
+@keyframes loginPopReveal {
+  0% {
+    opacity: 0;
+    transform: scale(0.94) translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
 .login-left-window {
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  animation: loginPopReveal 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .login-right-window {
@@ -296,6 +308,16 @@ td {
   justify-content: center;
   flex: 1;
   max-width: 420px;
+  animation: loginPopReveal 0.42s cubic-bezier(0.16, 1, 0.3, 1) 0.06s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-left-window,
+  .login-right-window {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @media (max-width: 900px) {
