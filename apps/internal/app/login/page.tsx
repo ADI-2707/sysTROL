@@ -63,43 +63,44 @@ export default function LoginPage() {
 
   return (
     <div className="login-split-container">
-      <div className="login-left-window">
-        <SysTrolLogo
-          isCollapsed={false}
-          height={140}
-          style={{
-            border: "none",
-            boxShadow: "none",
-            backgroundColor: "transparent",
-            cursor: "default",
-          }}
-        />
+      <div
+        style={{
+          position: "fixed",
+          top: "24px",
+          right: "28px",
+          zIndex: 10,
+        }}
+      >
+        <ThemeToggle />
       </div>
 
-      <div className="login-right-window">
-        <div
-          style={{
-            position: "absolute",
-            top: "24px",
-            right: "28px",
-            zIndex: 10,
-          }}
-        >
-          <ThemeToggle />
+      <div className="login-coherent-lockup">
+        <div className="login-left-window">
+          <SysTrolLogo
+            isCollapsed={false}
+            height={140}
+            style={{
+              border: "none",
+              boxShadow: "none",
+              backgroundColor: "transparent",
+              cursor: "default",
+            }}
+          />
         </div>
 
-        <div
-          style={{
-            width: "100%",
-            maxWidth: "400px",
-            backgroundColor: "var(--bg-card)",
-            border: "1px solid var(--border-subtle)",
-            borderRadius: "16px",
-            padding: "36px 32px",
-            boxShadow: "var(--shadow-card)",
-            position: "relative",
-          }}
-        >
+        <div className="login-right-window">
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "400px",
+              backgroundColor: "var(--bg-card)",
+              border: "1px solid var(--border-subtle)",
+              borderRadius: "16px",
+              padding: "36px 32px",
+              boxShadow: "var(--shadow-card)",
+              position: "relative",
+            }}
+          >
           {isSubmitting && (
             <div
               data-testid="login-ui-lock"
@@ -375,5 +376,6 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  </div>
   );
 }
