@@ -1,4 +1,4 @@
-import { isTokenValid } from "./token-utils.js";
+import { isTokenValid, parseJwt } from "./token-utils.js";
 import {
   getStoredSession,
   clearStoredSession,
@@ -6,9 +6,61 @@ import {
 } from "./auth-storage.js";
 
 let inMemoryAccessToken: string | null = null;
+let proactiveTimer: ReturnType<typeof setTimeout> | null = null;
+
+export function clearProactiveRefresh(): void {
+  if (proactiveTimer) {
+    clearTimeout(proactiveTimer);
+    proactiveTimer = null;
+  }
+}
+
+export function scheduleProactiveRefresh(token: string | null): void {
+  clearProactiveRefresh();
+  if (!token) return;
+  const decoded = parseJwt(token);
+  if (!decoded || typeof decoded.exp !== "number") return;
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  const remainingSeconds = decoded.exp - nowSeconds;
+  const refreshDelaySeconds = remainingSeconds - 120;
+  if (refreshDelaySeconds <= 0) {
+    if (typeof document !== "undefined" && document.visibilityState === "hidden") {
+      return;
+    }
+    silentRefreshToken().catch(() => {});
+    return;
+  }
+  proactiveTimer = setTimeout(() => {
+    if (typeof document !== "undefined" && document.visibilityState === "hidden") {
+      return;
+    }
+    silentRefreshToken().catch(() => {});
+  }, refreshDelaySeconds * 1000);
+}
+
+if (typeof document !== "undefined") {
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && inMemoryAccessToken) {
+      const decoded = parseJwt(inMemoryAccessToken);
+      if (decoded && typeof decoded.exp === "number") {
+        const remaining = decoded.exp - Math.floor(Date.now() / 1000);
+        if (remaining <= 120) {
+          silentRefreshToken().catch(() => {});
+        } else {
+          scheduleProactiveRefresh(inMemoryAccessToken);
+        }
+      }
+    }
+  });
+}
 
 export function setInMemoryToken(token: string | null): void {
   inMemoryAccessToken = token;
+  if (token) {
+    scheduleProactiveRefresh(token);
+  } else {
+    clearProactiveRefresh();
+  }
 }
 
 export function getInMemoryToken(): string | null {
@@ -16,7 +68,7 @@ export function getInMemoryToken(): string | null {
 }
 
 export function updateStoredToken(newToken: string, newRefreshToken?: string): void {
-  inMemoryAccessToken = newToken;
+  setInMemoryToken(newToken);
   storageUpdateToken(newToken, newRefreshToken);
 }
 
@@ -73,7 +125,7 @@ export async function silentRefreshToken(): Promise<string> {
   });
 
   if (!res.ok) {
-    inMemoryAccessToken = null;
+    setInMemoryToken(null);
     clearStoredSession();
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("systrol:session_expired"));
@@ -89,7 +141,7 @@ export async function silentRefreshToken(): Promise<string> {
   const data = await res.json();
   const newAccessToken = data.accessToken || data.token;
   if (!newAccessToken) {
-    inMemoryAccessToken = null;
+    setInMemoryToken(null);
     clearStoredSession();
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("systrol:session_expired"));
@@ -102,8 +154,8 @@ export async function silentRefreshToken(): Promise<string> {
     throw new Error("Malformed refresh response");
   }
 
-  inMemoryAccessToken = newAccessToken;
-  updateStoredToken(newAccessToken, data.refreshToken);
+  setInMemoryToken(newAccessToken);
+  storageUpdateToken(newAccessToken, data.refreshToken);
   return newAccessToken;
 }
 

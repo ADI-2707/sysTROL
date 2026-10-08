@@ -41,6 +41,9 @@ The Internal application is an operational portal engineered for field engineers
   - Backend-For-Frontend (BFF) Proxy (`app/api/proxy/[...path]/route.ts`): Relays client API requests server-to-server to Render, eliminating third-party cookie blocking and converting all auth cookies to first-party same-origin cookies (`SameSite=Lax; Path=/; HttpOnly; Secure`).
   - Centralized Auth Storage (`lib/auth-storage.ts`): Enforces a single canonical session key (`systrol_user_session`) across `auth-context.tsx` and `api-client.ts`, preventing session desynchronization.
   - Authenticated API Client (`lib/api-client.ts`): Automatically resolves relative paths through the BFF proxy, intercepts `401 Unauthorized` responses, initiates silent token refresh with body token fallback, queues concurrent calls, and dispatches `systrol:session_expired` on failure.
+  - Proactive Silent Refresh: Automatically inspects JWT `exp` claims and triggers proactive silent refresh 2 minutes prior to expiration (`exp - 120s`), preventing session interruptions and eliminating 401 errors during active sessions.
+  - Visibility-Aware Polling (`lib/use-visibility-polling.ts`): Employs the Page Visibility API to suspend background polling timers across the Latency Telemetry Banner, System Health Beacon, and Unread Inquiries indicator when tabs are hidden or minimized, conserving Render free-tier CPU, memory, and database connections. Immediately fires a fresh request upon tab reactivation.
+  - 401 Circuit Breaker: Automatically halts recurring polling intervals upon detecting unauthorized or expired session responses, eliminating zombie polling and console error spam.
   - Graceful Session Eviction: Listens for session expiration events, cleanly purges local storage, and redirects the user to `/login?session_expired=1` with an informative warning banner.
   - Input Debouncing: `useDebounce` hook prevents network congestion on rapid search inputs across Media, Projects, Employees, and Analytics.
   - Action Mutation Locking: Prevents double-click duplicate mutations on purchase order status changes, enquiry conversions, and sales visit creation.
@@ -96,7 +99,9 @@ apps/internal/
 │   ├── token-utils.ts                # Client-side JWT expiration checking
 │   ├── use-debounce.ts               # Input debounce hook
 │   ├── use-debounce.test.ts          # Automated tests for debounce hook and mutation locking
-│   └── use-keep-alive.ts             # Backend cold-start keep-alive heartbeat
+│   ├── use-keep-alive.ts             # Backend cold-start keep-alive heartbeat
+│   ├── use-visibility-polling.ts     # Visibility-aware polling hook with circuit breaker
+│   └── use-visibility-polling.test.ts# Automated tests for visibility-aware polling
 ├── public/
 │   ├── icon.jpeg                     # Official application icon
 │   └── images/                       # Brand vectors and diagram assets
