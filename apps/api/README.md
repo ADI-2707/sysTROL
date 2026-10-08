@@ -29,8 +29,11 @@ The API application is structured as a modular monolith providing high-throughpu
 - File Storage: S3-compatible object storage (MinIO in development, Supabase/AWS S3 in production) via `@aws-sdk/client-s3`
 - Authentication & Security Architecture:
   - Fastify JWT (`@fastify/jwt`) with access and refresh token rotation
+  - Direct O(1) Session Keys in Upstash Redis: Stores active sessions under `session:<refreshToken>` with atomic TTL expiration, replacing expensive linear key scans with sub-millisecond direct lookups
   - Dual-Mode Refresh Tokens: `/api/v1/auth/refresh` accepts tokens via HTTP-only cookies or JSON body payloads (`{ refreshToken }`), ensuring seamless fallback when browsers or environments restrict cross-domain cookies
   - Token Response Payloads: Both `/api/v1/auth/login` and `/api/v1/auth/refresh` return `{ accessToken, refreshToken, user }` in the JSON response in addition to setting the cookie
+  - Atomic Token Rotation: Invalidation of consumed refresh tokens and automatic issuance of replacement pairs on every refresh
+  - Seeded Super Controller Account: Dedicated `admin@systrol.com` root administrator provisioned via Prisma migrations with `SUPER_ADMIN` operational authority
   - Fastify Empty-Body JSON Defense: Custom JSON content-type parser converts empty or whitespace-only bodies with `application/json` headers into `{}` cleanly, preventing `400 Bad Request` (`FST_ERR_CTP_EMPTY_JSON_BODY`) errors
   - Password hashing with `bcryptjs`
   - Two-factor authentication (TOTP) using `otplib` and QR code generation
