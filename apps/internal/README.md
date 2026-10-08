@@ -45,7 +45,7 @@ The Internal application is an operational portal engineered for field engineers
   - Visibility-Aware Polling (`lib/use-visibility-polling.ts`): Employs the Page Visibility API to suspend background polling timers across the Latency Telemetry Banner, System Health Beacon, and Unread Inquiries indicator when tabs are hidden or minimized, conserving Render free-tier CPU, memory, and database connections. Immediately fires a fresh request upon tab reactivation.
   - 401 Circuit Breaker: Automatically halts recurring polling intervals upon detecting unauthorized or expired session responses, eliminating zombie polling and console error spam.
   - Graceful Session Eviction: Listens for session expiration events, cleanly purges local storage, and redirects the user to `/login?session_expired=1` with an informative warning banner.
-  - Redesigned Industrial Authentication Portal (`app/login/page.tsx`): Split-pane workstation layout featuring an engineering showcase on widescreen displays (Level-2 automation metrics, Commissioning DAG Engine, 99.98% SLA telemetry, IEC 61508 SIL3 compliance badge). Features a token-aligned authentication card with animated `SysTrolLogo`, industrial rocker `ThemeToggle`, floating input states with `Mail`/`Lock` icons, interactive password visibility reveal, `session_expired=1` alert banner, and categorized demo quick-access credentials for Leadership, Field Operations, Engineering, and Corporate teams.
+  - Redesigned Industrial Authentication Portal (`app/login/page.tsx`): Split-pane workstation layout without a topbar, featuring the expanded official sysTROL logo with industrial branding on the left pane, and a focused sign-in box on the right pane with email, password, and sign-in action. Integrates the mechanical rocker `ThemeToggle`, interactive password reveal, `session_expired=1` alert banner, and comprehensive UI locking (field disabling and authentication overlay) during submission.
   - Input Debouncing: `useDebounce` hook prevents network congestion on rapid search inputs across Media, Projects, Employees, and Analytics.
   - Action Mutation Locking: Prevents double-click duplicate mutations on purchase order status changes, enquiry conversions, and sales visit creation.
   - Global Error Boundaries: Root and dashboard `error.tsx` error boundaries, custom `not-found.tsx` 404 pages, and skeleton `loading.tsx` states.
@@ -128,7 +128,7 @@ apps/internal/
 | Careers & Jobs | `/careers-admin/postings` | Job posting management, publishing/pausing openings, candidate application review, and real-time synchronization with the public careers platform |
 | Analytics | `/analytics` | Dwell duration per stage, end-to-end conversion funnel, aging enquiries/procurement telemetry matrix, and 12-month AMC revenue projection |
 | Settings | `/settings` | Profile summary, designation, role verification, and self-service password change |
-| Authentication | `/login` | Industrial split-screen authentication portal with brand logo, theme rocker toggle, password reveal, expiration banner, and categorized demo role quick-fill |
+| Authentication | `/login` | Two-pane split window authentication without topbar, expanded logo, theme rocker switch, password reveal, expiration banner, and submission UI locking |
 
 ---
 
@@ -173,7 +173,7 @@ pnpm --filter @systrol/internal typecheck
 # Lint source files
 pnpm --filter @systrol/internal lint
 
-# Run automated tests (107 tests across 19 test suites)
+# Run automated tests (108 tests across 19 test suites)
 pnpm --filter @systrol/internal test
 
 # Build production bundle

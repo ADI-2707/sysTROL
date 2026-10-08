@@ -2,4 +2,4 @@
 "@systrol/internal": patch
 ---
 
-Redesign internal operations login portal with industrial split-screen layout, design tokens, animated SysTrolLogo, theme rocker toggle, password reveal, and categorized demo credentials.
+Redesign internal operations login portal with two-side window layout, expanded sysTROL logo, minimalist email and password sign-in card without topbar, and UI interaction locking during authentication.
