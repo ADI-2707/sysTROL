@@ -246,3 +246,85 @@ td {
   }
 }
 
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.login-split-container {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8fafc;
+  background-image:
+    radial-gradient(circle 650px at 12% 15%, rgba(22, 55, 91, 0.07) 0%, transparent 70%),
+    radial-gradient(circle 650px at 88% 85%, rgba(31, 122, 77, 0.06) 0%, transparent 70%),
+    linear-gradient(to right, rgba(22, 55, 91, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(22, 55, 91, 0.035) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+  background-position: 0 0, 0 0, -1px -1px, -1px -1px;
+  color: var(--text-body);
+  position: relative;
+  padding: 32px 24px;
+}
+
+.login-coherent-lockup {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 64px;
+  width: 100%;
+  max-width: 900px;
+}
+
+@keyframes loginPopReveal {
+  0% {
+    opacity: 0;
+    transform: scale(0.94) translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.login-left-window {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  animation: loginPopReveal 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.login-right-window {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  max-width: 420px;
+  animation: loginPopReveal 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-left-window,
+  .login-right-window {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .login-coherent-lockup {
+    flex-direction: column;
+    gap: 36px;
+  }
+}
+
+
