@@ -1,5 +1,11 @@
 # @systrol/internal
 
+## 2.6.2
+
+### Patch Changes
+
+- f281d8b: Implement visibility-aware polling to pause background requests on inactive tabs, 401 circuit breaker to prevent zombie polling, and proactive token refresh scheduling before JWT expiration.
+
 ## 2.6.1
 
 ### Patch Changes
