@@ -173,7 +173,7 @@ pnpm --filter @systrol/internal typecheck
 # Lint source files
 pnpm --filter @systrol/internal lint
 
-# Run automated tests (108 tests across 19 test suites)
+# Run automated tests (109 tests across 19 test suites)
 pnpm --filter @systrol/internal test
 
 # Build production bundle

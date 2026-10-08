@@ -14,13 +14,15 @@ vi.mock("next/navigation", () => ({
 }));
 
 const mockLogin = vi.fn();
+let mockAuthState = {
+  login: mockLogin,
+  isAuthenticated: false,
+  isLoading: false,
+  logout: vi.fn(),
+};
+
 vi.mock("@/lib/auth-context", () => ({
-  useAuth: () => ({
-    login: mockLogin,
-    isAuthenticated: false,
-    isLoading: false,
-    logout: vi.fn(),
-  }),
+  useAuth: () => mockAuthState,
 }));
 
 vi.mock("@/components/brand/SysTrolLogo", () => ({
@@ -37,8 +39,25 @@ describe("LoginPage unit and integration tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockLogin.mockResolvedValue({ success: true });
+    mockAuthState = {
+      login: mockLogin,
+      isAuthenticated: false,
+      isLoading: false,
+      logout: vi.fn(),
+    };
     delete (window as any).location;
     (window as any).location = new URL("http://localhost:3001/login");
+  });
+
+  it("redirects to /dashboard on mount if user is already authenticated", () => {
+    mockAuthState = {
+      login: mockLogin,
+      isAuthenticated: true,
+      isLoading: false,
+      logout: vi.fn(),
+    };
+    render(<LoginPage />);
+    expect(mockPush).toHaveBeenCalledWith("/dashboard");
   });
 
   it("renders two side window with expanded logo on left and login box on right without topbar or theme toggle", () => {
