@@ -24,7 +24,9 @@ vi.mock("@/lib/auth-context", () => ({
 }));
 
 vi.mock("@/components/brand/SysTrolLogo", () => ({
-  SysTrolLogo: () => <div data-testid="logo">sysTROL Logo</div>,
+  SysTrolLogo: ({ isCollapsed }: { isCollapsed: boolean }) => (
+    <div data-testid="logo">{isCollapsed ? "Collapsed Logo" : "Expanded Logo"}</div>
+  ),
 }));
 
 vi.mock("../theme-toggle", () => ({
@@ -37,6 +39,17 @@ describe("LoginPage unit and integration tests", () => {
     mockLogin.mockResolvedValue({ success: true });
     delete (window as any).location;
     (window as any).location = new URL("http://localhost:3001/login");
+  });
+
+  it("renders two side window with expanded logo on left and login box on right without topbar", () => {
+    const { container } = render(<LoginPage />);
+    expect(container.querySelector("header")).toBeNull();
+    expect(screen.getByText("Expanded Logo")).toBeDefined();
+    expect(screen.getByRole("heading", { name: "Sign In" })).toBeDefined();
+    expect(screen.getByLabelText("Email")).toBeDefined();
+    expect(screen.getByLabelText("Password")).toBeDefined();
+    expect(screen.getByTestId("submit-btn")).toBeDefined();
+    expect(screen.getByTestId("theme-toggle")).toBeDefined();
   });
 
   it("does not render session expired banner by default", () => {
@@ -67,16 +80,33 @@ describe("LoginPage unit and integration tests", () => {
     expect(passwordInput.type).toBe("password");
   });
 
-  it("populates email and password when quick fill role button is clicked", () => {
+  it("locks UI, disables fields, and displays authenticating spinner during submission", async () => {
+    let resolveLogin: (value: { success: boolean }) => void = () => {};
+    mockLogin.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveLogin = resolve;
+      })
+    );
+
     render(<LoginPage />);
     const emailInput = screen.getByPlaceholderText("operator@systrol.com") as HTMLInputElement;
     const passwordInput = screen.getByPlaceholderText("••••••••") as HTMLInputElement;
+    const submitBtn = screen.getByTestId("submit-btn") as HTMLButtonElement;
 
-    const adminButton = screen.getByText("Super Admin");
-    fireEvent.click(adminButton);
+    fireEvent.change(emailInput, { target: { value: "operator@systrol.com" } });
+    fireEvent.change(passwordInput, { target: { value: "password123" } });
+    fireEvent.click(submitBtn);
 
-    expect(emailInput.value).toBe("admin@systrol.com");
-    expect(passwordInput.value).toBe("admin123");
+    expect(screen.getByTestId("login-ui-lock")).toBeDefined();
+    expect(emailInput.disabled).toBe(true);
+    expect(passwordInput.disabled).toBe(true);
+    expect(submitBtn.disabled).toBe(true);
+    expect(screen.getByText("Signing In...")).toBeDefined();
+
+    resolveLogin({ success: true });
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith("/dashboard");
+    });
   });
 
   it("renders error message when submitting empty fields", async () => {
