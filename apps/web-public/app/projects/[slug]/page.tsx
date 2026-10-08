@@ -63,8 +63,65 @@ export default async function ProjectDetailPage({
     .filter((p) => p.slug !== slug && (p.industry === project.industry || p.serviceType === project.serviceType))
     .slice(0, 2);
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://sys-trol.com";
+  const projectUrl = `${siteUrl}/projects/${slug}`;
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: siteUrl,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Projects",
+        item: `${siteUrl}/projects`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: project.title,
+        item: projectUrl,
+      },
+    ],
+  };
+
+  const articleSchema = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: project.title,
+    description: project.shortBlurb,
+    url: projectUrl,
+    publisher: {
+      "@type": "Organization",
+      name: "sysTROL Engineering & Consultancy Pvt. Ltd.",
+      url: siteUrl,
+      logo: {
+        "@type": "ImageObject",
+        url: `${siteUrl}/images/systrol-logo.jpeg`,
+      },
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": projectUrl,
+    },
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      />
       <Navbar />
       <main>
         <section
