@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { EmployeeTeam } from "./permissions";
 import { isTokenValid } from "./token-utils";
 import { getStoredSession, setStoredSession, clearStoredSession, StoredSession } from "./auth-storage";
-import { setInMemoryToken, silentRefreshToken } from "./api-client";
+import { setInMemoryToken, silentRefreshToken, clearProactiveRefresh } from "./api-client";
 
 export interface AuthUser {
   id: string;
@@ -73,10 +73,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
     initializeAuth();
+    return () => {
+      clearProactiveRefresh();
+    };
   }, []);
 
   useEffect(() => {
     const handleExpired = () => {
+      clearProactiveRefresh();
       setInMemoryToken(null);
       setUser(null);
       clearStoredSession();
@@ -177,6 +181,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
+    clearProactiveRefresh();
     setInMemoryToken(null);
     setUser(null);
     clearStoredSession();
