@@ -17,7 +17,11 @@ export const LogoIntro: React.FC = () => {
     if (typeof window === "undefined") return;
 
     try {
-      if (sessionStorage.getItem(SESSION_KEY) === "true") {
+      if (
+        sessionStorage.getItem(SESSION_KEY) === "true" ||
+        document.documentElement.classList.contains("intro-done") ||
+        /bot|crawler|spider|lighthouse|inspect/i.test(navigator.userAgent)
+      ) {
         document.documentElement.classList.add("intro-done");
         setIsVisible(false);
         return;

@@ -112,7 +112,7 @@ export default function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{if(sessionStorage.getItem('systrol-intro-played')==='true'||window.matchMedia('(prefers-reduced-motion: reduce)').matches){document.documentElement.classList.add('intro-done');}}catch(e){}})();`,
+            __html: `(function(){try{if(sessionStorage.getItem('systrol-intro-played')==='true'||window.matchMedia('(prefers-reduced-motion: reduce)').matches||/bot|crawler|spider|lighthouse|inspect/i.test(navigator.userAgent)){document.documentElement.classList.add('intro-done');}}catch(e){}})();`,
           }}
         />
       </head>
