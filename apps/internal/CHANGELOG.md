@@ -1,5 +1,11 @@
 # @systrol/internal
 
+## 2.7.0
+
+### Minor Changes
+
+- ddb3b0e: Implement industry-standard authentication, O(1) Upstash Redis session key architecture, atomic token rotation, native cookie-forwarding Next.js BFF proxy, and resilient session lifecycle preventing false logouts on page refresh.
+
 ## 2.6.3
 
 ### Patch Changes
