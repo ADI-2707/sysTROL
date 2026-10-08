@@ -66,4 +66,22 @@ describe("LatencyMonitoringBanner Component Tests", () => {
       expect(screen.getByText("48.0 ms")).toBeDefined();
     });
   });
+
+  it("halts repeated polling on 401 response", async () => {
+    vi.useFakeTimers();
+    mockApiClient.mockResolvedValue({
+      status: 401,
+      ok: false,
+    });
+
+    render(<LatencyMonitoringBanner />);
+
+    await vi.advanceTimersByTimeAsync(0);
+    const initialCalls = mockApiClient.mock.calls.length;
+
+    await vi.advanceTimersByTimeAsync(90000);
+    expect(mockApiClient.mock.calls.length).toBe(initialCalls);
+
+    vi.useRealTimers();
+  });
 });
