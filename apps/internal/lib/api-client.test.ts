@@ -1,5 +1,15 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { apiClient, silentRefreshToken, getStoredSession, updateStoredToken, resolveApiUrl, getInMemoryToken, setInMemoryToken } from "./api-client.js";
+import {
+  apiClient,
+  silentRefreshToken,
+  getStoredSession,
+  updateStoredToken,
+  resolveApiUrl,
+  getInMemoryToken,
+  setInMemoryToken,
+  scheduleProactiveRefresh,
+  clearProactiveRefresh,
+} from "./api-client.js";
 import { SYSTROL_SESSION_STORAGE_KEY, setStoredSession } from "./auth-storage.js";
 
 describe("apiClient & silentRefreshToken unit tests", () => {
@@ -216,5 +226,59 @@ describe("apiClient & silentRefreshToken unit tests", () => {
     await expect(p1).rejects.toThrow("Session expired");
     await expect(p2).rejects.toThrow("Session expired");
     expect(getInMemoryToken()).toBeNull();
+  });
+
+  it("schedules proactive refresh before token expiration and triggers silent refresh", async () => {
+    vi.useFakeTimers();
+    const exp = Math.floor(Date.now() / 1000) + 300;
+    const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+    const payload = btoa(JSON.stringify({ exp }));
+    const token = `${header}.${payload}.sig`;
+
+    const mockFetch = vi.fn().mockImplementation((url: string) => {
+      if (url.includes("/auth/refresh")) {
+        return Promise.resolve(
+          new Response(JSON.stringify({ accessToken: "proactive-new-token" }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          })
+        );
+      }
+      return Promise.resolve(new Response("{}", { status: 200 }));
+    });
+    global.fetch = mockFetch;
+
+    scheduleProactiveRefresh(token);
+
+    vi.advanceTimersByTime(179000);
+    expect(mockFetch).not.toHaveBeenCalled();
+
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining("/api/proxy/v1/auth/refresh"),
+      expect.objectContaining({ method: "POST" })
+    );
+
+    clearProactiveRefresh();
+    vi.useRealTimers();
+  });
+
+  it("cancels proactive refresh when clearProactiveRefresh is called", async () => {
+    vi.useFakeTimers();
+    const exp = Math.floor(Date.now() / 1000) + 300;
+    const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+    const payload = btoa(JSON.stringify({ exp }));
+    const token = `${header}.${payload}.sig`;
+
+    const mockFetch = vi.fn().mockResolvedValue(new Response("{}", { status: 200 }));
+    global.fetch = mockFetch;
+
+    scheduleProactiveRefresh(token);
+    clearProactiveRefresh();
+
+    await vi.advanceTimersByTimeAsync(300000);
+    expect(mockFetch).not.toHaveBeenCalled();
+
+    vi.useRealTimers();
   });
 });
