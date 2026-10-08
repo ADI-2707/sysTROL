@@ -64,7 +64,16 @@ export default function LoginPage() {
   return (
     <div className="login-split-container">
       <div className="login-left-window">
-        <SysTrolLogo isCollapsed={false} height={88} />
+        <SysTrolLogo
+          isCollapsed={false}
+          height={140}
+          style={{
+            border: "none",
+            boxShadow: "none",
+            backgroundColor: "transparent",
+            cursor: "default",
+          }}
+        />
       </div>
 
       <div className="login-right-window">

@@ -7,12 +7,14 @@ interface SysTrolLogoProps {
   isCollapsed: boolean;
   onClick?: () => void;
   height?: number;
+  style?: React.CSSProperties;
 }
 
 export const SysTrolLogo: React.FC<SysTrolLogoProps> = ({
   isCollapsed,
   onClick,
   height = 36,
+  style,
 }) => {
   const leftWidth = Math.round(height * (98 / 195));
   const rightWidth = Math.round(height * (124 / 195));
@@ -34,7 +36,7 @@ export const SysTrolLogo: React.FC<SysTrolLogoProps> = ({
         display: "inline-flex",
         alignItems: "center",
         justifyContent: isCollapsed ? "center" : "flex-start",
-        cursor: "pointer",
+        cursor: onClick ? "pointer" : "default",
         userSelect: "none",
         transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
         padding: "4px",
@@ -42,6 +44,7 @@ export const SysTrolLogo: React.FC<SysTrolLogoProps> = ({
         backgroundColor: "rgba(255, 255, 255, 0.95)",
         boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
         border: "1px solid rgba(226, 232, 240, 0.8)",
+        ...style,
       }}
     >
       <div
