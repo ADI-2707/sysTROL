@@ -64,61 +64,7 @@ export default function LoginPage() {
   return (
     <div className="login-split-container">
       <div className="login-left-window">
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            textAlign: "center",
-            maxWidth: "480px",
-            width: "100%",
-          }}
-        >
-          <div style={{ marginBottom: "28px" }}>
-            <SysTrolLogo isCollapsed={false} height={68} />
-          </div>
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              padding: "5px 14px",
-              borderRadius: "999px",
-              backgroundColor: "var(--sys-blue-subtle)",
-              border: "1px solid var(--border-subtle)",
-              color: "var(--sys-blue-primary)",
-              fontSize: "12px",
-              fontWeight: 700,
-              fontFamily: "var(--font-mono)",
-              textTransform: "uppercase",
-              letterSpacing: "0.8px",
-              marginBottom: "16px",
-            }}
-          >
-            Engineering & Consultancy
-          </div>
-          <h2
-            style={{
-              fontSize: "26px",
-              fontWeight: 800,
-              color: "var(--text-heading)",
-              letterSpacing: "-0.5px",
-              lineHeight: "1.3",
-              marginBottom: "12px",
-            }}
-          >
-            Industrial Automation & Operations
-          </h2>
-          <p
-            style={{
-              fontSize: "14px",
-              lineHeight: "1.6",
-              color: "var(--text-muted)",
-              margin: 0,
-            }}
-          >
-            Mission-critical enterprise console for supervisory control, commissioning lifecycle execution, and rolling mill management.
-          </p>
-        </div>
+        <SysTrolLogo isCollapsed={false} height={88} />
       </div>
 
       <div className="login-right-window">
