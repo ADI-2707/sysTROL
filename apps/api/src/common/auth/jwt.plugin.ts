@@ -105,10 +105,17 @@ async function jwtPluginAsync(fastify: FastifyInstance) {
       );
 
       const refreshToken = crypto.randomBytes(40).toString("hex");
+      const directSessionKey = `session:${refreshToken}`;
       const refreshKey = `refresh:${userId}:${refreshToken}`;
       const refreshTtl = Number(env.JWT_REFRESH_TTL);
 
       try {
+        await redis.set(
+          directSessionKey,
+          JSON.stringify({ userId, role }),
+          "EX",
+          refreshTtl
+        );
         await redis.set(refreshKey, role, "EX", refreshTtl);
       } catch (redisErr) {
         memoryRefreshTokens.set(refreshToken, {
@@ -155,15 +162,32 @@ async function jwtPluginAsync(fastify: FastifyInstance) {
       let matchingKey: string | null = null;
 
       try {
-        const keys = await redis.keys(`refresh:*:${rawToken}`);
-        if (keys.length > 0) {
-          matchingKey = keys[0];
-          const parts = matchingKey.split(":");
-          foundUserId = parts[1];
-          const storedRole = await redis.get(matchingKey);
-          foundRole = (storedRole as UserRole) || null;
+        const directSession = await redis.get(`session:${rawToken}`);
+        if (directSession) {
+          matchingKey = `session:${rawToken}`;
+          try {
+            const parsed = JSON.parse(directSession);
+            foundUserId = parsed.userId;
+            foundRole = parsed.role;
+          } catch {
+            foundRole = directSession as UserRole;
+          }
         }
       } catch (redisErr) {
+      }
+
+      if (!foundUserId) {
+        try {
+          const keys = await redis.keys(`refresh:*:${rawToken}`);
+          if (keys.length > 0) {
+            matchingKey = keys[0];
+            const parts = matchingKey.split(":");
+            foundUserId = parts[1];
+            const storedRole = await redis.get(matchingKey);
+            foundRole = (storedRole as UserRole) || null;
+          }
+        } catch (redisErr) {
+        }
       }
 
       if (!foundUserId) {
@@ -184,12 +208,15 @@ async function jwtPluginAsync(fastify: FastifyInstance) {
         throw new Error("Invalid or expired refresh token");
       }
 
-      if (matchingKey) {
-        try {
+      try {
+        if (matchingKey) {
           await redis.del(matchingKey);
-        } catch {
-          // ignore
         }
+        await redis.del(`session:${rawToken}`);
+        if (foundUserId) {
+          await redis.del(`refresh:${foundUserId}:${rawToken}`);
+        }
+      } catch {
       }
 
       const user = await prisma.user.findUnique({ where: { id: foundUserId } });

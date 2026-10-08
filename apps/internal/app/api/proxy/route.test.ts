@@ -118,7 +118,8 @@ describe("BFF Proxy Route Unit & Scenario Tests", () => {
     expect(setCookie).toBeDefined();
     expect(setCookie).toContain("refreshToken=rotated456");
     expect(setCookie).not.toContain("onrender.com");
-    expect(setCookie).toContain("SameSite=Lax");
+    expect(setCookie?.toLowerCase()).toContain("samesite=lax");
+    expect(res.cookies.get("refreshToken")?.value).toBe("rotated456");
   });
 
   it("Scenario 3.4: propagates upstream 401, 403, and 500 error status codes cleanly", async () => {

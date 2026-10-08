@@ -42,10 +42,16 @@ export class AuthService {
     try {
       const keys = await redis.keys(`refresh:${userId}:*`);
       if (keys.length > 0) {
+        for (const k of keys) {
+          const parts = k.split(":");
+          const token = parts[2];
+          if (token) {
+            await redis.del(`session:${token}`);
+          }
+        }
         await redis.del(...keys);
       }
     } catch {
-      // Redis unavailable in offline mode
     }
   }
 }

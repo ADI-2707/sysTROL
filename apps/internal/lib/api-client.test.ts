@@ -169,6 +169,32 @@ describe("apiClient & silentRefreshToken unit tests", () => {
     window.removeEventListener("systrol:session_expired", listener);
   });
 
+  it("Scenario 4.5b: does not purge session when refresh request fails with 502 Bad Gateway", async () => {
+    setInMemoryToken("old-token");
+    setStoredSession({ user: { id: "1", email: "a@b.com", name: "A", role: "ADMIN", team: "L", designation: "D" } });
+
+    let eventFired = false;
+    const listener = () => {
+      eventFired = true;
+    };
+    window.addEventListener("systrol:session_expired", listener);
+
+    const mockFetch = vi.fn().mockImplementation((url: string) => {
+      if (url.includes("/auth/refresh")) {
+        return Promise.resolve(new Response(JSON.stringify({ error: "Bad Gateway" }), { status: 502 }));
+      }
+      return Promise.resolve(new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 }));
+    });
+
+    global.fetch = mockFetch;
+
+    await expect(apiClient("/api/v1/sensitive-data")).rejects.toThrow();
+    expect(getStoredSession()?.user?.email).toBe("a@b.com");
+    expect(eventFired).toBe(false);
+
+    window.removeEventListener("systrol:session_expired", listener);
+  });
+
   it("Scenario 4.6: does not loop refresh for login endpoint returning 401", async () => {
     const mockFetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({ error: "Invalid credentials" }), { status: 401 }));
     global.fetch = mockFetch;

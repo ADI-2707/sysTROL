@@ -160,24 +160,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: true };
     }
 
-    if (password === "systrol2026" || password === "admin123") {
-      const isSuper = normalizedEmail === "admin@systrol.com";
-      const guestUser: AuthUser = {
-        id: isSuper ? "usr-admin-01" : `usr-${Date.now()}`,
-        email: normalizedEmail,
-        name: isSuper ? "Admin Controls" : normalizedEmail.split("@")[0].replace(".", " ").toUpperCase(),
-        role: isSuper ? "SUPER_ADMIN" : "OPERATOR",
-        team: "LEADERSHIP",
-        designation: isSuper ? "Operations Executive" : "Executive Director",
-        baseLocation: "HQ - Kolkata",
-        isSeededSuperAdmin: isSuper,
-      };
-      setUser(guestUser);
-      setStoredSession(guestUser as unknown as StoredSession);
-      return { success: true };
-    }
-
-    return { success: false, error: "Invalid email or password. Use demo credentials or password 'admin123'." };
+    return { success: false, error: "Invalid email or password" };
   };
 
   const logout = () => {
