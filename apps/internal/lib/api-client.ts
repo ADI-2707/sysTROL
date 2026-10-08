@@ -1,11 +1,26 @@
 import { isTokenValid } from "./token-utils.js";
 import {
   getStoredSession,
-  updateStoredToken,
   clearStoredSession,
+  updateStoredToken as storageUpdateToken,
 } from "./auth-storage.js";
 
-export { getStoredSession, updateStoredToken, clearStoredSession };
+let inMemoryAccessToken: string | null = null;
+
+export function setInMemoryToken(token: string | null): void {
+  inMemoryAccessToken = token;
+}
+
+export function getInMemoryToken(): string | null {
+  return inMemoryAccessToken;
+}
+
+export function updateStoredToken(newToken: string, newRefreshToken?: string): void {
+  inMemoryAccessToken = newToken;
+  storageUpdateToken(newToken, newRefreshToken);
+}
+
+export { getStoredSession, clearStoredSession };
 
 export function resolveApiUrl(endpoint: string): string {
   if (endpoint.startsWith("http://") || endpoint.startsWith("https://")) {
@@ -54,13 +69,19 @@ export async function silentRefreshToken(): Promise<string> {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({ refreshToken: session?.refreshToken || "" }),
+    body: JSON.stringify({ refreshToken: (session as any)?.refreshToken || "" }),
   });
 
   if (!res.ok) {
+    inMemoryAccessToken = null;
     clearStoredSession();
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("systrol:session_expired"));
+      try {
+        if (window.location && window.location.pathname !== "/login") {
+          window.location.href = "/login?session_expired=1";
+        }
+      } catch {}
     }
     throw new Error("Session expired. Please log in again.");
   }
@@ -68,13 +89,20 @@ export async function silentRefreshToken(): Promise<string> {
   const data = await res.json();
   const newAccessToken = data.accessToken || data.token;
   if (!newAccessToken) {
+    inMemoryAccessToken = null;
     clearStoredSession();
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("systrol:session_expired"));
+      try {
+        if (window.location && window.location.pathname !== "/login") {
+          window.location.href = "/login?session_expired=1";
+        }
+      } catch {}
     }
     throw new Error("Malformed refresh response");
   }
 
+  inMemoryAccessToken = newAccessToken;
   updateStoredToken(newAccessToken, data.refreshToken);
   return newAccessToken;
 }
@@ -84,13 +112,13 @@ export async function apiClient(
   options: RequestInit = {}
 ): Promise<Response> {
   const url = resolveApiUrl(endpoint);
-
   const headers = new Headers(options.headers || {});
   const session = getStoredSession();
+  const tokenToUse = inMemoryAccessToken || (session as any)?.token;
 
-  if (session?.token && isTokenValid(session.token)) {
+  if (tokenToUse && isTokenValid(tokenToUse)) {
     if (!headers.has("Authorization")) {
-      headers.set("Authorization", `Bearer ${session.token}`);
+      headers.set("Authorization", `Bearer ${tokenToUse}`);
     }
   }
 

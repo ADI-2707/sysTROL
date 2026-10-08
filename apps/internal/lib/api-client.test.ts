@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { apiClient, silentRefreshToken, getStoredSession, updateStoredToken, resolveApiUrl } from "./api-client.js";
+import { apiClient, silentRefreshToken, getStoredSession, updateStoredToken, resolveApiUrl, getInMemoryToken, setInMemoryToken } from "./api-client.js";
 import { SYSTROL_SESSION_STORAGE_KEY, setStoredSession } from "./auth-storage.js";
 
 describe("apiClient & silentRefreshToken unit tests", () => {
@@ -7,12 +7,14 @@ describe("apiClient & silentRefreshToken unit tests", () => {
 
   beforeEach(() => {
     localStorage.clear();
+    setInMemoryToken(null);
     vi.restoreAllMocks();
   });
 
   afterEach(() => {
     global.fetch = originalFetch;
     localStorage.clear();
+    setInMemoryToken(null);
   });
 
   it("Scenario 4.2a: resolves API endpoints to BFF proxy route in browser", () => {
@@ -26,7 +28,7 @@ describe("apiClient & silentRefreshToken unit tests", () => {
     const validToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
       btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 })) +
       ".signature";
-    setStoredSession({ token: validToken, user: { id: "1", email: "a@b.com", name: "A", role: "ADMIN", team: "L", designation: "D" } });
+    setInMemoryToken(validToken);
 
     const mockFetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({ ok: true }), { status: 200 }));
     global.fetch = mockFetch;
@@ -59,7 +61,7 @@ describe("apiClient & silentRefreshToken unit tests", () => {
     const expiredToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
       btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) - 100 })) +
       ".sig";
-    setStoredSession({ token: expiredToken, refreshToken: "old-refresh-token", user: { id: "u1", email: "a@b.com", name: "A", role: "ADMIN", team: "L", designation: "D" } });
+    setInMemoryToken(expiredToken);
 
     const newAccessToken = "newToken999";
     const newRefreshToken = "newRefresh999";
@@ -87,10 +89,7 @@ describe("apiClient & silentRefreshToken unit tests", () => {
 
     const response = await apiClient("/api/v1/projects");
     expect(response.status).toBe(200);
-
-    const updatedSession = getStoredSession();
-    expect(updatedSession?.token).toBe(newAccessToken);
-    expect(updatedSession?.refreshToken).toBe(newRefreshToken);
+    expect(getInMemoryToken()).toBe(newAccessToken);
   });
 
   it("Scenario 4.4: queues concurrent calls during token refresh to avoid duplicate refresh calls", async () => {
@@ -133,7 +132,8 @@ describe("apiClient & silentRefreshToken unit tests", () => {
   });
 
   it("Scenario 4.5: purges stored session and dispatches session_expired event when refresh request fails", async () => {
-    setStoredSession({ token: "invalid", user: { id: "1", email: "a@b.com", name: "A", role: "ADMIN", team: "L", designation: "D" } });
+    setInMemoryToken("invalid");
+    setStoredSession({ user: { id: "1", email: "a@b.com", name: "A", role: "ADMIN", team: "L", designation: "D" } });
 
     let eventFired = false;
     const listener = () => {
@@ -153,6 +153,7 @@ describe("apiClient & silentRefreshToken unit tests", () => {
     await expect(apiClient("/api/v1/sensitive-data")).rejects.toThrow("Session expired");
     expect(localStorage.getItem(SYSTROL_SESSION_STORAGE_KEY)).toBeNull();
     expect(getStoredSession()).toBeNull();
+    expect(getInMemoryToken()).toBeNull();
     expect(eventFired).toBe(true);
 
     window.removeEventListener("systrol:session_expired", listener);
@@ -168,7 +169,8 @@ describe("apiClient & silentRefreshToken unit tests", () => {
   });
 
   it("Scenario 4.7: purges session and throws on malformed 200 refresh payload", async () => {
-    setStoredSession({ token: "expired", user: { id: "1", email: "a@b.com", name: "A", role: "ADMIN", team: "L", designation: "D" } });
+    setInMemoryToken("expired");
+    setStoredSession({ user: { id: "1", email: "a@b.com", name: "A", role: "ADMIN", team: "L", designation: "D" } });
 
     let eventFired = false;
     const listener = () => {
@@ -186,13 +188,15 @@ describe("apiClient & silentRefreshToken unit tests", () => {
 
     await expect(apiClient("/api/v1/projects")).rejects.toThrow("Malformed refresh response");
     expect(getStoredSession()).toBeNull();
+    expect(getInMemoryToken()).toBeNull();
     expect(eventFired).toBe(true);
 
     window.removeEventListener("systrol:session_expired", listener);
   });
 
   it("Scenario 4.8: cleanly rejects all queued concurrent requests if refresh fails", async () => {
-    setStoredSession({ token: "expired", user: { id: "1", email: "a@b.com", name: "A", role: "ADMIN", team: "L", designation: "D" } });
+    setInMemoryToken("expired");
+    setStoredSession({ user: { id: "1", email: "a@b.com", name: "A", role: "ADMIN", team: "L", designation: "D" } });
 
     const mockFetch = vi.fn().mockImplementation((url: string) => {
       if (url.includes("/auth/refresh")) {
@@ -211,5 +215,6 @@ describe("apiClient & silentRefreshToken unit tests", () => {
 
     await expect(p1).rejects.toThrow("Session expired");
     await expect(p2).rejects.toThrow("Session expired");
+    expect(getInMemoryToken()).toBeNull();
   });
 });

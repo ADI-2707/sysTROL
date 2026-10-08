@@ -12,16 +12,16 @@ jobs:
 
     steps:
       - name: Probe Public Corporate Web Platform
-        run: curl -sSf -m 15 https://systrol.vercel.app/api/health > /dev/null
+        run: curl -sSf --retry 2 --retry-delay 3 -m 20 https://systrol.vercel.app/api/health > /dev/null
 
       - name: Probe Internal Operations Portal
-        run: curl -sSf -m 15 https://systrolops.vercel.app/login > /dev/null
+        run: curl -sSf --retry 2 --retry-delay 3 -m 20 https://systrolops.vercel.app/login > /dev/null
 
       - name: Probe API Liveness & Prevent Cold Start
-        run: curl -sSf -m 45 https://systrol-api.onrender.com/api/v1/health > /dev/null
+        run: curl -sSf --retry 3 --retry-delay 5 --retry-all-errors -m 90 https://systrol-api.onrender.com/api/v1/health > /dev/null
 
       - name: Probe Deep Subsystems Health
-        run: curl -sSf -m 45 https://systrol-api.onrender.com/api/v1/health/deep > /dev/null
+        run: curl -sSf --retry 2 --retry-delay 5 --retry-all-errors -m 60 https://systrol-api.onrender.com/api/v1/health/deep > /dev/null
 
       - name: Dispatch Webhook Alert on Incident
         if: failure() && env.ALERT_WEBHOOK != ''

@@ -154,7 +154,12 @@ export default function DashboardLayout({
   const [logoutHovered, setLogoutHovered] = useState(false);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://systrol-api.onrender.com";
-  useBackendKeepAlive(apiUrl, user?.token);
+  useBackendKeepAlive(apiUrl, user?.token, {
+    onTokenInvalid: () => {
+      logout();
+      window.location.href = "/login?session_expired=1";
+    },
+  });
 
   useEffect(() => {
     const saved = localStorage.getItem("systrol_sidebar_collapsed");

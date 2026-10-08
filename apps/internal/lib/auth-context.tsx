@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { EmployeeTeam } from "./permissions";
 import { isTokenValid } from "./token-utils";
 import { getStoredSession, setStoredSession, clearStoredSession, StoredSession } from "./auth-storage";
+import { setInMemoryToken, silentRefreshToken } from "./api-client";
 
 export interface AuthUser {
   id: string;
@@ -52,24 +53,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const router = useRouter();
 
   useEffect(() => {
-    try {
-      const stored = getStoredSession();
-      if (stored) {
-        if (stored.token && !isTokenValid(stored.token)) {
-          stored.token = undefined;
-          setStoredSession(stored);
+    const initializeAuth = async () => {
+      try {
+        const stored = getStoredSession();
+        if (stored?.user) {
+          setUser(stored.user as unknown as AuthUser);
+          try {
+            const token = await silentRefreshToken();
+            if (token) {
+              setInMemoryToken(token);
+              setUser((prev) => prev ? { ...prev, token } : prev);
+            }
+          } catch {}
         }
-        setUser(stored as unknown as AuthUser);
+      } catch {
+        setUser(null);
+      } finally {
+        setIsLoading(false);
       }
-    } catch {
-      setUser(null);
-    } finally {
-      setIsLoading(false);
-    }
+    };
+    initializeAuth();
   }, []);
 
   useEffect(() => {
     const handleExpired = () => {
+      setInMemoryToken(null);
       setUser(null);
       clearStoredSession();
       router.push("/login?session_expired=1");
@@ -94,6 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const res = await fetch(loginUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ email: normalizedEmail, password }),
         signal: controller.signal,
       });
@@ -112,11 +121,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           token: data.accessToken,
           isSeededSuperAdmin: normalizedEmail === "admin@systrol.com",
         };
+        setInMemoryToken(data.accessToken || null);
         setUser(authedUser);
         setStoredSession({
-          ...authedUser,
-          token: data.accessToken,
-          refreshToken: data.refreshToken,
           user: {
             id: authedUser.id,
             email: authedUser.email,
@@ -170,8 +177,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
+    setInMemoryToken(null);
     setUser(null);
     clearStoredSession();
+    try {
+      fetch("/api/proxy/v1/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      }).catch(() => {});
+    } catch {}
     router.push("/login");
   };
 
