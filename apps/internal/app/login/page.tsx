@@ -81,11 +81,11 @@ export default function LoginPage() {
             style={{
               width: "100%",
               maxWidth: "400px",
-              backgroundColor: "var(--bg-card)",
+              backgroundColor: "#ffffff",
               border: "1px solid var(--border-subtle)",
               borderRadius: "16px",
               padding: "36px 32px",
-              boxShadow: "var(--shadow-card)",
+              boxShadow: "0 10px 25px -5px rgba(22, 55, 91, 0.07), 0 4px 6px -2px rgba(22, 55, 91, 0.04)",
               position: "relative",
             }}
           >
