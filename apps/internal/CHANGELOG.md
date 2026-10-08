@@ -1,5 +1,11 @@
 # @systrol/internal
 
+## 2.6.1
+
+### Patch Changes
+
+- 9b03f72: Implement in-memory token management, HttpOnly cookie-based silent refresh, sanitized local storage session persistence, and session expiration callback on dashboard keep-alive probe.
+
 ## 2.6.0
 
 ### Minor Changes
