@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -26,6 +26,7 @@ import { canAccessPage, canAccessAuditLogs, TEAM_LABELS } from "@/lib/permission
 import { useBackendKeepAlive } from "@/lib/use-keep-alive";
 import { apiClient } from "@/lib/api-client";
 import { SystemHealthBeacon } from "@/components/health/SystemHealthBeacon";
+import { useVisibilityPolling } from "@/lib/use-visibility-polling";
 
 interface NavItemConfig {
   label: string;
@@ -192,21 +193,27 @@ export default function DashboardLayout({
 
   const [unreadCtaCount, setUnreadCtaCount] = useState<number>(0);
 
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    const fetchUnread = async () => {
-      try {
-        const res = await apiClient("/api/v1/cta/unread-count");
-        if (res.ok) {
-          const data = await res.json();
-          setUnreadCtaCount(data.unreadCount || 0);
-        }
-      } catch {}
-    };
-    fetchUnread();
-    const interval = setInterval(fetchUnread, 15000);
-    return () => clearInterval(interval);
-  }, [isAuthenticated]);
+  const fetchUnread = useCallback(async () => {
+    try {
+      const res = await apiClient("/api/v1/cta/unread-count");
+      if (res.status === 401) {
+        throw new Error("Unauthorized");
+      }
+      if (res.ok) {
+        const data = await res.json();
+        setUnreadCtaCount(data.unreadCount || 0);
+      }
+    } catch (err: any) {
+      if (err?.status === 401 || err?.message?.includes("Unauthorized") || err?.message?.includes("Session expired")) {
+        throw err;
+      }
+    }
+  }, []);
+
+  useVisibilityPolling(fetchUnread, {
+    intervalMs: 15000,
+    enabled: isAuthenticated,
+  });
 
   const navItems: NavItemConfig[] = [
     { label: "Dashboard", href: "/dashboard", icon: <LayoutDashboard size={17} /> },
