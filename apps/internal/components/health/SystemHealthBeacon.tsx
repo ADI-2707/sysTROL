@@ -5,6 +5,7 @@ import { Activity, Database, Server, RefreshCw, X, ShieldCheck, AlertTriangle } 
 import { apiClient } from "@/lib/api-client";
 import { useAuth } from "@/lib/auth-context";
 import { canAccessAuditLogs } from "@/lib/permissions";
+import { useVisibilityPolling } from "@/lib/use-visibility-polling";
 
 interface HealthCheckData {
   status: "healthy" | "degraded" | "offline";
@@ -48,11 +49,7 @@ export function SystemHealthBeacon() {
     }
   }, []);
 
-  useEffect(() => {
-    checkHealth();
-    const interval = setInterval(checkHealth, 30000);
-    return () => clearInterval(interval);
-  }, [checkHealth]);
+  useVisibilityPolling(checkHealth, { intervalMs: 30000 });
 
   const isHealthy = data?.status === "healthy";
   const isDegraded = data?.status === "degraded";
