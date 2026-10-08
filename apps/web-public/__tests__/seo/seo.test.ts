@@ -16,6 +16,7 @@ import { projectsData } from "../../content/projects.js";
 
 describe("SEO and Metadata Scenarios", () => {
   const originalEnv = process.env.NEXT_PUBLIC_SITE_URL;
+  const originalFetch = globalThis.fetch;
 
   beforeEach(() => {
     delete process.env.NEXT_PUBLIC_SITE_URL;
@@ -27,6 +28,7 @@ describe("SEO and Metadata Scenarios", () => {
     } else {
       delete process.env.NEXT_PUBLIC_SITE_URL;
     }
+    globalThis.fetch = originalFetch;
   });
 
   it("generates default sitemap with expected routes, priorities, and default domain", () => {
@@ -122,7 +124,6 @@ describe("SEO and Metadata Scenarios", () => {
       description: "Supervisory mill automation software development.",
     };
 
-    const originalFetch = globalThis.fetch;
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ job: mockJob }),
@@ -135,12 +136,9 @@ describe("SEO and Metadata Scenarios", () => {
     expect(meta.title).toContain("Lead Level-2 Automation Engineer");
     expect(meta.description).toBe(mockJob.description);
     expect(meta.alternates?.canonical).toBe("/careers/lead-l2-automation-engineer");
-
-    globalThis.fetch = originalFetch;
   });
 
   it("handles non-existent job gracefully in careers/[id]", async () => {
-    const originalFetch = globalThis.fetch;
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: false,
     } as Response);
@@ -150,7 +148,43 @@ describe("SEO and Metadata Scenarios", () => {
     });
 
     expect(meta.title).toBe("Position Not Found");
+  });
 
-    globalThis.fetch = originalFetch;
+  it("handles network failure and fetch rejection gracefully in careers/[id]", async () => {
+    globalThis.fetch = vi.fn().mockRejectedValue(new Error("Network connection refused"));
+
+    const meta = await generateCareerMetadata({
+      params: Promise.resolve({ id: "unreachable-job-id" }),
+    });
+
+    expect(meta.title).toBe("Position Not Found");
+  });
+
+  it("handles malformed JSON response gracefully in careers/[id]", async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => {
+        throw new Error("SyntaxError: Unexpected token");
+      },
+    } as Response);
+
+    const meta = await generateCareerMetadata({
+      params: Promise.resolve({ id: "malformed-json-job" }),
+    });
+
+    expect(meta.title).toBe("Position Not Found");
+  });
+
+  it("handles payload with missing job property gracefully in careers/[id]", async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({}),
+    } as Response);
+
+    const meta = await generateCareerMetadata({
+      params: Promise.resolve({ id: "missing-job-prop" }),
+    });
+
+    expect(meta.title).toBe("Position Not Found");
   });
 });
