@@ -347,6 +347,29 @@ describe("Auth Module Unit & Payload Tests", () => {
       expect(data.refreshToken).toBeDefined();
     });
 
+    it("Scenario 2.1b: refreshes token using direct O(1) session key in Redis", async () => {
+      (redis.get as any).mockResolvedValueOnce(JSON.stringify({ userId: "usr-1", role: "ADMIN" }));
+      (prisma.user.findUnique as any).mockResolvedValueOnce({
+        id: "usr-1",
+        email: "admin@systrol.com",
+        role: "ADMIN",
+      });
+
+      const res = await server.inject({
+        method: "POST",
+        url: "/api/v1/auth/refresh",
+        headers: {
+          cookie: "refreshToken=direct-token-123",
+        },
+      });
+
+      expect(res.statusCode).toBe(200);
+      const data = JSON.parse(res.body);
+      expect(data.accessToken).toBeDefined();
+      expect(data.refreshToken).toBeDefined();
+      expect(redis.get).toHaveBeenCalledWith("session:direct-token-123");
+    });
+
     it("Scenario 2.2: refreshes token with valid body payload and no cookie", async () => {
       (redis.keys as any).mockResolvedValueOnce(["refresh:usr-2:body-token-456"]);
       (redis.get as any).mockResolvedValueOnce("OPERATOR");
