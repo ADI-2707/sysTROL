@@ -41,15 +41,16 @@ describe("LoginPage unit and integration tests", () => {
     (window as any).location = new URL("http://localhost:3001/login");
   });
 
-  it("renders two side window with expanded logo on left and login box on right without topbar", () => {
+  it("renders two side window with expanded logo on left and login box on right without topbar or theme toggle", () => {
     const { container } = render(<LoginPage />);
     expect(container.querySelector("header")).toBeNull();
     expect(container.querySelector(".login-left-window")?.textContent?.trim()).toBe("Expanded Logo");
+    expect(container.querySelector(".login-split-container")?.getAttribute("data-theme")).toBe("light");
     expect(screen.getByRole("heading", { name: "Sign In" })).toBeDefined();
     expect(screen.getByLabelText("Email")).toBeDefined();
     expect(screen.getByLabelText("Password")).toBeDefined();
     expect(screen.getByTestId("submit-btn")).toBeDefined();
-    expect(screen.getByTestId("theme-toggle")).toBeDefined();
+    expect(screen.queryByTestId("theme-toggle")).toBeNull();
   });
 
   it("does not render session expired banner by default", () => {

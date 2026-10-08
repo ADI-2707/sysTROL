@@ -291,10 +291,6 @@ td {
   max-width: 420px;
 }
 
-[data-theme="dark"] .login-split-container {
-  background-color: var(--bg-canvas);
-}
-
 @media (max-width: 900px) {
   .login-coherent-lockup {
     flex-direction: column;

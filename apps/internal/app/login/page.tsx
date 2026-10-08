@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { SysTrolLogo } from "@/components/brand/SysTrolLogo";
-import { ThemeToggle } from "../theme-toggle";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -62,18 +61,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="login-split-container">
-      <div
-        style={{
-          position: "fixed",
-          top: "24px",
-          right: "28px",
-          zIndex: 10,
-        }}
-      >
-        <ThemeToggle />
-      </div>
-
+    <div className="login-split-container" data-theme="light">
       <div className="login-coherent-lockup">
         <div className="login-left-window">
           <SysTrolLogo
