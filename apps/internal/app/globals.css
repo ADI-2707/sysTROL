@@ -299,7 +299,7 @@ td {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  animation: loginPopReveal 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: loginPopReveal 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .login-right-window {
@@ -308,7 +308,7 @@ td {
   justify-content: center;
   flex: 1;
   max-width: 420px;
-  animation: loginPopReveal 0.42s cubic-bezier(0.16, 1, 0.3, 1) 0.06s both;
+  animation: loginPopReveal 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
