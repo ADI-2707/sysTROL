@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState, useCallback } from "react";
 import { Activity, Zap, ShieldCheck, RefreshCw, BarChart2 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
+import { useAuth } from "@/lib/auth-context";
+import { useVisibilityPolling } from "@/lib/use-visibility-polling";
 
 interface LatencyMetrics {
   totalSamples: number;
@@ -22,17 +24,25 @@ interface CtaMetrics {
 }
 
 export function LatencyMonitoringBanner() {
+  let isAuthenticated = true;
+  try {
+    const auth = useAuth();
+    isAuthenticated = auth.isAuthenticated;
+  } catch {}
   const [latency, setLatency] = useState<LatencyMetrics | null>(null);
   const [ctaMetrics, setCtaMetrics] = useState<CtaMetrics | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const fetchMetrics = async () => {
+  const fetchMetrics = useCallback(async () => {
     try {
       setLoading(true);
       const [latRes, ctaRes] = await Promise.all([
         apiClient("/api/v1/metrics/latency"),
         apiClient("/api/v1/cta/metrics"),
       ]);
+      if (latRes.status === 401 || ctaRes.status === 401) {
+        throw new Error("Unauthorized");
+      }
       if (latRes.ok) {
         const latData = await latRes.json();
         setLatency(latData);
@@ -41,7 +51,10 @@ export function LatencyMonitoringBanner() {
         const ctaData = await ctaRes.json();
         setCtaMetrics(ctaData);
       }
-    } catch {
+    } catch (err: any) {
+      if (err?.status === 401 || err?.message?.includes("Unauthorized") || err?.message?.includes("Session expired")) {
+        throw err;
+      }
       setLatency({
         totalSamples: 120,
         avgMs: 14.2,
@@ -60,13 +73,12 @@ export function LatencyMonitoringBanner() {
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchMetrics();
-    const interval = setInterval(fetchMetrics, 30000);
-    return () => clearInterval(interval);
   }, []);
+
+  useVisibilityPolling(fetchMetrics, {
+    intervalMs: 30000,
+    enabled: isAuthenticated,
+  });
 
   const p95 = latency?.p95Ms ?? 0;
   const statusColor = p95 < 100 ? "var(--sys-green-accent)" : p95 < 300 ? "var(--sys-amber-accent)" : "var(--sys-red-accent, #ef4444)";
