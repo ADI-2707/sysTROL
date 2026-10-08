@@ -12,8 +12,6 @@ export interface StoredUser {
 }
 
 export interface StoredSession {
-  token?: string;
-  refreshToken?: string;
   user?: StoredUser;
   [key: string]: unknown;
 }
@@ -23,7 +21,10 @@ export function getStoredSession(): StoredSession | null {
   try {
     const raw = localStorage.getItem(SYSTROL_SESSION_STORAGE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    delete parsed.token;
+    delete parsed.refreshToken;
+    return parsed;
   } catch {
     return null;
   }
@@ -32,9 +33,11 @@ export function getStoredSession(): StoredSession | null {
 export function setStoredSession(session: StoredSession): void {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(SYSTROL_SESSION_STORAGE_KEY, JSON.stringify(session));
-  } catch {
-  }
+    const sanitized = { ...session };
+    delete (sanitized as Record<string, unknown>).token;
+    delete (sanitized as Record<string, unknown>).refreshToken;
+    localStorage.setItem(SYSTROL_SESSION_STORAGE_KEY, JSON.stringify(sanitized));
+  } catch {}
 }
 
 export function clearStoredSession(): void {
@@ -42,21 +45,7 @@ export function clearStoredSession(): void {
   try {
     localStorage.removeItem(SYSTROL_SESSION_STORAGE_KEY);
     localStorage.removeItem("systrol_user");
-  } catch {
-  }
+  } catch {}
 }
 
-export function updateStoredToken(newToken: string, newRefreshToken?: string): void {
-  if (typeof window === "undefined") return;
-  try {
-    const session = getStoredSession();
-    if (session) {
-      session.token = newToken;
-      if (newRefreshToken) {
-        session.refreshToken = newRefreshToken;
-      }
-      setStoredSession(session);
-    }
-  } catch {
-  }
-}
+export function updateStoredToken(_newToken: string, _newRefreshToken?: string): void {}
