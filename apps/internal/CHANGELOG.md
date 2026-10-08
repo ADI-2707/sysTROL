@@ -1,5 +1,11 @@
 # @systrol/internal
 
+## 2.6.3
+
+### Patch Changes
+
+- e693df9: Redesign internal operations login portal with coherent two-side lockup, enlarged sysTROL logo, subtle engineering blueprint grid with brand ambient gradients, synchronized pop-reveal micro-animation, permanent light mode, and UI interaction locking during authentication.
+
 ## 2.6.2
 
 ### Patch Changes
