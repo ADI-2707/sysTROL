@@ -44,7 +44,7 @@ describe("LoginPage unit and integration tests", () => {
   it("renders two side window with expanded logo on left and login box on right without topbar", () => {
     const { container } = render(<LoginPage />);
     expect(container.querySelector("header")).toBeNull();
-    expect(screen.getByText("Expanded Logo")).toBeDefined();
+    expect(container.querySelector(".login-left-window")?.textContent?.trim()).toBe("Expanded Logo");
     expect(screen.getByRole("heading", { name: "Sign In" })).toBeDefined();
     expect(screen.getByLabelText("Email")).toBeDefined();
     expect(screen.getByLabelText("Password")).toBeDefined();
