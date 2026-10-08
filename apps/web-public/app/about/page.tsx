@@ -19,6 +19,9 @@ export const metadata: Metadata = {
   title: "About Us | sysTROL Engineering & Consultancy",
   description:
     "Learn about sysTROL's founding intent, our leadership in Level-2 rolling mill automation software, and verified global spares trading.",
+  alternates: {
+    canonical: "/about",
+  },
 };
 
 export default function AboutPage() {

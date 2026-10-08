@@ -17,6 +17,9 @@ export const metadata: Metadata = {
   title: "Imported Mill Machinery & Spares Trading | sysTROL",
   description:
     "OEM-certified imported heavy machinery, Tungsten Carbide roll rings, hydraulic AGC servo valves, and critical consumables for steel plants.",
+  alternates: {
+    canonical: "/services/trading",
+  },
 };
 
 export default function TradingPage() {

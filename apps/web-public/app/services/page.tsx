@@ -20,6 +20,9 @@ export const metadata: Metadata = {
   title: "Engineering Services & Trading | sysTROL",
   description:
     "Explore sysTROL's two divisions: Level-2 Process Automation software for steel rolling mills and Global Machinery Spares Trading.",
+  alternates: {
+    canonical: "/services",
+  },
 };
 
 const automationFlowSteps: Record<number, string[]> = {

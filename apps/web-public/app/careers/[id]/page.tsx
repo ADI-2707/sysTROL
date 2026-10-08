@@ -74,6 +74,9 @@ export async function generateMetadata({
   return {
     title: `${vacancy.title} | Careers | sysTROL Industrial Automation`,
     description: vacancy.description,
+    alternates: {
+      canonical: `/careers/${id}`,
+    },
   };
 }
 
@@ -93,8 +96,41 @@ export default async function JobDetailPage({
     .filter((v) => v.id !== vacancy.id)
     .slice(0, 3);
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://sys-trol.com";
+  const jobSchema = {
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    title: vacancy.title,
+    description: vacancy.description,
+    datePosted: "2026-01-01",
+    validThrough: "2026-12-31",
+    employmentType: vacancy.type.toLowerCase().includes("full") ? "FULL_TIME" : "OTHER",
+    hiringOrganization: {
+      "@type": "Organization",
+      name: "sysTROL Engineering & Consultancy Pvt. Ltd.",
+      sameAs: siteUrl,
+      logo: `${siteUrl}/images/systrol-logo.jpeg`,
+    },
+    jobLocation: {
+      "@type": "Place",
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: "Industrial Area",
+        addressLocality: vacancy.location.includes(",") ? vacancy.location.split(",")[0].trim() : "Bengaluru",
+        addressRegion: "Karnataka",
+        postalCode: "560001",
+        addressCountry: "IN",
+      },
+    },
+    directApply: true,
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jobSchema) }}
+      />
       <Navbar />
       <main>
         <section className={styles.heroSection}>

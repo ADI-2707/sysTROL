@@ -27,6 +27,9 @@ export const metadata: Metadata = {
   title: "Engineering Careers | sysTROL Industrial Automation & Machinery",
   description:
     "Explore engineering opportunities in Level-2 automation software (C# / .NET), rolling mill commissioning, and international machinery procurement at sysTROL Bengaluru.",
+  alternates: {
+    canonical: "/careers",
+  },
 };
 
 const PERKS = [

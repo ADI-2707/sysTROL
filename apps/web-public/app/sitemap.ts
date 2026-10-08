@@ -3,7 +3,7 @@ import { projectsData } from "@/content/projects";
 import { vacanciesData } from "@/content/careers";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://sys-trol.com";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://sys-trol.com";
 
   const staticRoutes = [
     "",

@@ -26,6 +26,8 @@ const monoFont = JetBrains_Mono({
   fallback: ["ui-monospace", "SFMono-Regular", "monospace"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://sys-trol.com";
+
 export const metadata: Metadata = {
   title: {
     template: "%s | sysTROL Engineering & Consultancy",
@@ -45,11 +47,14 @@ export const metadata: Metadata = {
     "Bengaluru Automation Engineering",
   ],
   authors: [{ name: "sysTROL Engineering & Consultancy Pvt. Ltd." }],
-  metadataBase: new URL("https://sys-trol.com"),
+  metadataBase: new URL(siteUrl),
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     type: "website",
     locale: "en_IN",
-    url: "https://sys-trol.com",
+    url: siteUrl,
     title: "sysTROL Engineering & Consultancy | Engineering Redefined",
     description:
       "Specialists in Level-2 Automation software for steel rolling mills and imported machinery trading.",
@@ -80,8 +85,8 @@ export default function RootLayout({
     "@type": "Organization",
     name: "sysTROL Engineering & Consultancy Pvt. Ltd.",
     alternateName: "sysTROL",
-    url: "https://sys-trol.com",
-    logo: "https://sys-trol.com/images/systrol-logo.jpeg",
+    url: siteUrl,
+    logo: `${siteUrl}/images/systrol-logo.jpeg`,
     description:
       "Level-2 (L2) process automation software engineered in C# for steel rolling mills and imported machinery spares trading.",
     address: {
@@ -112,7 +117,7 @@ export default function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{if(sessionStorage.getItem('systrol-intro-played')==='true'||window.matchMedia('(prefers-reduced-motion: reduce)').matches){document.documentElement.classList.add('intro-done');}}catch(e){}})();`,
+            __html: `(function(){try{if(sessionStorage.getItem('systrol-intro-played')==='true'||window.matchMedia('(prefers-reduced-motion: reduce)').matches||/bot|crawler|spider|lighthouse|inspect/i.test(navigator.userAgent)){document.documentElement.classList.add('intro-done');}}catch(e){}})();`,
           }}
         />
       </head>

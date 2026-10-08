@@ -18,6 +18,9 @@ export const metadata: Metadata = {
   title: "Clients & Industries Served | sysTROL",
   description:
     "Review sysTROL's client portfolio across Integrated Steel Plants, Process Industries, and International Rolling Mills.",
+  alternates: {
+    canonical: "/clients",
+  },
 };
 
 const sectors: Array<"Steel & Integrated Plants" | "Process Industries" | "International"> = [
