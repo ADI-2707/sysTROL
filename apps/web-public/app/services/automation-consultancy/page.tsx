@@ -18,6 +18,9 @@ export const metadata: Metadata = {
   title: "Level-2 Automation Engineering & Consultancy | sysTROL",
   description:
     "C# and Python Level-2 supervisory automation systems for steel rolling mills, deterministic calculation matrices, pass scheduling, and Level-1 PLC integration.",
+  alternates: {
+    canonical: "/services/automation-consultancy",
+  },
 };
 
 export default function AutomationConsultancyPage() {

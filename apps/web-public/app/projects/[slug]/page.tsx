@@ -41,6 +41,9 @@ export async function generateMetadata({
   return {
     title: `${project.title} | sysTROL Case Study`,
     description: project.shortBlurb,
+    alternates: {
+      canonical: `/projects/${slug}`,
+    },
   };
 }
 

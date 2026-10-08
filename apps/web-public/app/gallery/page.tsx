@@ -16,6 +16,9 @@ export const metadata: Metadata = {
   title: "Gallery & Visual Showcase | sysTROL Engineering & Consultancy",
   description:
     "Explore sysTROL's physical simulation labs, engineering team collaboration, and onsite continuous steel rolling mill deployments in live operation.",
+  alternates: {
+    canonical: "/gallery",
+  },
 };
 
 async function getGalleryItems(): Promise<GalleryItem[]> {

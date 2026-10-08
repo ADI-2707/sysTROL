@@ -74,6 +74,9 @@ export async function generateMetadata({
   return {
     title: `${vacancy.title} | Careers | sysTROL Industrial Automation`,
     description: vacancy.description,
+    alternates: {
+      canonical: `/careers/${id}`,
+    },
   };
 }
 
