@@ -175,11 +175,20 @@
   flex: 1;
   gap: var(--space-2);
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  position: relative;
+  transform: translateY(0);
+  backface-visibility: hidden;
   transition: transform var(--duration-fast) var(--ease-in-out),
     box-shadow var(--duration-fast) var(--ease-in-out),
-    border-color var(--duration-fast) var(--ease-in-out);
+    border-color var(--duration-fast) var(--ease-in-out),
+    background-color var(--duration-fast) var(--ease-in-out);
 }
-
+.metricCard::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 -6px 0;
+  pointer-events: auto;
+}
 .metricCard:hover {
   transform: translateY(-3px);
   border-color: var(--color-accent-teal-500);

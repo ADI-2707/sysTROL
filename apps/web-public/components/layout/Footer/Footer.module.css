@@ -288,10 +288,22 @@
   background-color: rgba(10, 102, 194, 0.12);
   border: 1px solid rgba(10, 102, 194, 0.3);
   color: #0A66C2;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  transform: translateY(0);
+  backface-visibility: hidden;
+  transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   text-decoration: none;
 }
-
+.linkedinBtn::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 -4px 0;
+  pointer-events: auto;
+}
 .linkedinBtn:hover {
   background-color: #0A66C2;
   border-color: #0A66C2;

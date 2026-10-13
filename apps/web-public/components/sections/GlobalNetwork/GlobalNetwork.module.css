@@ -38,11 +38,19 @@
   flex-direction: column;
   height: 100%;
   flex: 1;
+  position: relative;
+  transform: translateY(0);
+  backface-visibility: hidden;
   transition: transform var(--duration-fast) var(--ease-in-out),
               box-shadow var(--duration-fast) var(--ease-in-out),
               border-color var(--duration-fast) var(--ease-in-out);
 }
-
+.networkCard::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 -6px 0;
+  pointer-events: auto;
+}
 .networkCard:hover {
   transform: translateY(-3px);
   box-shadow: var(--shadow-md);

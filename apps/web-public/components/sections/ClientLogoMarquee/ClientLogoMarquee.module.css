@@ -110,9 +110,16 @@
   flex-shrink: 0;
   cursor: pointer;
   overflow: hidden;
+  transform: translateY(0) scale(1) rotateX(0deg);
+  backface-visibility: hidden;
   transform-style: preserve-3d;
 }
-
+.logoPlaque3d::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 -10px 0;
+  pointer-events: auto;
+}
 .logoPlaque3d:hover {
   transform: translateY(-6px) scale(1.04) rotateX(3deg);
   box-shadow: 

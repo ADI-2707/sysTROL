@@ -100,9 +100,20 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  transition: all var(--duration-fast);
+  position: relative;
+  transform: translateY(0);
+  backface-visibility: hidden;
+  transition: border-color var(--duration-fast) var(--ease-in-out),
+              background-color var(--duration-fast) var(--ease-in-out),
+              transform var(--duration-fast) var(--ease-in-out),
+              box-shadow var(--duration-fast) var(--ease-in-out);
 }
-
+.linkCard::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 -6px 0;
+  pointer-events: auto;
+}
 .linkCard:hover {
   border-color: var(--color-brand-green-600);
   background-color: var(--color-surface-0);

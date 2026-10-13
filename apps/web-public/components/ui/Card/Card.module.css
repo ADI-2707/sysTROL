@@ -8,12 +8,20 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  transform: translateY(0);
+  backface-visibility: hidden;
   transition: transform var(--duration-fast) var(--ease-in-out),
               box-shadow var(--duration-fast) var(--ease-in-out),
               border-color var(--duration-fast) var(--ease-in-out);
 }
 .clickable {
   cursor: pointer;
+}
+.hoverable::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 -6px 0;
+  pointer-events: auto;
 }
 .hoverable:hover {
   transform: translateY(-2px);
