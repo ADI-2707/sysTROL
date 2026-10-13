@@ -45,7 +45,18 @@
   font-weight: var(--font-medium);
   color: var(--color-ink-900);
   box-shadow: var(--shadow-sm);
-  transition: all var(--duration-fast);
+  position: relative;
+  transform: translateY(0);
+  backface-visibility: hidden;
+  transition: border-color var(--duration-fast) var(--ease-in-out),
+              color var(--duration-fast) var(--ease-in-out),
+              transform var(--duration-fast) var(--ease-in-out);
+}
+.chip::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 -4px 0;
+  pointer-events: auto;
 }
 .chip:hover {
   border-color: var(--color-brand-green-600);

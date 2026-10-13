@@ -68,6 +68,11 @@ code, kbd, samp, pre {
   font-family: var(--font-mono), monospace;
   font-size: 0.9em;
 }
+a svg,
+button svg,
+[role="button"] svg {
+  pointer-events: none;
+}
 a svg.lucide-arrow-right,
 button svg.lucide-arrow-right,
 [role="button"] svg.lucide-arrow-right,

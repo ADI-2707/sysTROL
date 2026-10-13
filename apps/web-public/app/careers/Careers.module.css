@@ -146,9 +146,17 @@
   gap: var(--space-3);
   height: 100%;
   flex: 1;
+  position: relative;
+  transform: translateY(0);
+  backface-visibility: hidden;
   transition: transform var(--duration-fast) ease, border-color var(--duration-fast) ease;
 }
-
+.perkCard::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 -6px 0;
+  pointer-events: auto;
+}
 .perkCard:hover {
   transform: translateY(-2px);
   border-color: var(--color-brand-green-600);

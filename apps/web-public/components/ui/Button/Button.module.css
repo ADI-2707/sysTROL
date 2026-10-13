@@ -9,10 +9,21 @@
   text-decoration: none;
   cursor: pointer;
   white-space: nowrap;
-  transition: all var(--duration-fast) var(--ease-in-out);
+  transition: background-color var(--duration-fast) var(--ease-in-out),
+              border-color var(--duration-fast) var(--ease-in-out),
+              color var(--duration-fast) var(--ease-in-out),
+              box-shadow var(--duration-fast) var(--ease-in-out),
+              transform var(--duration-fast) var(--ease-in-out);
   position: relative;
-  overflow: hidden;
   user-select: none;
+  transform: translateY(0);
+  backface-visibility: hidden;
+}
+.button::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 -4px 0;
+  pointer-events: auto;
 }
 .button:disabled {
   opacity: 0.6;
@@ -108,12 +119,14 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  pointer-events: none;
 }
 .rightIcon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  pointer-events: none;
   transition: transform var(--duration-fast) var(--ease-in-out);
 }
 .button:hover:not(:disabled) .rightIcon {

@@ -425,10 +425,20 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: all var(--duration-fast) ease;
+  position: relative;
+  transform: translateY(0);
+  backface-visibility: hidden;
+  transition: border-color var(--duration-fast) ease,
+              transform var(--duration-fast) ease,
+              box-shadow var(--duration-fast) ease;
   text-decoration: none;
 }
-
+.otherRoleCard::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 -6px 0;
+  pointer-events: auto;
+}
 .otherRoleCard:hover {
   border-color: var(--color-brand-green-600);
   transform: translateY(-2px);

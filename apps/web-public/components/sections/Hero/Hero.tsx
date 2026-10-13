@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { ArrowRight, Cpu, Building2, Factory, Truck } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Cpu, Building2, Factory, Truck } from "lucide-react";
 import { Container } from "@/components/layout/Container/Container";
 import { Button } from "@/components/ui/Button/Button";
 import { Badge } from "@/components/ui/Badge/Badge";
@@ -81,8 +81,14 @@ export const Hero: React.FC = () => {
                 >
                   Get in Touch
                 </Button>
-                <Button href="/projects" variant="outline" size="lg">
-                  View Case Studies
+                <Button
+                  href="/projects"
+                  variant="outline"
+                  size="lg"
+                  rightIcon={<ArrowUpRight size={18} className={styles.projectsArrow} />}
+                  className={styles.projectsBtn}
+                >
+                  View Projects
                 </Button>
               </div>
             </div>

@@ -45,6 +45,8 @@
   border-radius: var(--radius-md);
   padding: var(--space-6);
   box-shadow: var(--shadow-sm);
+  transform: translateY(0);
+  backface-visibility: hidden;
   transition: transform var(--duration-fast) var(--ease-in-out), box-shadow var(--duration-fast) var(--ease-in-out);
 }
 .card::before,

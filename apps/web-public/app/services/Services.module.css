@@ -32,7 +32,18 @@
   grid-template-columns: 1fr;
   gap: var(--space-8);
   margin-bottom: var(--space-12);
-  transition: all var(--duration-normal) var(--ease-in-out);
+  position: relative;
+  transform: translateY(0);
+  backface-visibility: hidden;
+  transition: transform var(--duration-normal) var(--ease-in-out),
+              box-shadow var(--duration-normal) var(--ease-in-out),
+              border-color var(--duration-normal) var(--ease-in-out);
+}
+.divisionCard::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 -6px 0;
+  pointer-events: auto;
 }
 
 .cardBanner {
