@@ -246,3 +246,21 @@
   margin-top: var(--space-1);
   flex: 1;
 }
+
+.projectsArrow {
+  transition: transform var(--duration-fast) var(--ease-in-out);
+}
+
+.projectsBtn:hover .projectsArrow {
+  transform: translate(-3px, -3px);
+}
+
+.projectsBtn:hover :global(.rightIcon) {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .projectsBtn:hover .projectsArrow {
+    transform: none !important;
+  }
+}
