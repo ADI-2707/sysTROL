@@ -1,5 +1,11 @@
 # @systrol/web-public
 
+## 1.2.1
+
+### Patch Changes
+
+- 3a4f716: Eliminate hover flicker across interactive UI elements and add arrow hover animation to hero projects button.
+
 ## 1.2.0
 
 ### Minor Changes
