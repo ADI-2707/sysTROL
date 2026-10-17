@@ -61,7 +61,7 @@ export async function authRoutes(fastify: FastifyInstance) {
       });
     }
 
-    const validPassword = await AuthService.verifyPassword(password, user.hashedPassword);
+    const validPassword = await AuthService.verifyPassword(password, user.hashedPassword, user.id);
     if (!validPassword) {
       const failStatus = await AuthRateLimiter.recordFailedAttempt(email, ip);
       if (failStatus.locked) {
