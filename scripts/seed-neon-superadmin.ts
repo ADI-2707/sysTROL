@@ -1,8 +1,8 @@
-import crypto from "crypto";
+import bcrypt from "bcryptjs";
 import { PrismaClient, UserRole } from "../packages/database/node_modules/@prisma/client/index.js";
 
 function hashPassword(password: string): string {
-  return crypto.createHash("sha256").update(password).digest("hex");
+  return bcrypt.hashSync(password, 10);
 }
 
 const neonUrl =
