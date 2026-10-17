@@ -37,7 +37,7 @@ declare module "fastify" {
   }
 }
 
-const memoryRefreshTokens = new Map<string, { userId: string; role: UserRole; expiresAt: number }>();
+const memoryRefreshTokens = new Map<string, { userId: string; role: UserRole; expiresAt: number; rotatedTo?: { accessToken: string; refreshToken: string } }>();
 
 async function jwtPluginAsync(fastify: FastifyInstance) {
   if (!fastify.hasPlugin("@fastify/cookie")) {
@@ -167,6 +167,17 @@ async function jwtPluginAsync(fastify: FastifyInstance) {
           matchingKey = `session:${rawToken}`;
           try {
             const parsed = JSON.parse(directSession);
+            if (parsed.rotatedTo) {
+              reply.setCookie("refreshToken", parsed.rotatedTo.refreshToken, {
+                path: "/",
+                httpOnly: true,
+                secure: env.NODE_ENV === "production",
+                sameSite: env.NODE_ENV === "production" ? "none" : "lax",
+                partitioned: env.NODE_ENV === "production",
+                maxAge: Number(env.JWT_REFRESH_TTL),
+              });
+              return parsed.rotatedTo;
+            }
             foundUserId = parsed.userId;
             foundRole = parsed.role;
           } catch {
@@ -193,9 +204,19 @@ async function jwtPluginAsync(fastify: FastifyInstance) {
       if (!foundUserId) {
         const fallbackSession = memoryRefreshTokens.get(rawToken);
         if (fallbackSession && fallbackSession.expiresAt > Date.now()) {
+          if (fallbackSession.rotatedTo) {
+            reply.setCookie("refreshToken", fallbackSession.rotatedTo.refreshToken, {
+              path: "/",
+              httpOnly: true,
+              secure: env.NODE_ENV === "production",
+              sameSite: env.NODE_ENV === "production" ? "none" : "lax",
+              partitioned: env.NODE_ENV === "production",
+              maxAge: Number(env.JWT_REFRESH_TTL),
+            });
+            return fallbackSession.rotatedTo;
+          }
           foundUserId = fallbackSession.userId;
           foundRole = fallbackSession.role;
-          memoryRefreshTokens.delete(rawToken);
         }
       }
 
@@ -206,17 +227,6 @@ async function jwtPluginAsync(fastify: FastifyInstance) {
           message: "Invalid or expired refresh token",
         });
         throw new Error("Invalid or expired refresh token");
-      }
-
-      try {
-        if (matchingKey) {
-          await redis.del(matchingKey);
-        }
-        await redis.del(`session:${rawToken}`);
-        if (foundUserId) {
-          await redis.del(`refresh:${foundUserId}:${rawToken}`);
-        }
-      } catch {
       }
 
       const user = await prisma.user.findUnique({ where: { id: foundUserId } });
@@ -231,6 +241,29 @@ async function jwtPluginAsync(fastify: FastifyInstance) {
 
       const role = (foundRole || user.role) as UserRole;
       const tokens = await fastify.issueTokens(user.id, role, reply);
+
+      try {
+        if (matchingKey && matchingKey !== `session:${rawToken}`) {
+          await redis.del(matchingKey);
+        }
+        await redis.set(
+          `session:${rawToken}`,
+          JSON.stringify({ userId: foundUserId, role, rotatedTo: tokens }),
+          "EX",
+          15
+        );
+        if (foundUserId) {
+          await redis.del(`refresh:${foundUserId}:${rawToken}`);
+        }
+      } catch {
+        memoryRefreshTokens.set(rawToken, {
+          userId: foundUserId,
+          role,
+          expiresAt: Date.now() + 15000,
+          rotatedTo: tokens,
+        });
+      }
+
       return { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken };
     }
   );

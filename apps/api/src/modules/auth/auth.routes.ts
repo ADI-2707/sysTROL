@@ -130,7 +130,14 @@ export async function authRoutes(fastify: FastifyInstance) {
     try {
       const result = await fastify.refreshTokens(request, reply);
       return reply.send(result);
-    } catch {
+    } catch (err: any) {
+      if (!reply.sent) {
+        return reply.status(401).send({
+          statusCode: 401,
+          error: "Unauthorized",
+          message: err?.message || "Invalid or expired refresh token",
+        });
+      }
     }
   });
 

@@ -108,6 +108,12 @@ describe("Auth Module Unit & Payload Tests", () => {
       expect(isNotMatch).toBe(false);
     });
 
+    it("rejects plain sha256 strings and enforces bcrypt exclusively", async () => {
+      const sha256Hash = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8";
+      const isMatch = await AuthService.verifyPassword("password", sha256Hash);
+      expect(isMatch).toBe(false);
+    });
+
     it("finds user by lowercased email", async () => {
       (prisma.user.findUnique as any).mockResolvedValue({
         id: "usr-1",
@@ -288,7 +294,7 @@ describe("Auth Module Unit & Payload Tests", () => {
 
       expect(allowedOrigins).toContain("https://systrolops.vercel.app");
       expect(allowedOrigins).toContain("https://systrol.vercel.app");
-      expect(allowedOrigins.some((origin) => origin instanceof RegExp)).toBe(false);
+      expect(allowedOrigins.some((origin) => (origin as unknown) instanceof RegExp)).toBe(false);
       expect(allowedOrigins).not.toContain("https://malicious-clone.vercel.app");
     });
   });
@@ -515,6 +521,33 @@ describe("Auth Module Unit & Payload Tests", () => {
       const data = JSON.parse(res.body);
       expect(data.error).toBe("Unauthorized");
       expect(data.message).toBe("User no longer exists");
+    });
+
+    it("Scenario 2.9: returns active rotated tokens when refresh token is presented during grace period", async () => {
+      const activeRotatedTokens = {
+        accessToken: "grace-active-access",
+        refreshToken: "grace-active-refresh",
+      };
+      (redis.get as any).mockResolvedValueOnce(
+        JSON.stringify({
+          userId: "usr-1",
+          role: "ADMIN",
+          rotatedTo: activeRotatedTokens,
+        })
+      );
+
+      const res = await server.inject({
+        method: "POST",
+        url: "/api/v1/auth/refresh",
+        headers: {
+          cookie: "refreshToken=recently-rotated-token",
+        },
+      });
+
+      expect(res.statusCode).toBe(200);
+      const data = JSON.parse(res.body);
+      expect(data.accessToken).toBe("grace-active-access");
+      expect(data.refreshToken).toBe("grace-active-refresh");
     });
   });
 });

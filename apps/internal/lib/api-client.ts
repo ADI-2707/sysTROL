@@ -13,6 +13,7 @@ export function clearProactiveRefresh(): void {
     clearTimeout(proactiveTimer);
     proactiveTimer = null;
   }
+  activeRefreshPromise = null;
 }
 
 export function scheduleProactiveRefresh(token: string | null): void {
@@ -22,6 +23,7 @@ export function scheduleProactiveRefresh(token: string | null): void {
   if (!decoded || typeof decoded.exp !== "number") return;
   const nowSeconds = Math.floor(Date.now() / 1000);
   const remainingSeconds = decoded.exp - nowSeconds;
+  if (remainingSeconds <= 0) return;
   const refreshDelaySeconds = remainingSeconds - 120;
   if (refreshDelaySeconds <= 0) {
     if (typeof document !== "undefined" && document.visibilityState === "hidden") {
@@ -113,58 +115,60 @@ function processQueue(error: any, token: string | null = null) {
   failedQueue = [];
 }
 
-export async function silentRefreshToken(): Promise<string> {
-  const session = getStoredSession();
-  const refreshUrl = resolveApiUrl("/api/v1/auth/refresh");
+let activeRefreshPromise: Promise<string> | null = null;
 
-  let res: Response;
-  try {
-    res = await fetch(refreshUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ refreshToken: (session as any)?.refreshToken || "" }),
-    });
-  } catch (err: any) {
-    throw new Error(err?.message || "Refresh request failed");
+export async function silentRefreshToken(): Promise<string> {
+  if (activeRefreshPromise) {
+    return activeRefreshPromise;
   }
 
-  if (!res.ok) {
-    if (res.status === 401) {
+  activeRefreshPromise = (async () => {
+    const session = getStoredSession();
+    const refreshUrl = resolveApiUrl("/api/v1/auth/refresh");
+
+    let res: Response;
+    try {
+      res = await fetch(refreshUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ refreshToken: (session as any)?.refreshToken || "" }),
+      });
+    } catch (err: any) {
+      throw new Error(err?.message || "Refresh request failed");
+    }
+
+    if (!res.ok) {
+      if (res.status === 401) {
+        setInMemoryToken(null);
+        clearStoredSession();
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("systrol:session_expired"));
+        }
+        throw new Error("Session expired. Please log in again.");
+      }
+      throw new Error(`Refresh request failed with status ${res.status}`);
+    }
+
+    const data = await res.json();
+    const newAccessToken = data.accessToken || data.token;
+    if (!newAccessToken) {
       setInMemoryToken(null);
       clearStoredSession();
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("systrol:session_expired"));
-        try {
-          if (window.location && window.location.pathname !== "/login") {
-            window.location.href = "/login?session_expired=1";
-          }
-        } catch {}
       }
-      throw new Error("Session expired. Please log in again.");
+      throw new Error("Malformed refresh response");
     }
-    throw new Error(`Refresh request failed with status ${res.status}`);
-  }
 
-  const data = await res.json();
-  const newAccessToken = data.accessToken || data.token;
-  if (!newAccessToken) {
-    setInMemoryToken(null);
-    clearStoredSession();
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("systrol:session_expired"));
-      try {
-        if (window.location && window.location.pathname !== "/login") {
-          window.location.href = "/login?session_expired=1";
-        }
-      } catch {}
-    }
-    throw new Error("Malformed refresh response");
-  }
+    setInMemoryToken(newAccessToken);
+    storageUpdateToken(newAccessToken, data.refreshToken);
+    return newAccessToken;
+  })().finally(() => {
+    activeRefreshPromise = null;
+  });
 
-  setInMemoryToken(newAccessToken);
-  storageUpdateToken(newAccessToken, data.refreshToken);
-  return newAccessToken;
+  return activeRefreshPromise;
 }
 
 export async function apiClient(
