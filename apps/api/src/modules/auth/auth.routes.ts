@@ -143,10 +143,22 @@ export async function authRoutes(fastify: FastifyInstance) {
 
   fastify.post(
     "/auth/logout",
-    { preHandler: [fastify.verifyJWT] },
     async (request: FastifyRequest, reply: FastifyReply) => {
-      const userId = request.user.sub;
-      await AuthService.revokeUserSessions(userId);
+      try {
+        await request.jwtVerify();
+        if (request.user?.sub) {
+          await AuthService.revokeUserSessions(request.user.sub);
+        }
+      } catch {
+      }
+
+      const rawRefreshToken = request.cookies?.refreshToken;
+      if (rawRefreshToken) {
+        try {
+          await redis.del(`session:${rawRefreshToken}`);
+        } catch {
+        }
+      }
 
       reply.clearCookie("refreshToken", {
         path: "/",

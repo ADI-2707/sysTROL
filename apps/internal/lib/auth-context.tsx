@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { EmployeeTeam } from "./permissions";
 import { isTokenValid } from "./token-utils";
 import { getStoredSession, setStoredSession, clearStoredSession, StoredSession } from "./auth-storage";
-import { setInMemoryToken, silentRefreshToken, clearProactiveRefresh } from "./api-client";
+import { setInMemoryToken, silentRefreshToken, clearProactiveRefresh, getInMemoryToken } from "./api-client";
 
 export interface AuthUser {
   id: string;
@@ -141,6 +141,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
+    const currentToken = getInMemoryToken() || user?.token;
     clearProactiveRefresh();
     setInMemoryToken(null);
     setUser(null);
@@ -148,6 +149,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       fetch("/api/proxy/v1/auth/logout", {
         method: "POST",
+        headers: currentToken ? { Authorization: `Bearer ${currentToken}` } : {},
         credentials: "include",
       }).catch(() => {});
     } catch {}

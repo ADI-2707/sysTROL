@@ -560,5 +560,38 @@ describe("Auth Module Unit & Payload Tests", () => {
       expect(data.accessToken).toBe("grace-active-access");
       expect(data.refreshToken).toBe("grace-active-refresh");
     });
+
+    it("Scenario 2.10: logs out cleanly without bearer token and clears refreshToken cookie", async () => {
+      const res = await server.inject({
+        method: "POST",
+        url: "/api/v1/auth/logout",
+        headers: {
+          cookie: "refreshToken=test-refresh-cookie",
+        },
+      });
+
+      expect(res.statusCode).toBe(200);
+      const data = JSON.parse(res.body);
+      expect(data.success).toBe(true);
+      expect(res.headers["set-cookie"]).toBeDefined();
+      expect(String(res.headers["set-cookie"])).toContain("refreshToken=");
+    });
+
+    it("Scenario 2.11: logs out with valid bearer token and revokes sessions", async () => {
+      const validToken = server.jwt.sign({ sub: "usr-admin-1", role: "SUPER_ADMIN" });
+      const res = await server.inject({
+        method: "POST",
+        url: "/api/v1/auth/logout",
+        headers: {
+          authorization: `Bearer ${validToken}`,
+          cookie: "refreshToken=test-cookie",
+        },
+      });
+
+      expect(res.statusCode).toBe(200);
+      const data = JSON.parse(res.body);
+      expect(data.success).toBe(true);
+      expect(String(res.headers["set-cookie"])).toContain("refreshToken=");
+    });
   });
 });
