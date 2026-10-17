@@ -1,5 +1,13 @@
 # @systrol/api
 
+## 2.7.2
+
+### Patch Changes
+
+- 58ca9e2: Implement transparent auto-upgrade from legacy SHA-256 to bcrypt on login and update database seed scripts with bcrypt hashing.
+- Updated dependencies [58ca9e2]
+  - @systrol/database@0.1.2
+
 ## 2.7.1
 
 ### Patch Changes
