@@ -144,11 +144,6 @@ export async function silentRefreshToken(): Promise<string> {
         clearStoredSession();
         if (typeof window !== "undefined") {
           window.dispatchEvent(new CustomEvent("systrol:session_expired"));
-          try {
-            if (window.location && window.location.pathname !== "/login") {
-              window.location.href = "/login?session_expired=1";
-            }
-          } catch {}
         }
         throw new Error("Session expired. Please log in again.");
       }
@@ -162,11 +157,6 @@ export async function silentRefreshToken(): Promise<string> {
       clearStoredSession();
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("systrol:session_expired"));
-        try {
-          if (window.location && window.location.pathname !== "/login") {
-            window.location.href = "/login?session_expired=1";
-          }
-        } catch {}
       }
       throw new Error("Malformed refresh response");
     }
