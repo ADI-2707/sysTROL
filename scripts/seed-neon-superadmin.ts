@@ -1,4 +1,4 @@
-import bcrypt from "bcryptjs";
+import bcrypt from "../packages/database/node_modules/bcryptjs/index.js";
 import { PrismaClient, UserRole } from "../packages/database/node_modules/@prisma/client/index.js";
 
 function hashPassword(password: string): string {
