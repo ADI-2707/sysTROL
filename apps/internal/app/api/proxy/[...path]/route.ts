@@ -22,7 +22,7 @@ async function handleProxy(req: NextRequest, { params }: { params: Promise<{ pat
     }
   });
 
-  const cookieHeader = req.headers.get("cookie");
+  const cookieHeader = req.headers.get("cookie") || (req.cookies ? req.cookies.toString() : "");
   if (cookieHeader) {
     forwardHeaders.set("cookie", cookieHeader);
   }
@@ -76,7 +76,7 @@ async function handleProxy(req: NextRequest, { params }: { params: Promise<{ pat
 
     for (const cookieStr of rawSetCookies) {
       if (cookieStr) {
-        response.headers.append("set-cookie", cleanSetCookieHeader(cookieStr));
+        response.headers.set("set-cookie", cleanSetCookieHeader(cookieStr));
         const parsed = parseCookieAttributes(cookieStr);
         response.cookies.set(parsed);
       }
