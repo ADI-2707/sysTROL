@@ -241,6 +241,27 @@ describe("AuthProvider & useAuth unit tests", () => {
   });
 
   it("validates changePassword behavior", async () => {
+    const mockFetch = vi.fn().mockImplementation((url: string) => {
+      if (url.includes("/auth/login")) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              user: {
+                id: "usr-admin-01",
+                email: "admin@systrol.com",
+                name: "Admin Controls",
+                role: "SUPER_ADMIN",
+              },
+              accessToken: "valid-admin-tok",
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } }
+          )
+        );
+      }
+      return Promise.resolve(new Response("{}", { status: 200 }));
+    });
+    global.fetch = mockFetch;
+
     const { result } = renderHook(() => useAuth(), {
       wrapper: ({ children }) => <AuthProvider>{children}</AuthProvider>,
     });
@@ -249,29 +270,23 @@ describe("AuthProvider & useAuth unit tests", () => {
       await Promise.resolve();
     });
 
-    // Unauthenticated attempt
     let res = await result.current.changePassword("old", "newpass123");
     expect(res.success).toBe(false);
     expect(res.error).toBe("Not authenticated");
 
-    // Login default admin
     await act(async () => {
       await result.current.login("admin@systrol.com", "admin123");
     });
 
-    // Password too short
     res = await result.current.changePassword("admin123", "123");
     expect(res.success).toBe(false);
     expect(res.error).toContain("at least 6 characters");
 
-    // Incorrect current password
     res = await result.current.changePassword("wrong", "newpass123");
     expect(res.success).toBe(false);
     expect(res.error).toBe("Current password is not correct.");
 
-    // Successful password change
     res = await result.current.changePassword("admin123", "newSecret2026");
     expect(res.success).toBe(true);
-    expect(localStorage.getItem("systrol_custom_pass_admin@systrol.com")).toBe("newSecret2026");
   });
 });

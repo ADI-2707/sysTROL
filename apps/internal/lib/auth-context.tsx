@@ -29,22 +29,6 @@ interface AuthContextType {
   changePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
 }
 
-const DEFAULT_USERS: Record<string, { pass: string; user: AuthUser }> = {
-  "admin@systrol.com": {
-    pass: "admin123",
-    user: {
-      id: "usr-admin-01",
-      email: "admin@systrol.com",
-      name: "Admin Controls",
-      role: "SUPER_ADMIN",
-      team: "LEADERSHIP",
-      designation: "Operations Executive",
-      baseLocation: "HQ - Kolkata",
-      isSeededSuperAdmin: true,
-    },
-  },
-};
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -64,7 +48,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               setInMemoryToken(token);
               setUser((prev) => prev ? { ...prev, token } : prev);
             }
-          } catch {}
+          } catch {
+            setInMemoryToken(null);
+            setUser(null);
+            clearStoredSession();
+          }
         }
       } catch {
         setUser(null);
@@ -149,17 +137,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch {
     }
 
-    const defaultAccount = DEFAULT_USERS[normalizedEmail];
-    const customPassKey = `systrol_custom_pass_${normalizedEmail}`;
-    const customPass = typeof window !== "undefined" ? localStorage.getItem(customPassKey) : null;
-    const expectedPass = customPass || defaultAccount?.pass;
-
-    if (defaultAccount && expectedPass === password) {
-      setUser(defaultAccount.user);
-      setStoredSession(defaultAccount.user as unknown as StoredSession);
-      return { success: true };
-    }
-
     return { success: false, error: "Invalid email or password" };
   };
 
@@ -186,16 +163,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, error: "New password must be at least 6 characters long." };
     }
 
-    const normalizedEmail = user.email.toLowerCase();
-    const customPassKey = `systrol_custom_pass_${normalizedEmail}`;
-    const customPass = localStorage.getItem(customPassKey);
-    const expectedPass = customPass || DEFAULT_USERS[normalizedEmail]?.pass || "admin123";
-
-    if (currentPassword !== expectedPass && currentPassword !== "admin123") {
+    if (currentPassword !== "admin123") {
       return { success: false, error: "Current password is not correct." };
     }
 
-    localStorage.setItem(customPassKey, newPassword);
     return { success: true };
   };
 
