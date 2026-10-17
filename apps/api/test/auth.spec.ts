@@ -108,10 +108,21 @@ describe("Auth Module Unit & Payload Tests", () => {
       expect(isNotMatch).toBe(false);
     });
 
-    it("rejects plain sha256 strings and enforces bcrypt exclusively", async () => {
+    it("verifies and transparently upgrades legacy sha256 to bcrypt", async () => {
       const sha256Hash = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8";
-      const isMatch = await AuthService.verifyPassword("password", sha256Hash);
-      expect(isMatch).toBe(false);
+      (prisma.user.update as any).mockResolvedValue({});
+      const isMatch = await AuthService.verifyPassword("password", sha256Hash, "usr-legacy-1");
+      expect(isMatch).toBe(true);
+      expect(prisma.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "usr-legacy-1" },
+          data: expect.objectContaining({
+            hashedPassword: expect.stringMatching(/^\$2[aby]\$/),
+          }),
+        })
+      );
+      const isWrongMatch = await AuthService.verifyPassword("wrongpass", sha256Hash, "usr-legacy-1");
+      expect(isWrongMatch).toBe(false);
     });
 
     it("finds user by lowercased email", async () => {
