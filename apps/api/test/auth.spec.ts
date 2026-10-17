@@ -294,7 +294,7 @@ describe("Auth Module Unit & Payload Tests", () => {
 
       expect(allowedOrigins).toContain("https://systrolops.vercel.app");
       expect(allowedOrigins).toContain("https://systrol.vercel.app");
-      expect(allowedOrigins.some((origin) => origin instanceof RegExp)).toBe(false);
+      expect(allowedOrigins.some((origin) => (origin as unknown) instanceof RegExp)).toBe(false);
       expect(allowedOrigins).not.toContain("https://malicious-clone.vercel.app");
     });
   });
