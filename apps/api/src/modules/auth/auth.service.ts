@@ -1,17 +1,10 @@
 import bcrypt from "bcryptjs";
-import crypto from "crypto";
 import { prisma } from "@systrol/database";
-import { UserRole } from "@systrol/types";
-import { TotpService } from "../../common/auth/totp.service.js";
 import { redis } from "../../common/redis.js";
 
 export class AuthService {
   static async verifyPassword(plain: string, hashed: string): Promise<boolean> {
-    if (hashed.startsWith("$2a$") || hashed.startsWith("$2b$")) {
-      return bcrypt.compare(plain, hashed);
-    }
-    const sha = crypto.createHash("sha256").update(plain).digest("hex");
-    return sha === hashed;
+    return bcrypt.compare(plain, hashed);
   }
 
   static async hashPassword(plain: string): Promise<string> {
