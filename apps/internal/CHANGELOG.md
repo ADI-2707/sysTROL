@@ -1,5 +1,11 @@
 # @systrol/internal
 
+## 2.7.2
+
+### Patch Changes
+
+- b08d906: Make logout endpoint resilient, idempotent, and unblocked by expired JWTs, while ensuring client passes authorization header gracefully and cookies are always cleared.
+
 ## 2.7.1
 
 ### Patch Changes
