@@ -307,4 +307,31 @@ describe("apiClient & silentRefreshToken unit tests", () => {
 
     vi.useRealTimers();
   });
+
+  it("Scenario 4.9: deduplicates concurrent direct silentRefreshToken calls via inflight promise mutex", async () => {
+    let networkCalls = 0;
+    const mockFetch = vi.fn().mockImplementation((url: string) => {
+      if (url.includes("/auth/refresh")) {
+        networkCalls++;
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            resolve(new Response(JSON.stringify({ accessToken: "mutexToken123" }), { status: 200 }));
+          }, 30);
+        });
+      }
+      return Promise.resolve(new Response("{}", { status: 200 }));
+    });
+    global.fetch = mockFetch;
+
+    const [tok1, tok2, tok3] = await Promise.all([
+      silentRefreshToken(),
+      silentRefreshToken(),
+      silentRefreshToken(),
+    ]);
+
+    expect(tok1).toBe("mutexToken123");
+    expect(tok2).toBe("mutexToken123");
+    expect(tok3).toBe("mutexToken123");
+    expect(networkCalls).toBe(1);
+  });
 });
