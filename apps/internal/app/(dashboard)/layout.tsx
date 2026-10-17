@@ -159,7 +159,7 @@ export default function DashboardLayout({
     onTokenInvalid: () => {
       if (!isLoading && user?.token && !user?.isSeededSuperAdmin) {
         logout();
-        window.location.href = "/login?session_expired=1";
+        router.push("/login?session_expired=1");
       }
     },
   });
@@ -196,6 +196,7 @@ export default function DashboardLayout({
   const [unreadCtaCount, setUnreadCtaCount] = useState<number>(0);
 
   const fetchUnread = useCallback(async () => {
+    if (isLoading || !isAuthenticated) return;
     try {
       const res = await apiClient("/api/v1/cta/unread-count");
       if (res.status === 401) {
@@ -210,11 +211,11 @@ export default function DashboardLayout({
         throw err;
       }
     }
-  }, []);
+  }, [isLoading, isAuthenticated]);
 
   useVisibilityPolling(fetchUnread, {
     intervalMs: 15000,
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && !isLoading,
   });
 
   const navItems: NavItemConfig[] = [
