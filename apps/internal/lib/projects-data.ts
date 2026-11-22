@@ -188,7 +188,7 @@ export function updateProject(updated: ProjectItem): void {
 
 export async function syncProjectToApi(project: ProjectItem): Promise<ProjectItem | null> {
   try {
-    const res = await apiClient<any>("/api/v1/projects", {
+    const res = await apiClient("/api/v1/projects", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -202,11 +202,15 @@ export async function syncProjectToApi(project: ProjectItem): Promise<ProjectIte
         targetCutoverDate: project.targetCutoverDate,
       }),
     });
-    if (res && res.id) {
+    if (!res.ok) {
+      return null;
+    }
+    const data = await res.json();
+    if (data && data.id) {
       return {
         ...project,
-        id: res.id,
-        projectCode: res.projectCode || project.projectCode,
+        id: data.id,
+        projectCode: data.projectCode || project.projectCode,
       };
     }
     return null;
