@@ -120,7 +120,7 @@ export default function AuditLogsPage() {
       <div
         style={{
           maxWidth: "560px",
-          margin: "80px auto",
+          margin: "40px auto 0 auto",
           padding: "36px",
           backgroundColor: "var(--bg-card)",
           borderRadius: "12px",

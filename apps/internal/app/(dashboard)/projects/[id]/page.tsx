@@ -57,7 +57,7 @@ export default function ProjectDetailPage() {
 
   if (!project) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", gap: "16px", padding: "20px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
         <Link
           href="/projects"
           style={{

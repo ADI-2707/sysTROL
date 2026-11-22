@@ -162,7 +162,7 @@ export default function AnalyticsDashboardPage() {
   const totalCtaBtnCount = cta.mostEffectiveCtaButtons.reduce((acc, curr) => acc + curr.count, 0) || 1;
 
   return (
-    <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "24px 20px" }}>
+    <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
       <div
         style={{
           display: "flex",

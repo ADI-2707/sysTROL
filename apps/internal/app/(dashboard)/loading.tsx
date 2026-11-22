@@ -8,7 +8,6 @@ export default function DashboardLoading() {
         display: "flex",
         flexDirection: "column",
         gap: "24px",
-        padding: "8px 0",
         minHeight: "400px",
       }}
     >

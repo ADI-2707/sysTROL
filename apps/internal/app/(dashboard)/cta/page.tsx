@@ -251,7 +251,7 @@ export default function CtaInquiriesPage() {
   }, [effectiveEnquiries, effectiveEvents, selectedChannel, selectedStatus, searchQuery]);
 
   return (
-    <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "24px 20px" }}>
+    <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px", flexWrap: "wrap", gap: "16px" }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
