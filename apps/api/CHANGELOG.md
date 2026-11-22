@@ -1,5 +1,11 @@
 # @systrol/api
 
+## 2.8.1
+
+### Patch Changes
+
+- 0768fd8: Fix foreign key constraint violation on project log week creation by auto-provisioning missing project database records, synchronizing client project creation directly with the backend API, and preserving strict multi-project daily log isolation.
+
 ## 2.8.0
 
 ### Minor Changes
