@@ -554,6 +554,80 @@ describe("Project Log Component Test Suite", () => {
         ).toBeDefined();
       });
     });
+
+    it("maintains strict project scoping when switching between multiple projects", async () => {
+      vi.mocked(projectLogApi.fetchLogWeeks).mockImplementation((pId: string) => {
+        return Promise.resolve([
+          {
+            id: `week-${pId}`,
+            projectId: pId,
+            weekNumber: 47,
+            year: 2026,
+            status: LogWeekStatus.OPEN,
+            startDate: "2026-11-16T00:00:00.000Z",
+            endDate: "2026-11-22T23:59:59.999Z",
+            entryCount: 1,
+            lockedAt: null,
+          },
+        ]);
+      });
+
+      vi.mocked(projectLogApi.fetchLogEntries).mockImplementation((pId: string) => {
+        return Promise.resolve({
+          data: [
+            {
+              id: `entry-${pId}`,
+              projectId: pId,
+              weekId: `week-${pId}`,
+              authorId: "u-1",
+              authorName: "Sarah Connor",
+              category: LogEntryCategory.PROGRESS,
+              stage: LifecycleStage.ERECTION,
+              stepId: null,
+              stepTitle: null,
+              content: `Exclusive update for ${pId}`,
+              blockers: null,
+              nextAction: null,
+              attachments: [],
+              entryDate: "2026-11-17T09:00:00Z",
+              createdAt: "2026-11-17T09:00:00Z",
+            },
+          ],
+          meta: { total: 1, page: 1, limit: 100, totalPages: 1, hasNextPage: false, hasPrevPage: false },
+        });
+      });
+
+      const { unmount } = render(
+        <ProjectLogTab
+          projectId="proj-sohar-steels"
+          steps={[{ id: "s-1", title: "Step 1" }]}
+          userRole="SUPER_ADMIN"
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("Exclusive update for proj-sohar-steels")).toBeDefined();
+        expect(projectLogApi.fetchLogWeeks).toHaveBeenCalledWith("proj-sohar-steels");
+        expect(projectLogApi.fetchLogEntries).toHaveBeenCalledWith("proj-sohar-steels", expect.any(Object));
+      });
+
+      unmount();
+
+      render(
+        <ProjectLogTab
+          projectId="proj-tata-wire-rod"
+          steps={[{ id: "s-1", title: "Step 1" }]}
+          userRole="SUPER_ADMIN"
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("Exclusive update for proj-tata-wire-rod")).toBeDefined();
+        expect(screen.queryByText("Exclusive update for proj-sohar-steels")).toBeNull();
+        expect(projectLogApi.fetchLogWeeks).toHaveBeenCalledWith("proj-tata-wire-rod");
+        expect(projectLogApi.fetchLogEntries).toHaveBeenCalledWith("proj-tata-wire-rod", expect.any(Object));
+      });
+    });
   });
 
   describe("LifecycleStepsTab", () => {
