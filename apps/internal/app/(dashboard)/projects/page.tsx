@@ -57,17 +57,19 @@ export default function ProjectManagementPage() {
   const commissionedCount = projects.filter((p) => p.status === "COMMISSIONED").length;
   const publishedCount = projects.filter((p) => p.status === "PUBLISHED").length;
 
+  const effectiveSearch = (debouncedSearch || searchQuery).trim().toLowerCase();
+
   const filteredProjects = projects
     .filter((p) => p.status === activeTab)
     .filter((p) => {
-      if (!debouncedSearch.trim()) return true;
-      const q = debouncedSearch.toLowerCase();
+      if (!effectiveSearch) return true;
       return (
-        p.clientName.toLowerCase().includes(q) ||
-        p.lineName.toLowerCase().includes(q) ||
-        p.location.toLowerCase().includes(q) ||
-        p.projectCode.toLowerCase().includes(q) ||
-        (p.caseStudy?.projectName && p.caseStudy.projectName.toLowerCase().includes(q))
+        p.name.toLowerCase().includes(effectiveSearch) ||
+        p.clientName.toLowerCase().includes(effectiveSearch) ||
+        p.lineName.toLowerCase().includes(effectiveSearch) ||
+        p.location.toLowerCase().includes(effectiveSearch) ||
+        p.projectCode.toLowerCase().includes(effectiveSearch) ||
+        (p.caseStudy?.projectName && p.caseStudy.projectName.toLowerCase().includes(effectiveSearch))
       );
     });
 
@@ -430,20 +432,20 @@ export default function ProjectManagementPage() {
                             lineHeight: 1.3,
                           }}
                         >
-                          {project.clientName}
+                          {project.caseStudy?.projectName || project.name}
                         </h3>
                       </div>
 
                       <div
                         style={{
-                          fontSize: "14px",
+                          fontSize: "13.5px",
                           fontWeight: 600,
                           color: "var(--text-body)",
-                          marginBottom: "10px",
+                          marginBottom: "4px",
                           paddingLeft: "24px",
                         }}
                       >
-                        {project.lineName}
+                        {project.clientName} — {project.lineName}
                       </div>
 
                       <div
