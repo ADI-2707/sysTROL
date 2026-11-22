@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { ChevronDown, ChevronRight, Lock, Unlock } from "lucide-react";
 import { LogWeekStatus, ProjectLogEntryDto, ProjectLogWeekDto } from "@systrol/types";
 import { DayGroup } from "./DayGroup.js";
@@ -51,14 +51,16 @@ export function WeekAccordion({
 
   const isLocked = week.status === LogWeekStatus.LOCKED;
 
-  const groupedByDate = entries.reduce<Record<string, ProjectLogEntryDto[]>>((acc, entry) => {
-    const d = entry.entryDate ? entry.entryDate.split("T")[0] : "Other";
-    if (!acc[d]) acc[d] = [];
-    acc[d].push(entry);
-    return acc;
-  }, {});
-
-  const sortedDates = Object.keys(groupedByDate).sort((a, b) => b.localeCompare(a));
+  const { groupedByDate, sortedDates } = useMemo(() => {
+    const grouped = entries.reduce<Record<string, ProjectLogEntryDto[]>>((acc, entry) => {
+      const d = entry.entryDate ? entry.entryDate.split("T")[0] : "Other";
+      if (!acc[d]) acc[d] = [];
+      acc[d].push(entry);
+      return acc;
+    }, {});
+    const sorted = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
+    return { groupedByDate: grouped, sortedDates: sorted };
+  }, [entries]);
 
   return (
     <div

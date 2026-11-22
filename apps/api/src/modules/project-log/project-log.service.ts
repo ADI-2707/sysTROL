@@ -10,6 +10,40 @@ import {
 import { getWeekBounds, startOfDayUTC } from "./week.util.js";
 
 export class ProjectLogService {
+  private static formatWeek(w: any) {
+    return {
+      id: w.id,
+      projectId: w.projectId,
+      weekNumber: w.weekNumber,
+      year: w.year,
+      startDate: w.startDate.toISOString(),
+      endDate: w.endDate.toISOString(),
+      status: w.status,
+      lockedAt: w.lockedAt ? w.lockedAt.toISOString() : null,
+      entryCount: w._count?.entries ?? 0,
+    };
+  }
+
+  private static formatEntry(e: any) {
+    return {
+      id: e.id,
+      weekId: e.weekId,
+      projectId: e.projectId,
+      authorId: e.authorId,
+      authorName: e.author?.name || e.authorName || "",
+      category: e.category,
+      stage: e.stage,
+      stepId: e.stepId,
+      stepTitle: e.step?.title || e.stepTitle || null,
+      content: e.content,
+      blockers: e.blockers,
+      nextAction: e.nextAction,
+      attachments: e.attachments,
+      entryDate: e.entryDate.toISOString(),
+      createdAt: e.createdAt.toISOString(),
+    };
+  }
+
   static async getWeeks(projectId: string, params?: { page?: number; limit?: number }) {
     const page = Math.max(1, Number(params?.page) || 1);
     const limit = Math.min(100, Math.max(1, Number(params?.limit) || 50));
@@ -33,17 +67,7 @@ export class ProjectLogService {
     const totalPages = Math.ceil(total / limit) || 1;
 
     return {
-      data: weeks.map((w: any) => ({
-        id: w.id,
-        projectId: w.projectId,
-        weekNumber: w.weekNumber,
-        year: w.year,
-        startDate: w.startDate.toISOString(),
-        endDate: w.endDate.toISOString(),
-        status: w.status,
-        lockedAt: w.lockedAt ? w.lockedAt.toISOString() : null,
-        entryCount: w._count.entries,
-      })),
+      data: weeks.map((w: any) => this.formatWeek(w)),
       meta: {
         total,
         page,
@@ -82,17 +106,7 @@ export class ProjectLogService {
       },
     });
 
-    return {
-      id: week.id,
-      projectId: week.projectId,
-      weekNumber: week.weekNumber,
-      year: week.year,
-      startDate: week.startDate.toISOString(),
-      endDate: week.endDate.toISOString(),
-      status: week.status,
-      lockedAt: week.lockedAt ? week.lockedAt.toISOString() : null,
-      entryCount: week._count.entries,
-    };
+    return this.formatWeek(week);
   }
 
   static async getWeekWithEntries(projectId: string, weekId: string) {
@@ -119,32 +133,8 @@ export class ProjectLogService {
     }
 
     return {
-      id: week.id,
-      projectId: week.projectId,
-      weekNumber: week.weekNumber,
-      year: week.year,
-      startDate: week.startDate.toISOString(),
-      endDate: week.endDate.toISOString(),
-      status: week.status,
-      lockedAt: week.lockedAt ? week.lockedAt.toISOString() : null,
-      entryCount: week._count.entries,
-      entries: week.entries.map((e: any) => ({
-        id: e.id,
-        weekId: e.weekId,
-        projectId: e.projectId,
-        authorId: e.authorId,
-        authorName: e.author.name,
-        category: e.category,
-        stage: e.stage,
-        stepId: e.stepId,
-        stepTitle: e.step?.title || null,
-        content: e.content,
-        blockers: e.blockers,
-        nextAction: e.nextAction,
-        attachments: e.attachments,
-        entryDate: e.entryDate.toISOString(),
-        createdAt: e.createdAt.toISOString(),
-      })),
+      ...this.formatWeek(week),
+      entries: week.entries.map((e: any) => this.formatEntry(e)),
     };
   }
 
@@ -186,23 +176,7 @@ export class ProjectLogService {
     const totalPages = Math.ceil(total / limit) || 1;
 
     return {
-      data: entries.map((e: any) => ({
-        id: e.id,
-        weekId: e.weekId,
-        projectId: e.projectId,
-        authorId: e.authorId,
-        authorName: e.author.name,
-        category: e.category,
-        stage: e.stage,
-        stepId: e.stepId,
-        stepTitle: e.step?.title || null,
-        content: e.content,
-        blockers: e.blockers,
-        nextAction: e.nextAction,
-        attachments: e.attachments,
-        entryDate: e.entryDate.toISOString(),
-        createdAt: e.createdAt.toISOString(),
-      })),
+      data: entries.map((e: any) => this.formatEntry(e)),
       meta: {
         total,
         page,
@@ -310,23 +284,7 @@ export class ProjectLogService {
       },
     });
 
-    return {
-      id: created.id,
-      weekId: created.weekId,
-      projectId: created.projectId,
-      authorId: created.authorId,
-      authorName: created.author.name,
-      category: created.category,
-      stage: created.stage,
-      stepId: created.stepId,
-      stepTitle: created.step?.title || null,
-      content: created.content,
-      blockers: created.blockers,
-      nextAction: created.nextAction,
-      attachments: created.attachments,
-      entryDate: created.entryDate.toISOString(),
-      createdAt: created.createdAt.toISOString(),
-    };
+    return this.formatEntry(created);
   }
 
   static async lockWeek(projectId: string, weekId: string, userId: string, _dto?: LockWeekDto) {

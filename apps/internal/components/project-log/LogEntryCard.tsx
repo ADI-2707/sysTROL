@@ -2,17 +2,14 @@
 
 import React from "react";
 import {
-  CheckCircle2,
-  AlertOctagon,
-  Flag,
-  FileText,
   Trash2,
   Paperclip,
   Clock,
   User,
   ArrowRight,
 } from "lucide-react";
-import { LogEntryCategory, ProjectLogEntryDto } from "@systrol/types";
+import { ProjectLogEntryDto } from "@systrol/types";
+import { getCategoryMeta } from "./category-meta.js";
 
 export interface LogEntryCardProps {
   entry: ProjectLogEntryDto;
@@ -27,44 +24,6 @@ export function LogEntryCard({ entry, canDelete, onDelete }: LogEntryCardProps) 
       return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     } catch {
       return "";
-    }
-  };
-
-  const getCategoryMeta = (cat: LogEntryCategory) => {
-    switch (cat) {
-      case LogEntryCategory.BLOCKER:
-        return {
-          label: "BLOCKER",
-          icon: <AlertOctagon size={13} />,
-          color: "#ef4444",
-          bgColor: "rgba(239, 68, 68, 0.1)",
-          borderColor: "rgba(239, 68, 68, 0.25)",
-        };
-      case LogEntryCategory.MILESTONE:
-        return {
-          label: "MILESTONE",
-          icon: <Flag size={13} />,
-          color: "var(--sys-green-accent)",
-          bgColor: "var(--sys-green-subtle)",
-          borderColor: "var(--sys-green-border)",
-        };
-      case LogEntryCategory.NOTE:
-        return {
-          label: "NOTE",
-          icon: <FileText size={13} />,
-          color: "var(--text-muted)",
-          bgColor: "var(--bg-canvas)",
-          borderColor: "var(--border-subtle)",
-        };
-      case LogEntryCategory.PROGRESS:
-      default:
-        return {
-          label: "PROGRESS",
-          icon: <CheckCircle2 size={13} />,
-          color: "var(--sys-blue-primary)",
-          bgColor: "var(--sys-blue-subtle)",
-          borderColor: "var(--sys-blue-border)",
-        };
     }
   };
 
@@ -108,8 +67,8 @@ export function LogEntryCard({ entry, canDelete, onDelete }: LogEntryCardProps) 
               letterSpacing: "0.5px",
             }}
           >
-            {meta.icon}
-            <span>{meta.label}</span>
+            {meta.icon(13)}
+            <span>{meta.badgeLabel}</span>
           </span>
 
           <span

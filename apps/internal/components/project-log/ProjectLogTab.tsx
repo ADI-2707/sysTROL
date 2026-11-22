@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Plus,
   Filter,
@@ -135,6 +135,19 @@ export function ProjectLogTab({
       return prev;
     });
   };
+
+  const entriesByWeekId = useMemo(() => {
+    const map = new Map<string, ProjectLogEntryDto[]>();
+    for (const entry of entries) {
+      const list = map.get(entry.weekId);
+      if (list) {
+        list.push(entry);
+      } else {
+        map.set(entry.weekId, [entry]);
+      }
+    }
+    return map;
+  }, [entries]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
@@ -354,23 +367,20 @@ export function ProjectLogTab({
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-          {weeks.map((week, idx) => {
-            const weekEntries = entries.filter((e) => e.weekId === week.id);
-            return (
-              <WeekAccordion
-                key={week.id}
-                week={week}
-                defaultOpen={idx === 0 || !!stepFilter}
-                canLock={canLock}
-                canUnlock={canUnlock}
-                canDelete={canDelete}
-                onLock={handleLockWeek}
-                onUnlock={handleUnlockWeek}
-                onDeleteEntry={handleDeleteEntry}
-                entries={weekEntries}
-              />
-            );
-          })}
+          {weeks.map((week, idx) => (
+            <WeekAccordion
+              key={week.id}
+              week={week}
+              defaultOpen={idx === 0 || !!stepFilter}
+              canLock={canLock}
+              canUnlock={canUnlock}
+              canDelete={canDelete}
+              onLock={handleLockWeek}
+              onUnlock={handleUnlockWeek}
+              onDeleteEntry={handleDeleteEntry}
+              entries={entriesByWeekId.get(week.id) || []}
+            />
+          ))}
         </div>
       )}
 

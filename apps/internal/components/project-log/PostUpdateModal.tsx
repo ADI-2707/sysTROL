@@ -1,17 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
-  CheckCircle2,
-  AlertOctagon,
-  Flag,
-  FileText,
   X,
   Plus,
   Calendar,
 } from "lucide-react";
 import { LogEntryCategory, ProjectLogEntryDto } from "@systrol/types";
 import { postLogEntry } from "@/lib/project-log-api";
+import { CATEGORY_OPTIONS } from "./category-meta.js";
 
 export interface PostUpdateModalProps {
   projectId: string;
@@ -20,34 +17,34 @@ export interface PostUpdateModalProps {
   onSuccess: (entry: ProjectLogEntryDto) => void;
 }
 
+function getCurrentWeekDays() {
+  const now = new Date();
+  const dayNr = (now.getUTCDay() + 6) % 7;
+  const monday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - dayNr));
+
+  const days: Array<{ label: string; dateStr: string; isToday: boolean }> = [];
+  for (let i = 0; i <= dayNr; i++) {
+    const d = new Date(Date.UTC(monday.getUTCFullYear(), monday.getUTCMonth(), monday.getUTCDate() + i));
+    const dateStr = d.toISOString();
+    const weekday = d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" });
+    const dayDate = d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+    const isToday = i === dayNr;
+    days.push({
+      label: isToday ? `Today (${weekday}, ${dayDate})` : `${weekday}, ${dayDate}`,
+      dateStr,
+      isToday,
+    });
+  }
+  return days;
+}
+
 export function PostUpdateModal({
   projectId,
   steps,
   onClose,
   onSuccess,
 }: PostUpdateModalProps) {
-  const getCurrentWeekDays = () => {
-    const now = new Date();
-    const dayNr = (now.getUTCDay() + 6) % 7;
-    const monday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - dayNr));
-
-    const days: Array<{ label: string; dateStr: string; isToday: boolean }> = [];
-    for (let i = 0; i <= dayNr; i++) {
-      const d = new Date(Date.UTC(monday.getUTCFullYear(), monday.getUTCMonth(), monday.getUTCDate() + i));
-      const dateStr = d.toISOString();
-      const weekday = d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" });
-      const dayDate = d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
-      const isToday = i === dayNr;
-      days.push({
-        label: isToday ? `Today (${weekday}, ${dayDate})` : `${weekday}, ${dayDate}`,
-        dateStr,
-        isToday,
-      });
-    }
-    return days;
-  };
-
-  const weekDays = getCurrentWeekDays();
+  const weekDays = useMemo(() => getCurrentWeekDays(), []);
   const defaultDay = weekDays[weekDays.length - 1]?.dateStr || new Date().toISOString();
 
   const [category, setCategory] = useState<LogEntryCategory>(LogEntryCategory.PROGRESS);
@@ -114,13 +111,6 @@ export function PostUpdateModal({
       setSubmitting(false);
     }
   };
-
-  const categoryOptions = [
-    { value: LogEntryCategory.PROGRESS, label: "Progress", icon: <CheckCircle2 size={14} /> },
-    { value: LogEntryCategory.BLOCKER, label: "Blocker", icon: <AlertOctagon size={14} /> },
-    { value: LogEntryCategory.MILESTONE, label: "Milestone", icon: <Flag size={14} /> },
-    { value: LogEntryCategory.NOTE, label: "Note", icon: <FileText size={14} /> },
-  ];
 
   return (
     <div
@@ -214,7 +204,7 @@ export function PostUpdateModal({
               Update Category
             </label>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px" }}>
-              {categoryOptions.map((opt) => {
+              {CATEGORY_OPTIONS.map((opt) => {
                 const isSelected = category === opt.value;
                 return (
                   <button
@@ -237,7 +227,7 @@ export function PostUpdateModal({
                       cursor: "pointer",
                     }}
                   >
-                    {opt.icon}
+                    {opt.icon(14)}
                     <span>{opt.label}</span>
                   </button>
                 );
