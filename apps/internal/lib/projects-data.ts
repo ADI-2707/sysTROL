@@ -186,9 +186,9 @@ export function updateProject(updated: ProjectItem): void {
   }
 }
 
-export async function syncProjectToApi(project: ProjectItem): Promise<void> {
+export async function syncProjectToApi(project: ProjectItem): Promise<ProjectItem | null> {
   try {
-    await apiClient("/api/v1/projects", {
+    const res = await apiClient("/api/v1/projects", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -202,7 +202,21 @@ export async function syncProjectToApi(project: ProjectItem): Promise<void> {
         targetCutoverDate: project.targetCutoverDate,
       }),
     });
-  } catch {}
+    if (!res.ok) {
+      return null;
+    }
+    const data = await res.json();
+    if (data && data.id) {
+      return {
+        ...project,
+        id: data.id,
+        projectCode: data.projectCode || project.projectCode,
+      };
+    }
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 export async function syncStepStatusToApi(

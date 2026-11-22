@@ -2,6 +2,7 @@ import { prisma } from "@systrol/database";
 import {
   CreateLogEntryDto,
   JWTPayload,
+  LifecycleStage,
   LogEntryCategory,
   LogWeekStatus,
   LockWeekDto,
@@ -10,6 +11,79 @@ import {
 import { getWeekBounds, startOfDayUTC } from "./week.util.js";
 
 export class ProjectLogService {
+  private static async ensureProjectExists(projectId: string, userId?: string) {
+    const existing = await prisma.project.findUnique({
+      where: { id: projectId },
+      select: { id: true, currentStage: true },
+    });
+    if (existing) {
+      return existing;
+    }
+
+    let client = await prisma.clientCompany.findFirst();
+    if (!client) {
+      client = await prisma.clientCompany.create({
+        data: {
+          name: "Industrial Client",
+          country: "India",
+          sector: "Steel & Metallurgy",
+          contactEmail: "client@systrol.com",
+        },
+      });
+    }
+
+    let author = userId ? await prisma.user.findUnique({ where: { id: userId } }) : null;
+    if (!author) {
+      author = await prisma.user.findFirst();
+    }
+    if (!author) {
+      author = await prisma.user.create({
+        data: {
+          email: "system@systrol.com",
+          name: "System Administrator",
+          role: UserRole.SUPER_ADMIN,
+          hashedPassword: "system-auto-provisioned",
+        },
+      });
+    }
+
+    const safeSuffix = projectId.replace(/[^a-zA-Z0-9]/g, "").slice(-8).toUpperCase() || Date.now().toString(36).toUpperCase();
+    let projectCode = `PROJ-${safeSuffix}`;
+    let counter = 1;
+    while (await prisma.project.findUnique({ where: { projectCode } })) {
+      projectCode = `PROJ-${safeSuffix}-${counter++}`;
+    }
+
+    try {
+      return await prisma.project.create({
+        data: {
+          id: projectId,
+          projectCode,
+          name: `Project ${projectId}`,
+          clientId: client.id,
+          plantLocation: "Site Plant",
+          country: "India",
+          millType: "Rolling Mill",
+          standCount: 10,
+          currentStage: LifecycleStage.ERECTION,
+          createdById: author.id,
+          startDate: new Date(),
+          targetCutoverDate: new Date(Date.now() + 180 * 86400000),
+        },
+        select: { id: true, currentStage: true },
+      });
+    } catch {
+      const raceCheck = await prisma.project.findUnique({
+        where: { id: projectId },
+        select: { id: true, currentStage: true },
+      });
+      if (raceCheck) {
+        return raceCheck;
+      }
+      throw new Error(`Failed to ensure project '${projectId}' exists`);
+    }
+  }
+
   private static formatWeek(w: any) {
     return {
       id: w.id,
@@ -80,6 +154,7 @@ export class ProjectLogService {
   }
 
   static async getCurrentWeek(projectId: string) {
+    await this.ensureProjectExists(projectId);
     const { weekNumber, year, startDate, endDate } = getWeekBounds(new Date());
 
     const week = await prisma.projectLogWeek.upsert({
@@ -234,6 +309,8 @@ export class ProjectLogService {
 
     const { weekNumber, year, startDate, endDate } = getWeekBounds(entryDate);
 
+    const project = await this.ensureProjectExists(projectId, user.sub);
+
     const week = await prisma.projectLogWeek.upsert({
       where: {
         projectId_weekNumber_year: {
@@ -258,11 +335,6 @@ export class ProjectLogService {
       error.statusCode = 422;
       throw error;
     }
-
-    const project = await prisma.project.findUniqueOrThrow({
-      where: { id: projectId },
-      select: { currentStage: true },
-    });
 
     const created = await prisma.projectLogEntry.create({
       data: {

@@ -57,11 +57,11 @@ export default function ProjectManagementPage() {
       );
     });
 
-  const handleCreateProject = (e: React.FormEvent) => {
+  const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newClient.trim() || !newLine.trim() || !newLocation.trim()) return;
 
-    const newProject: ProjectItem = {
+    let newProject: ProjectItem = {
       id: `proj-custom-${Date.now()}`,
       projectCode: `PROJ-2026-00${projects.length + 1}`,
       name: `${newClient} ${newLine}`,
@@ -83,6 +83,11 @@ export default function ProjectManagementPage() {
       })),
     };
 
+    const synced = await syncProjectToApi(newProject);
+    if (synced) {
+      newProject = synced;
+    }
+
     const updated = [newProject, ...projects];
     setProjects(updated);
     saveProjects(updated);
@@ -90,7 +95,6 @@ export default function ProjectManagementPage() {
     setNewClient("");
     setNewLine("");
     setNewLocation("");
-    syncProjectToApi(newProject);
   };
 
   return (

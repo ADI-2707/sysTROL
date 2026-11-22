@@ -36,7 +36,18 @@ vi.mock("@systrol/database", () => {
       count: vi.fn(),
     },
     project: {
+      findUnique: vi.fn(),
       findUniqueOrThrow: vi.fn(),
+      create: vi.fn(),
+    },
+    clientCompany: {
+      findFirst: vi.fn(),
+      create: vi.fn(),
+    },
+    user: {
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
     },
     siteDeployment: {
       findFirst: vi.fn(),
@@ -54,6 +65,10 @@ vi.mock("@systrol/database", () => {
 describe("Project Log Module Tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(prisma.project.findUnique).mockResolvedValue({
+      id: "proj-1",
+      currentStage: LifecycleStage.ERECTION,
+    } as any);
   });
 
   describe("Project Log - Zod Schema Validation", () => {
@@ -351,7 +366,8 @@ describe("Project Log Module Tests", () => {
         status: LogWeekStatus.OPEN,
       } as any);
 
-      vi.mocked(prisma.project.findUniqueOrThrow).mockResolvedValue({
+      vi.mocked(prisma.project.findUnique).mockResolvedValue({
+        id: "proj-1",
         currentStage: LifecycleStage.HOT_TRIAL,
       } as any);
 
@@ -413,6 +429,127 @@ describe("Project Log Module Tests", () => {
       );
 
       expect(res.id).toBe("entry-fe");
+    });
+
+    it("auto-provisions missing project record before creating log week and entry", async () => {
+      vi.mocked(prisma.project.findUnique)
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null)
+        .mockResolvedValue({ id: "proj-custom-999", currentStage: LifecycleStage.ERECTION } as any);
+
+      vi.mocked(prisma.clientCompany.findFirst).mockResolvedValue({ id: "client-1", name: "Steel Corp" } as any);
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({ id: "usr-admin", name: "Admin" } as any);
+      vi.mocked(prisma.project.create).mockResolvedValue({
+        id: "proj-custom-999",
+        projectCode: "PROJ-CUSTOM-999",
+        currentStage: LifecycleStage.ERECTION,
+      } as any);
+
+      vi.mocked(prisma.projectLogWeek.upsert).mockResolvedValue({
+        id: "week-auto",
+        projectId: "proj-custom-999",
+        status: LogWeekStatus.OPEN,
+      } as any);
+
+      vi.mocked(prisma.projectLogEntry.create).mockResolvedValue({
+        id: "entry-auto",
+        weekId: "week-auto",
+        projectId: "proj-custom-999",
+        authorId: "usr-admin",
+        author: { id: "usr-admin", name: "Admin" },
+        category: LogEntryCategory.PROGRESS,
+        stage: LifecycleStage.ERECTION,
+        stepId: null,
+        step: null,
+        content: "First log entry on auto-provisioned custom project",
+        blockers: null,
+        nextAction: null,
+        attachments: [],
+        entryDate: new Date(),
+        createdAt: new Date(),
+      } as any);
+
+      const result = await ProjectLogService.createEntry(
+        "proj-custom-999",
+        { content: "First log entry on auto-provisioned custom project", category: LogEntryCategory.PROGRESS, attachments: [] },
+        { sub: "usr-admin", role: UserRole.SUPER_ADMIN, iat: 0, exp: 0 }
+      );
+
+      expect(prisma.project.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            id: "proj-custom-999",
+          }),
+        })
+      );
+      expect(prisma.projectLogWeek.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            projectId_weekNumber_year: expect.objectContaining({
+              projectId: "proj-custom-999",
+            }),
+          }),
+        })
+      );
+      expect(result.id).toBe("entry-auto");
+      expect(result.projectId).toBe("proj-custom-999");
+    });
+
+    it("isolates multi-project daily log entries strictly per opened project", async () => {
+      vi.mocked(prisma.project.findUnique).mockImplementation((args: any) => {
+        return Promise.resolve({
+          id: args.where.id,
+          currentStage: LifecycleStage.COMMISSIONING,
+        } as any);
+      });
+
+      vi.mocked(prisma.projectLogWeek.upsert).mockImplementation((args: any) => {
+        const pId = args.create.projectId;
+        return Promise.resolve({
+          id: `week-for-${pId}`,
+          projectId: pId,
+          status: LogWeekStatus.OPEN,
+        } as any);
+      });
+
+      vi.mocked(prisma.projectLogEntry.create).mockImplementation((args: any) => {
+        return Promise.resolve({
+          id: `entry-${args.data.projectId}`,
+          weekId: args.data.weekId,
+          projectId: args.data.projectId,
+          authorId: "usr-engineer",
+          author: { id: "usr-engineer", name: "Field Engineer" },
+          category: LogEntryCategory.PROGRESS,
+          stage: LifecycleStage.COMMISSIONING,
+          stepId: null,
+          step: null,
+          content: args.data.content,
+          blockers: null,
+          nextAction: null,
+          attachments: [],
+          entryDate: args.data.entryDate,
+          createdAt: new Date(),
+        } as any);
+      });
+
+      const entryProjectA = await ProjectLogService.createEntry(
+        "proj-sohar-steels",
+        { content: "Morning commissioning on stand 1 to 4 drives", category: LogEntryCategory.PROGRESS, attachments: [] },
+        { sub: "usr-engineer", role: UserRole.COMMISSIONING_LEAD, iat: 0, exp: 0 }
+      );
+
+      const entryProjectB = await ProjectLogService.createEntry(
+        "proj-tata-wire-rod",
+        { content: "Afternoon speed cascade tuning on finishing block", category: LogEntryCategory.PROGRESS, attachments: [] },
+        { sub: "usr-engineer", role: UserRole.COMMISSIONING_LEAD, iat: 0, exp: 0 }
+      );
+
+      expect(entryProjectA.projectId).toBe("proj-sohar-steels");
+      expect(entryProjectA.weekId).toBe("week-for-proj-sohar-steels");
+      expect(entryProjectB.projectId).toBe("proj-tata-wire-rod");
+      expect(entryProjectB.weekId).toBe("week-for-proj-tata-wire-rod");
+      expect(entryProjectA.projectId).not.toBe(entryProjectB.projectId);
+      expect(entryProjectA.weekId).not.toBe(entryProjectB.weekId);
     });
   });
 
