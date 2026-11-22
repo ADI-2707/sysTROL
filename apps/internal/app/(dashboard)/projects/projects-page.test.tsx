@@ -99,4 +99,20 @@ describe("ProjectManagementPage with 3-tab system and publishing workflow", () =
     expect(screen.getByText("Reheating Furnace Level-2 Thermal Tracking & Mill Pacing")).toBeDefined();
     expect(screen.queryByText("Structural ERW Tube Mill Forming & Sizing Level-2 Automation")).toBeNull();
   });
+
+  it("renders card display images with onError fallback handling", () => {
+    render(<ProjectManagementPage />);
+
+    const publishedTab = screen.getByRole("button", { name: /Published on Website/i });
+    fireEvent.click(publishedTab);
+
+    const images = screen.getAllByRole("img");
+    expect(images.length).toBeGreaterThanOrEqual(6);
+
+    const firstImage = images[0] as HTMLImageElement;
+    expect(firstImage.src).toBeTruthy();
+
+    fireEvent.error(firstImage);
+    expect(firstImage.src).toContain("data:image/svg+xml");
+  });
 });

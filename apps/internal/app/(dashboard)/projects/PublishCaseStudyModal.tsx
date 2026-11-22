@@ -21,6 +21,7 @@ import {
 import { ProjectCaseStudy, ProjectCaseStudyImage, ProjectKpiCard } from "@systrol/types";
 import { useAuth } from "@/lib/auth-context";
 import { apiClient } from "@/lib/api-client";
+import { resolveMediaUrl, FALLBACK_PROJECT_IMAGE } from "@/lib/media-utils";
 
 interface PublishCaseStudyModalProps {
   isOpen: boolean;
@@ -520,8 +521,12 @@ export function PublishCaseStudyModal({
                     >
                       {img.url ? (
                         <img
-                          src={img.url}
+                          src={resolveMediaUrl(img.url)}
                           alt={img.altText || `Slot ${idx + 1}`}
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = FALLBACK_PROJECT_IMAGE;
+                          }}
                           style={{ width: "100%", height: "100%", objectFit: "cover" }}
                         />
                       ) : (

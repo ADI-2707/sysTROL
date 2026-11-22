@@ -33,6 +33,7 @@ import {
 import { TabGroup } from "@/components/ui/tab-group";
 import { useDebounce } from "@/lib/use-debounce";
 import { PublishCaseStudyModal } from "./PublishCaseStudyModal";
+import { resolveMediaUrl, FALLBACK_PROJECT_IMAGE } from "@/lib/media-utils";
 
 export default function ProjectManagementPage() {
   const [projects, setProjects] = useState<ProjectItem[]>([]);
@@ -313,8 +314,12 @@ export default function ProjectManagementPage() {
                     }}
                   >
                     <img
-                      src={showingImg.url}
+                      src={resolveMediaUrl(showingImg.url)}
                       alt={showingImg.altText || project.name}
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = FALLBACK_PROJECT_IMAGE;
+                      }}
                       style={{
                         width: "100%",
                         height: "100%",
