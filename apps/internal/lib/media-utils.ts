@@ -32,13 +32,14 @@ export function resolveMediaUrl(url?: string | null): string {
     return trimmed;
   }
 
+  const cleanPath = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
   const publicOrigin =
     process.env.NEXT_PUBLIC_PUBLIC_SITE_URL ||
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    "https://sys-trol.com";
+    process.env.NEXT_PUBLIC_SITE_URL;
 
-  const cleanOrigin = publicOrigin.replace(/\/+$/, "");
-  const cleanPath = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+  if (publicOrigin) {
+    return `${publicOrigin.replace(/\/+$/, "")}${cleanPath}`;
+  }
 
-  return `${cleanOrigin}${cleanPath}`;
+  return cleanPath;
 }
