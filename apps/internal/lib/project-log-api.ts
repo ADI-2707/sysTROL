@@ -73,9 +73,19 @@ export async function fetchStepEntryCounts(projectId: string): Promise<Record<st
   return res.json();
 }
 
+export interface PostLogEntryInput {
+  category?: LogEntryCategory;
+  content: string;
+  stepId?: string;
+  entryDate?: string;
+  blockers?: string;
+  nextAction?: string;
+  attachments?: string[];
+}
+
 export async function postLogEntry(
   projectId: string,
-  dto: CreateLogEntryDto
+  dto: PostLogEntryInput
 ): Promise<ProjectLogEntryDto> {
   const res = await apiClient(`/api/v1/projects/${projectId}/log/entries`, {
     method: "POST",
