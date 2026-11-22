@@ -59,4 +59,20 @@ describe("resolveProjects", () => {
     expect(result[0].thumbnailUrl).toBe("https://systrol.org/new-thumb.webp");
     expect(result.length).toBe(projectsData.length + 1);
   });
+
+  it("removes project from fallback list if dynamic item has isPublished: false", () => {
+    const dynamicProjects = [
+      {
+        id: "proj-1",
+        slug: "rolling-mill-l2-automation-upgrade",
+        isPublished: false,
+      },
+    ];
+
+    const result = resolveProjects(dynamicProjects, projectsData);
+    const unpublished = result.find((p) => p.slug === "rolling-mill-l2-automation-upgrade");
+
+    expect(unpublished).toBeUndefined();
+    expect(result.length).toBe(projectsData.length - 1);
+  });
 });

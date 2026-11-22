@@ -155,6 +155,25 @@ describe("Project Publishing & Case Study Lifecycle Tests", () => {
       });
     });
 
+    it("triggers revalidation upon publication", async () => {
+      const spy = vi.spyOn(ProjectsService, "triggerPublicRevalidation").mockResolvedValue(undefined);
+      const mockProject = {
+        id: "proj-comm-1",
+        name: "Commissioned Project",
+        currentStage: LifecycleStage.COMMISSIONING,
+        isPublished: false,
+      };
+      const mockUpdated = { ...mockProject, isPublished: true };
+      vi.mocked(prisma.project.findUnique).mockResolvedValue(mockProject as any);
+      vi.mocked(prisma.project.update).mockResolvedValue(mockUpdated as any);
+      vi.mocked(prisma.auditLog.create).mockResolvedValue({ id: "audit-1" } as any);
+
+      await ProjectsService.publishProject("proj-comm-1", validCaseStudyPayload, "user-super-admin");
+
+      expect(spy).toHaveBeenCalledWith(validCaseStudyPayload.caseStudy.slug);
+      spy.mockRestore();
+    });
+
     it("strictly rejects publication when project is in an uncompleted stage", async () => {
       const ongoingProject = {
         id: "proj-ongoing-1",
