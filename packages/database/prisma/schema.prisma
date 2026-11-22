@@ -123,6 +123,7 @@ model User {
   jobPostings           JobPosting[]
   jobApplicationReviews JobApplication[]       @relation("ApplicationReviewer")
   mediaAssets           MediaAsset[]
+  projectsPublished     Project[]              @relation("ProjectPublisher")
 }
 
 model ClientCompany {
@@ -288,6 +289,12 @@ model Project {
   targetCutoverDate    DateTime
   actualCutoverDate    DateTime?
   commissioningReportUrl String?
+  isPublished          Boolean             @default(false)
+  publishedAt          DateTime?
+  publishedById        String?
+  publishedBy          User?               @relation("ProjectPublisher", fields: [publishedById], references: [id])
+  publicSlug           String?             @unique
+  caseStudy            Json?
   stageHistory         ProjectStageHistory[]
   enquiry              Enquiry?
   salesVisits          SalesVisit[]
