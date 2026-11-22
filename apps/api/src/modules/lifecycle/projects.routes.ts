@@ -11,6 +11,7 @@ import { ProjectsService } from "./projects.service.js";
 
 export async function projectsRoutes(fastify: FastifyInstance) {
   fastify.get("/public/projects", async (request: FastifyRequest, reply: FastifyReply) => {
+    reply.header("Cache-Control", "public, max-age=15, stale-while-revalidate=45");
     const projects = await ProjectsService.listPublicProjects();
     return reply.status(200).send({ projects });
   });
@@ -25,6 +26,7 @@ export async function projectsRoutes(fastify: FastifyInstance) {
         message: `Public case study '${slug}' not found`,
       });
     }
+    reply.header("Cache-Control", "public, max-age=15, stale-while-revalidate=45");
     return reply.status(200).send({ project });
   });
 

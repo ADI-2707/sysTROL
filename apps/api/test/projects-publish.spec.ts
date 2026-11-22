@@ -18,6 +18,7 @@ vi.mock("@systrol/database", () => {
     auditLog: {
       create: vi.fn(),
     },
+    $transaction: vi.fn().mockImplementation((promises) => Promise.all(promises)),
   };
   return { prisma: mPrisma };
 });

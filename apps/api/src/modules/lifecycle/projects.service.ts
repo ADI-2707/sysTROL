@@ -437,30 +437,31 @@ export class ProjectsService {
       throw error;
     }
 
-    const updated = await prisma.project.update({
-      where: { id },
-      data: {
-        isPublished: true,
-        publishedAt: new Date(),
-        publishedById: userId,
-        publicSlug: dto.caseStudy.slug,
-        caseStudy: dto.caseStudy as any,
-      },
-    });
-
-    await prisma.auditLog.create({
-      data: {
-        projectId: id,
-        actorId: userId,
-        action: "PROJECT_PUBLISHED",
-        entityType: "PROJECT",
-        entityId: id,
-        diff: {
-          slug: dto.caseStudy.slug,
-          projectName: dto.caseStudy.projectName,
+    const [updated] = await prisma.$transaction([
+      prisma.project.update({
+        where: { id },
+        data: {
+          isPublished: true,
+          publishedAt: new Date(),
+          publishedById: userId,
+          publicSlug: dto.caseStudy.slug,
+          caseStudy: dto.caseStudy as any,
         },
-      },
-    });
+      }),
+      prisma.auditLog.create({
+        data: {
+          projectId: id,
+          actorId: userId,
+          action: "PROJECT_PUBLISHED",
+          entityType: "PROJECT",
+          entityId: id,
+          diff: {
+            slug: dto.caseStudy.slug,
+            projectName: dto.caseStudy.projectName,
+          },
+        },
+      }),
+    ]);
 
     return updated;
   }
@@ -480,25 +481,26 @@ export class ProjectsService {
       throw error;
     }
 
-    const updated = await prisma.project.update({
-      where: { id },
-      data: {
-        isPublished: false,
-      },
-    });
-
-    await prisma.auditLog.create({
-      data: {
-        projectId: id,
-        actorId: userId,
-        action: "PROJECT_UNPUBLISHED",
-        entityType: "PROJECT",
-        entityId: id,
-        diff: {
-          reason: dto?.reason || null,
+    const [updated] = await prisma.$transaction([
+      prisma.project.update({
+        where: { id },
+        data: {
+          isPublished: false,
         },
-      },
-    });
+      }),
+      prisma.auditLog.create({
+        data: {
+          projectId: id,
+          actorId: userId,
+          action: "PROJECT_UNPUBLISHED",
+          entityType: "PROJECT",
+          entityId: id,
+          diff: {
+            reason: dto?.reason || null,
+          },
+        },
+      }),
+    ]);
 
     return updated;
   }
