@@ -4,6 +4,8 @@ import {
   DeviateStageSchema,
   CreateProjectSchema,
   UpdateStepStatusSchema,
+  PublishProjectSchema,
+  UnpublishProjectSchema,
 } from "@systrol/types";
 import { ProjectsService } from "./projects.service.js";
 
@@ -99,5 +101,27 @@ export async function projectsRoutes(fastify: FastifyInstance) {
   fastify.get("/projects/:id/deviations", async (request) => {
     const { id } = request.params as { id: string };
     return ProjectsService.getDeviations(id);
+  });
+
+  fastify.post("/projects/:id/publish", {
+    preHandler: [fastify.authorize(["ADMIN", "SUPER_ADMIN"])],
+    handler: async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const parsed = PublishProjectSchema.parse(request.body || {});
+      const userId = (request.user as any)?.sub || (request.user as any)?.id;
+      const result = await ProjectsService.publishProject(id, parsed, userId);
+      return reply.status(200).send(result);
+    },
+  });
+
+  fastify.post("/projects/:id/unpublish", {
+    preHandler: [fastify.authorize(["ADMIN", "SUPER_ADMIN"])],
+    handler: async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const parsed = UnpublishProjectSchema.parse(request.body || {});
+      const userId = (request.user as any)?.sub || (request.user as any)?.id;
+      const result = await ProjectsService.unpublishProject(id, userId, parsed);
+      return reply.status(200).send(result);
+    },
   });
 }

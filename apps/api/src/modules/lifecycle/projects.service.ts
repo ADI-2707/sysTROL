@@ -6,6 +6,8 @@ import {
   DeviateStageDto,
   CreateProjectDto,
   UpdateStepStatusDto,
+  PublishProjectDto,
+  UnpublishProjectDto,
 } from "@systrol/types";
 import { StageGateEngine } from "./stage-gate.engine.js";
 
@@ -402,5 +404,102 @@ export class ProjectsService {
       previous: step,
       current: updated,
     };
+  }
+
+  static async publishProject(
+    id: string,
+    dto: PublishProjectDto,
+    userId: string
+  ) {
+    const project = await prisma.project.findUnique({
+      where: { id },
+    });
+
+    if (!project) {
+      const error: any = new Error(`Project '${id}' not found`);
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const uncompletedStages = [
+      LifecycleStage.ENQUIRY,
+      LifecycleStage.SALES_VISIT,
+      LifecycleStage.PROCUREMENT,
+      LifecycleStage.ENGINEERING,
+      LifecycleStage.MANUFACTURING,
+      LifecycleStage.DISPATCH,
+      LifecycleStage.ERECTION,
+    ];
+
+    if (uncompletedStages.includes(project.currentStage as any)) {
+      const error: any = new Error("Only completed or commissioned projects can be published to the public website");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const updated = await prisma.project.update({
+      where: { id },
+      data: {
+        isPublished: true,
+        publishedAt: new Date(),
+        publishedById: userId,
+        publicSlug: dto.caseStudy.slug,
+        caseStudy: dto.caseStudy as any,
+      },
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        projectId: id,
+        actorId: userId,
+        action: "PROJECT_PUBLISHED",
+        entityType: "PROJECT",
+        entityId: id,
+        diff: {
+          slug: dto.caseStudy.slug,
+          projectName: dto.caseStudy.projectName,
+        },
+      },
+    });
+
+    return updated;
+  }
+
+  static async unpublishProject(
+    id: string,
+    userId: string,
+    dto?: UnpublishProjectDto
+  ) {
+    const project = await prisma.project.findUnique({
+      where: { id },
+    });
+
+    if (!project) {
+      const error: any = new Error(`Project '${id}' not found`);
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const updated = await prisma.project.update({
+      where: { id },
+      data: {
+        isPublished: false,
+      },
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        projectId: id,
+        actorId: userId,
+        action: "PROJECT_UNPUBLISHED",
+        entityType: "PROJECT",
+        entityId: id,
+        diff: {
+          reason: dto?.reason || null,
+        },
+      },
+    });
+
+    return updated;
   }
 }
