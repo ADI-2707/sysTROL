@@ -24,6 +24,7 @@ import { mediaRoutes } from "./modules/media/media.routes.js";
 import { ctaRoutes } from "./modules/cta/cta.routes.js";
 import { healthRoutes } from "./modules/health/health.routes.js";
 import { auditRoutes } from "./modules/audit/audit.routes.js";
+import { projectLogRoutes } from "./modules/project-log/project-log.routes.js";
 import { latencyTracker } from "./common/metrics/latency-tracker.js";
 import fs from "node:fs";
 
@@ -129,6 +130,7 @@ export async function buildServer() {
       await v1.register(mediaRoutes);
       await v1.register(ctaRoutes);
       await v1.register(auditRoutes);
+      await v1.register(projectLogRoutes);
     },
     { prefix: "/api/v1" }
   );

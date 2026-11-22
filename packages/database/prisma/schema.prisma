@@ -87,6 +87,18 @@ enum UserRole {
   CLIENT_AUDITOR
 }
 
+enum LogWeekStatus {
+  OPEN
+  LOCKED
+}
+
+enum LogEntryCategory {
+  PROGRESS
+  BLOCKER
+  MILESTONE
+  NOTE
+}
+
 model User {
   id             String    @id @default(uuid())
   email          String    @unique
@@ -97,6 +109,8 @@ model User {
   totpEnabled    Boolean   @default(false)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+
+  logEntries  ProjectLogEntry[] @relation("ProjectLogAuthor")
 
   enquiries             Enquiry[]              @relation("EnquiryOwner")
   salesVisits           SalesVisit[]
@@ -292,6 +306,8 @@ model Project {
   deployments          SiteDeployment[]
   auditLogs            AuditLog[]
   mediaAssets          MediaAsset[]
+  logWeeks             ProjectLogWeek[]
+  logEntries           ProjectLogEntry[]
   createdAt            DateTime            @default(now())
   updatedAt            DateTime            @updatedAt
 }
@@ -319,6 +335,50 @@ model DeviationRecord {
   resolvedAt       DateTime?
 }
 
+model ProjectLogWeek {
+  id         String        @id @default(uuid())
+  projectId  String
+  project    Project       @relation(fields: [projectId], references: [id])
+  weekNumber Int
+  year       Int
+  startDate  DateTime
+  endDate    DateTime
+  status     LogWeekStatus @default(OPEN)
+  lockedById String?
+  lockedAt   DateTime?
+  createdAt  DateTime      @default(now())
+  entries    ProjectLogEntry[]
+
+  @@unique([projectId, weekNumber, year])
+  @@index([projectId, status])
+}
+
+model ProjectLogEntry {
+  id          String            @id @default(uuid())
+  weekId      String
+  week        ProjectLogWeek    @relation(fields: [weekId], references: [id])
+  projectId   String
+  project     Project           @relation(fields: [projectId], references: [id])
+  authorId    String
+  author      User              @relation("ProjectLogAuthor", fields: [authorId], references: [id])
+  category    LogEntryCategory  @default(PROGRESS)
+  stage       LifecycleStage
+  stepId      String?
+  step        CommissioningStep? @relation("LogStep", fields: [stepId], references: [id])
+  content     String
+  blockers    String?
+  nextAction  String?
+  attachments String[]
+  entryDate   DateTime
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([projectId, entryDate])
+  @@index([weekId])
+  @@index([stepId])
+  @@index([authorId])
+}
+
 model CommissioningStep {
   id           String      @id @default(uuid())
   projectId    String
@@ -332,6 +392,7 @@ model CommissioningStep {
   assignedToId String?
   dueDate      DateTime?
   evidenceUrls String[]
+  logEntries  ProjectLogEntry[] @relation("LogStep")
   signoffs     StepSignoff[] @relation("StepSignoffs")
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
