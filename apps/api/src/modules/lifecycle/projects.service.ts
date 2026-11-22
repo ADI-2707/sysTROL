@@ -463,7 +463,24 @@ export class ProjectsService {
       }),
     ]);
 
+    this.triggerPublicRevalidation(dto.caseStudy.slug);
+
     return updated;
+  }
+
+  static async triggerPublicRevalidation(slug?: string) {
+    try {
+      const publicUrl = process.env.PUBLIC_SITE_URL || "http://localhost:3000";
+      const secret = process.env.REVALIDATION_SECRET || "systrol-revalidate-secret-2026";
+      const params = new URLSearchParams({
+        secret,
+        path: slug ? `/projects/${slug}` : "/projects",
+        tag: "projects",
+      });
+      await fetch(`${publicUrl}/api/revalidate?${params.toString()}`, {
+        method: "POST",
+      });
+    } catch {}
   }
 
   static async unpublishProject(
@@ -501,6 +518,8 @@ export class ProjectsService {
         },
       }),
     ]);
+
+    this.triggerPublicRevalidation(project.publicSlug || undefined);
 
     return updated;
   }

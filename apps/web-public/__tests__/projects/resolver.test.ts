@@ -37,7 +37,7 @@ describe("resolveProjects", () => {
     expect(updated?.challenge).toBe("Modernized mill pacing bottleneck");
     expect(updated?.solution).toBe("Dual-redundant server clusters");
     expect(updated?.thumbnailUrl).toBe("https://systrol.org/img2.webp");
-    expect(updated?.metrics.length).toBe(2);
+    expect(updated?.metrics?.length).toBe(2);
   });
 
   it("prepends new dynamic published project if slug does not exist in fallback", () => {
