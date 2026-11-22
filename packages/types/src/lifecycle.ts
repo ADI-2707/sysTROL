@@ -34,6 +34,9 @@ export const STAGE_ORDER: LifecycleStage[] = [
   LifecycleStage.AMC,
 ];
 
+export const ProjectStatusEnum = z.enum(["ONGOING", "COMMISSIONED", "PUBLISHED"]);
+export type ProjectStatus = z.infer<typeof ProjectStatusEnum>;
+
 export interface ProjectStageHistoryDto {
   id: string;
   projectId: string;
@@ -68,6 +71,48 @@ export const DeviateStageSchema = z.object({
 export type AdvanceStageDto = z.infer<typeof AdvanceStageSchema>;
 export type DeviateStageDto = z.infer<typeof DeviateStageSchema>;
 
+export const ProjectKpiCardSchema = z.object({
+  label: z.string().min(1),
+  value: z.string().min(1),
+  description: z.string().optional(),
+});
+export type ProjectKpiCard = z.infer<typeof ProjectKpiCardSchema>;
+
+export const ProjectCaseStudyImageSchema = z.object({
+  url: z.string().min(1),
+  caption: z.string().default(""),
+  altText: z.string().default(""),
+  isShowingCard: z.boolean().default(false),
+  s3Key: z.string().optional(),
+});
+export type ProjectCaseStudyImage = z.infer<typeof ProjectCaseStudyImageSchema>;
+
+export const ProjectCaseStudySchema = z.object({
+  projectName: z.string().min(1),
+  slug: z.string().min(1),
+  challengeTitle: z.string().min(1),
+  challengeDescription: z.string().min(1),
+  solutionTitle: z.string().min(1),
+  solutionDescription: z.string().min(1),
+  technologies: z.array(z.string()).default([]),
+  kpiCards: z.array(ProjectKpiCardSchema).min(2).max(4),
+  images: z.array(ProjectCaseStudyImageSchema).length(3).refine(
+    (imgs) => imgs.filter((i) => i.isShowingCard).length === 1,
+    { message: "Exactly one image must be marked as the card thumbnail" }
+  ),
+});
+export type ProjectCaseStudy = z.infer<typeof ProjectCaseStudySchema>;
+
+export const PublishProjectSchema = z.object({
+  caseStudy: ProjectCaseStudySchema,
+});
+export type PublishProjectDto = z.infer<typeof PublishProjectSchema>;
+
+export const UnpublishProjectSchema = z.object({
+  reason: z.string().optional(),
+});
+export type UnpublishProjectDto = z.infer<typeof UnpublishProjectSchema>;
+
 export const CreateProjectSchema = z.object({
   name: z.string().min(1),
   clientName: z.string().min(1),
@@ -76,7 +121,7 @@ export const CreateProjectSchema = z.object({
   country: z.string().optional().default("India"),
   millType: z.string().optional().default("Rolling Mill"),
   standCount: z.number().int().optional().default(10),
-  status: z.enum(["ONGOING", "COMMISSIONED"]).optional().default("ONGOING"),
+  status: ProjectStatusEnum.optional().default("ONGOING"),
   contractValue: z.string().optional(),
   startDate: z.string().optional(),
   targetCutoverDate: z.string().optional(),
