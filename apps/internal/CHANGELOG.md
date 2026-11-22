@@ -1,5 +1,11 @@
 # @systrol/internal
 
+## 2.9.1
+
+### Patch Changes
+
+- 4cd7a22: Add universal media URL resolver with graceful onError image fallback. Bundle static project case study images in internal ops public directory for self-contained hosting on Vercel, preventing 404 image errors on project cards.
+
 ## 2.9.0
 
 ### Minor Changes
