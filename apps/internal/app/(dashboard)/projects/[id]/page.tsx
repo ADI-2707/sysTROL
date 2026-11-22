@@ -2,26 +2,17 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import {
   ArrowLeft,
-  Building,
   MapPin,
   Users,
-  CheckCircle2,
-  Clock,
-  Circle,
   Plus,
   Trash2,
   Calendar,
   Phone,
-  UserCheck,
-  Briefcase,
-  AlertCircle,
-  ShieldCheck,
-  ChevronRight,
   GitCommit,
-  Sparkles,
+  FileText,
 } from "lucide-react";
 import {
   getProjectById,
@@ -32,18 +23,21 @@ import {
   INITIAL_COMPANY_EMPLOYEES,
   syncStepStatusToApi,
 } from "@/lib/projects-data";
+import { TabGroup } from "@/components/ui/tab-group";
+import { LifecycleStepsTab } from "@/components/project-log/LifecycleStepsTab";
+import { ProjectLogTab } from "@/components/project-log/ProjectLogTab";
+import { fetchStepEntryCounts } from "@/lib/project-log-api";
+import { useAuth } from "@/lib/auth-context";
 
 export default function ProjectDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const projectId = params?.id as string;
+  const { user } = useAuth();
 
   const [project, setProject] = useState<ProjectItem | null>(null);
-  const [showAddSubStepModal, setShowAddSubStepModal] = useState(false);
-  const [targetStepOrder, setTargetStepOrder] = useState<number | null>(null);
-  const [subStepTitle, setSubStepTitle] = useState("");
-  const [subStepNotes, setSubStepNotes] = useState("");
-  const [subStepAssignee, setSubStepAssignee] = useState("");
+  const [activeTab, setActiveTab] = useState<"steps" | "log">("steps");
+  const [stepLogFilter, setStepLogFilter] = useState<string | undefined>(undefined);
+  const [stepEntryCounts, setStepEntryCounts] = useState<Record<string, number>>({});
 
   const [showDeployStaffModal, setShowDeployStaffModal] = useState(false);
   const [selectedStaffId, setSelectedStaffId] = useState(INITIAL_COMPANY_EMPLOYEES[0].id);
@@ -55,6 +49,9 @@ export default function ProjectDetailPage() {
       if (found) {
         setProject(found);
       }
+      fetchStepEntryCounts(projectId)
+        .then((counts) => setStepEntryCounts(counts))
+        .catch(() => {});
     }
   }, [projectId]);
 
@@ -95,6 +92,7 @@ export default function ProjectDetailPage() {
   const completedSteps = project.steps.filter((s) => s.status === "COMPLETED").length;
   const totalSteps = project.steps.length;
   const progressPct = Math.round((completedSteps / Math.max(totalSteps, 1)) * 100);
+  const totalLogEntries = Object.values(stepEntryCounts).reduce((acc, c) => acc + c, 0);
 
   const handleUpdateStepStatus = (stepId: string, newStatus: "PENDING" | "IN_PROGRESS" | "COMPLETED") => {
     const updatedSteps = project.steps.map((s) => {
@@ -118,26 +116,15 @@ export default function ProjectDetailPage() {
     syncStepStatusToApi(project.id, stepId, newStatus);
   };
 
-  const handleOpenAddSubStep = (order: number) => {
-    setTargetStepOrder(order);
-    setSubStepTitle("");
-    setSubStepNotes("");
-    setSubStepAssignee(INITIAL_COMPANY_EMPLOYEES[0].name);
-    setShowAddSubStepModal(true);
-  };
-
-  const handleSaveSubStep = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!subStepTitle.trim() || targetStepOrder === null) return;
-
+  const handleAddSubStep = (order: number, title: string, notes?: string, assignedTo?: string) => {
     const newStep: ProjectLifecycleStep = {
       id: `substep-${Date.now()}`,
-      title: subStepTitle.trim(),
-      description: subStepNotes.trim() || undefined,
+      title,
+      description: notes || undefined,
       isPredefined: false,
       status: "PENDING",
-      assignedTo: subStepAssignee,
-      order: targetStepOrder + 5,
+      assignedTo,
+      order: order + 5,
     };
 
     const updatedSteps = [...project.steps, newStep].sort((a, b) => a.order - b.order);
@@ -149,7 +136,6 @@ export default function ProjectDetailPage() {
 
     setProject(updatedProject);
     updateProject(updatedProject);
-    setShowAddSubStepModal(false);
   };
 
   const handleDeleteStep = (stepId: string) => {
@@ -213,10 +199,8 @@ export default function ProjectDetailPage() {
     updateProject(updatedProject);
   };
 
-  const sortedSteps = [...project.steps].sort((a, b) => a.order - b.order);
-
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       <div>
         <Link
           href="/projects"
@@ -337,7 +321,7 @@ export default function ProjectDetailPage() {
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "var(--text-muted)" }}>
               <span>{completedSteps} of {totalSteps} steps completed</span>
-              <span>{project.onSiteEmployees.length} staff on-site</span>
+              <span>{project.onSiteEmployees.length} staff assigned</span>
             </div>
           </div>
         </div>
@@ -368,10 +352,10 @@ export default function ProjectDetailPage() {
             <Users size={20} color="var(--sys-blue-primary)" />
             <div>
               <h2 style={{ fontSize: "17px", fontWeight: 700, color: "var(--text-heading)", margin: 0 }}>
-                On-Site Personnel Roster
+                Assigned Personnel Roster
               </h2>
               <div style={{ fontSize: "12.5px", color: "var(--text-muted)" }}>
-                Engineering specialists currently deployed at {project.location}
+                Engineers and project specialists deployed for {project.name}
               </div>
             </div>
           </div>
@@ -394,7 +378,7 @@ export default function ProjectDetailPage() {
             }}
           >
             <Plus size={15} />
-            <span>Deploy Staff On-Site</span>
+            <span>Deploy Staff</span>
           </button>
         </div>
 
@@ -407,7 +391,7 @@ export default function ProjectDetailPage() {
               fontSize: "13.5px",
             }}
           >
-            No employees currently deployed on-site for this project. Click &quot;Deploy Staff On-Site&quot; to assign engineers.
+            No employees currently deployed for this project. Click &quot;Deploy Staff&quot; to assign team members.
           </div>
         ) : (
           <div
@@ -462,7 +446,7 @@ export default function ProjectDetailPage() {
                   <button
                     type="button"
                     onClick={() => handleRelieveStaff(emp.id)}
-                    title="Relieve / Return from site"
+                    title="Relieve from project"
                     style={{
                       background: "transparent",
                       border: "none",
@@ -504,340 +488,52 @@ export default function ProjectDetailPage() {
         )}
       </div>
 
-      <div
-        style={{
-          backgroundColor: "var(--bg-card)",
-          borderRadius: "12px",
-          border: "1px solid var(--border-subtle)",
-          padding: "24px",
-          boxShadow: "var(--shadow-card)",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: "20px",
-            borderBottom: "1px solid var(--border-subtle)",
-            paddingBottom: "14px",
+      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        <TabGroup
+          tabs={[
+            {
+              id: "steps",
+              label: "Lifecycle Steps",
+              icon: <GitCommit size={15} />,
+              badge: totalSteps,
+            },
+            {
+              id: "log",
+              label: "Project Log",
+              icon: <FileText size={15} />,
+              badge: totalLogEntries > 0 ? totalLogEntries : undefined,
+            },
+          ]}
+          activeTab={activeTab}
+          onChange={(tabId) => {
+            if (tabId === "steps") setStepLogFilter(undefined);
+            setActiveTab(tabId as "steps" | "log");
           }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <GitCommit size={20} color="var(--sys-green-accent)" />
-            <div>
-              <h2 style={{ fontSize: "17px", fontWeight: 700, color: "var(--text-heading)", margin: 0 }}>
-                12-Step Lifecycle Workflow & Sub-Steps
-              </h2>
-              <div style={{ fontSize: "12.5px", color: "var(--text-muted)" }}>
-                Predefined milestone checkpoints with ability to mark and add small steps in between.
-              </div>
-            </div>
-          </div>
-        </div>
+        />
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-          {sortedSteps.map((step, idx) => {
-            const isCompleted = step.status === "COMPLETED";
-            const isInProgress = step.status === "IN_PROGRESS";
-
-            return (
-              <div
-                key={step.id}
-                style={{
-                  padding: step.isPredefined ? "14px 18px" : "12px 16px 12px 32px",
-                  borderRadius: "8px",
-                  backgroundColor: step.isPredefined ? "var(--bg-canvas)" : "var(--bg-card)",
-                  border: step.isPredefined
-                    ? `1px solid ${isCompleted ? "var(--sys-green-border)" : isInProgress ? "var(--sys-blue-border)" : "var(--border-subtle)"}`
-                    : "1px dashed var(--border-subtle)",
-                  display: "flex",
-                  flexWrap: "wrap",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: "14px",
-                  transition: "all 0.15s ease",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: "260px", flex: 1 }}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const next = isCompleted ? "PENDING" : isInProgress ? "COMPLETED" : "IN_PROGRESS";
-                      handleUpdateStepStatus(step.id, next);
-                    }}
-                    title="Click to toggle step completion status"
-                    style={{
-                      background: "transparent",
-                      border: "none",
-                      padding: 0,
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: isCompleted ? "var(--sys-green-accent)" : isInProgress ? "var(--sys-blue-primary)" : "var(--text-muted)",
-                    }}
-                  >
-                    {isCompleted ? (
-                      <CheckCircle2 size={20} />
-                    ) : isInProgress ? (
-                      <Clock size={20} />
-                    ) : (
-                      <Circle size={20} />
-                    )}
-                  </button>
-
-                  <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <span
-                        style={{
-                          fontSize: "11px",
-                          fontWeight: 700,
-                          color: step.isPredefined ? "var(--text-muted)" : "var(--sys-blue-primary)",
-                          fontFamily: "var(--font-mono)",
-                        }}
-                      >
-                        {step.isPredefined ? `Step ${idx + 1}` : "Sub-Step"}
-                      </span>
-                      <h3
-                        style={{
-                          fontSize: step.isPredefined ? "15px" : "14px",
-                          fontWeight: step.isPredefined ? 600 : 500,
-                          color: isCompleted ? "var(--text-heading)" : "var(--text-body)",
-                          margin: 0,
-                          textDecoration: isCompleted ? "none" : "none",
-                        }}
-                      >
-                        {step.title}
-                      </h3>
-                    </div>
-
-                    {step.description && (
-                      <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>
-                        {step.description}
-                      </div>
-                    )}
-
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px", fontSize: "11.5px", color: "var(--text-muted)", marginTop: "3px" }}>
-                      {step.assignedTo && <span>Assigned: {step.assignedTo}</span>}
-                      {step.completedAt && <span>Completed on: {step.completedAt}</span>}
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <select
-                    value={step.status}
-                    onChange={(e) => handleUpdateStepStatus(step.id, e.target.value as "PENDING" | "IN_PROGRESS" | "COMPLETED")}
-                    style={{
-                      fontSize: "12.5px",
-                      fontWeight: 600,
-                      padding: "4px 8px",
-                      borderRadius: "6px",
-                      border: "1px solid var(--border-subtle)",
-                      backgroundColor:
-                        step.status === "COMPLETED"
-                          ? "var(--sys-green-subtle)"
-                          : step.status === "IN_PROGRESS"
-                          ? "var(--sys-blue-subtle)"
-                          : "var(--bg-canvas)",
-                      color:
-                        step.status === "COMPLETED"
-                          ? "var(--sys-green-accent)"
-                          : step.status === "IN_PROGRESS"
-                          ? "var(--sys-blue-primary)"
-                          : "var(--text-muted)",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <option value="PENDING">Pending</option>
-                    <option value="IN_PROGRESS">In Progress</option>
-                    <option value="COMPLETED">Completed</option>
-                  </select>
-
-                  <button
-                    type="button"
-                    onClick={() => handleOpenAddSubStep(step.order)}
-                    title="Add small step after this predefined step"
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "4px",
-                      padding: "5px 10px",
-                      borderRadius: "6px",
-                      backgroundColor: "var(--bg-hover)",
-                      border: "1px solid var(--border-subtle)",
-                      color: "var(--text-body)",
-                      fontSize: "12px",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                    }}
-                  >
-                    <Plus size={13} />
-                    <span>Add Step In Between</span>
-                  </button>
-
-                  {!step.isPredefined && (
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteStep(step.id)}
-                      title="Delete sub-step"
-                      style={{
-                        background: "transparent",
-                        border: "none",
-                        color: "#ef4444",
-                        cursor: "pointer",
-                        padding: "4px",
-                      }}
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {showAddSubStepModal && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-            padding: "16px",
-          }}
-          onClick={() => setShowAddSubStepModal(false)}
-        >
-          <div
-            style={{
-              width: "100%",
-              maxWidth: "460px",
-              backgroundColor: "var(--bg-card)",
-              borderRadius: "12px",
-              border: "1px solid var(--border-subtle)",
-              padding: "24px",
-              boxShadow: "var(--shadow-lg)",
+        {activeTab === "steps" && (
+          <LifecycleStepsTab
+            project={project}
+            stepEntryCounts={stepEntryCounts}
+            onStepFilterSelect={(stepId) => {
+              setStepLogFilter(stepId);
+              setActiveTab("log");
             }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 style={{ fontSize: "17px", fontWeight: 700, color: "var(--text-heading)", margin: "0 0 14px 0" }}>
-              Insert Intermediate Step
-            </h3>
+            onUpdateStep={handleUpdateStepStatus}
+            onAddSubStep={handleAddSubStep}
+            onDeleteStep={handleDeleteStep}
+          />
+        )}
 
-            <form onSubmit={handleSaveSubStep} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-              <div>
-                <label style={{ display: "block", fontSize: "13px", fontWeight: 600, marginBottom: "4px", color: "var(--text-heading)" }}>
-                  Step Title / Requirement
-                </label>
-                <input
-                  type="text"
-                  value={subStepTitle}
-                  onChange={(e) => setSubStepTitle(e.target.value)}
-                  placeholder="e.g. Civil Foundation Curing Signoff"
-                  required
-                  style={{
-                    width: "100%",
-                    boxSizing: "border-box",
-                    padding: "8px 12px",
-                    borderRadius: "6px",
-                    border: "1px solid var(--border-subtle)",
-                    backgroundColor: "var(--bg-canvas)",
-                    color: "var(--text-heading)",
-                    fontSize: "13.5px",
-                  }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: "block", fontSize: "13px", fontWeight: 600, marginBottom: "4px", color: "var(--text-heading)" }}>
-                  Details / Notes
-                </label>
-                <textarea
-                  value={subStepNotes}
-                  onChange={(e) => setSubStepNotes(e.target.value)}
-                  placeholder="Specific requirements or prerequisites..."
-                  rows={3}
-                  style={{
-                    width: "100%",
-                    boxSizing: "border-box",
-                    padding: "8px 12px",
-                    borderRadius: "6px",
-                    border: "1px solid var(--border-subtle)",
-                    backgroundColor: "var(--bg-canvas)",
-                    color: "var(--text-heading)",
-                    fontSize: "13.5px",
-                  }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: "block", fontSize: "13px", fontWeight: 600, marginBottom: "4px", color: "var(--text-heading)" }}>
-                  Assigned Lead
-                </label>
-                <select
-                  value={subStepAssignee}
-                  onChange={(e) => setSubStepAssignee(e.target.value)}
-                  style={{
-                    width: "100%",
-                    boxSizing: "border-box",
-                    padding: "8px 12px",
-                    borderRadius: "6px",
-                    border: "1px solid var(--border-subtle)",
-                    backgroundColor: "var(--bg-canvas)",
-                    color: "var(--text-heading)",
-                    fontSize: "13.5px",
-                  }}
-                >
-                  {INITIAL_COMPANY_EMPLOYEES.map((emp) => (
-                    <option key={emp.id} value={emp.name}>
-                      {emp.name} ({emp.designation})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "8px" }}>
-                <button
-                  type="button"
-                  onClick={() => setShowAddSubStepModal(false)}
-                  style={{
-                    padding: "8px 14px",
-                    borderRadius: "6px",
-                    border: "1px solid var(--border-subtle)",
-                    backgroundColor: "transparent",
-                    color: "var(--text-muted)",
-                    fontSize: "13px",
-                    cursor: "pointer",
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  style={{
-                    padding: "8px 16px",
-                    borderRadius: "6px",
-                    backgroundColor: "var(--sys-blue-primary)",
-                    color: "#ffffff",
-                    border: "none",
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    cursor: "pointer",
-                  }}
-                >
-                  Insert Step
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+        {activeTab === "log" && (
+          <ProjectLogTab
+            projectId={project.id}
+            steps={project.steps.filter((s) => s.isPredefined).map((s) => ({ id: s.id, title: s.title }))}
+            userRole={user?.role || "SUPER_ADMIN"}
+            initialStepFilter={stepLogFilter}
+          />
+        )}
+      </div>
 
       {showDeployStaffModal && (
         <div
@@ -866,7 +562,7 @@ export default function ProjectDetailPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 style={{ fontSize: "17px", fontWeight: 700, color: "var(--text-heading)", margin: "0 0 14px 0" }}>
-              Deploy Engineer On-Site
+              Deploy Engineer / Team Member
             </h3>
 
             <form onSubmit={handleDeployStaff} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
@@ -902,13 +598,13 @@ export default function ProjectDetailPage() {
 
               <div>
                 <label style={{ display: "block", fontSize: "13px", fontWeight: 600, marginBottom: "4px", color: "var(--text-heading)" }}>
-                  On-Site Assignment Role
+                  Assignment Role
                 </label>
                 <input
                   type="text"
                   value={staffOnSiteRole}
                   onChange={(e) => setStaffOnSiteRole(e.target.value)}
-                  placeholder="e.g. Erection & Finishing Lead"
+                  placeholder="e.g. Lead Control Systems Engineer"
                   required
                   style={{
                     width: "100%",
@@ -952,7 +648,7 @@ export default function ProjectDetailPage() {
                     cursor: "pointer",
                   }}
                 >
-                  Deploy to Site
+                  Confirm Assignment
                 </button>
               </div>
             </form>
