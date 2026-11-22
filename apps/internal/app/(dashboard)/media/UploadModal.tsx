@@ -519,7 +519,6 @@ export function UploadModal({ isOpen, onClose, onSuccess, token, apiUrl }: Uploa
                 }}
               >
                 <option value="GALLERY">Gallery (Public Showcase)</option>
-                <option value="PROJECTS">Project Case Studies</option>
                 <option value="PRODUCTS">Machinery & Spares Catalog</option>
                 <option value="FACILITIES">Facilities & Labs</option>
                 <option value="BRANDING">Branding & Identity</option>
