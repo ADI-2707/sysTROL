@@ -1,5 +1,11 @@
 # @systrol/internal
 
+## 2.9.2
+
+### Patch Changes
+
+- 839c000: Remove decorative SVG icons from page headings across all portal views for clean typography, and eliminate the sidebar logout button animation flash by unifying the logout button into a single persistent DOM element with fluid CSS overflow transitions.
+
 ## 2.9.1
 
 ### Patch Changes
