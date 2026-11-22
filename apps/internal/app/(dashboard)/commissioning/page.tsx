@@ -114,8 +114,7 @@ export default function CommissioningDAGPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-            <Network className="h-6 w-6 text-cyan-500" />
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
             Commissioning DAG Engine & Live Telemetry
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400">
