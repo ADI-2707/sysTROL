@@ -11,6 +11,7 @@ import { CountUp } from "@/components/ui/CountUp/CountUp";
 import { CTASection } from "@/components/sections/CTASection/CTASection";
 import { ProjectGallery } from "@/components/sections/ProjectGallery/ProjectGallery";
 import { projectsData } from "@/content/projects";
+import { Project } from "@/types";
 import {
   ArrowLeft,
   ArrowRight,
@@ -29,13 +30,16 @@ async function getProject(slug: string): Promise<Project | null> {
     const res = await fetch(`${apiUrl}/api/v1/public/projects/${slug}`, {
       next: { revalidate: 60, tags: ["projects", `project-${slug}`] },
     });
-    if (res.status === 404) {
-      return null;
-    }
     if (res.ok) {
       const data = await res.json();
       if (data?.project) {
         return data.project;
+      }
+    }
+    if (res.status === 404) {
+      const data = await res.json().catch(() => null);
+      if (data?.isUnpublished) {
+        return null;
       }
     }
   } catch {}
