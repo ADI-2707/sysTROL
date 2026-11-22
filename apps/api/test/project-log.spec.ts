@@ -79,6 +79,49 @@ describe("Project Log Module Tests", () => {
       expect(result.success).toBe(false);
     });
 
+    it("rejects CreateLogEntrySchema when content exceeds 3000 characters", () => {
+      const payload = {
+        category: LogEntryCategory.PROGRESS,
+        content: "a".repeat(3001),
+      };
+      const result = CreateLogEntrySchema.safeParse(payload);
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects CreateLogEntrySchema when blockers exceed 800 characters", () => {
+      const payload = {
+        content: "Valid log entry description with enough characters",
+        blockers: "b".repeat(801),
+      };
+      const result = CreateLogEntrySchema.safeParse(payload);
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects CreateLogEntrySchema when nextAction exceeds 500 characters", () => {
+      const payload = {
+        content: "Valid log entry description with enough characters",
+        nextAction: "c".repeat(501),
+      };
+      const result = CreateLogEntrySchema.safeParse(payload);
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects CreateLogEntrySchema when attachments exceed 5 items", () => {
+      const payload = {
+        content: "Valid log entry description with enough characters",
+        attachments: [
+          "https://example.com/1.pdf",
+          "https://example.com/2.pdf",
+          "https://example.com/3.pdf",
+          "https://example.com/4.pdf",
+          "https://example.com/5.pdf",
+          "https://example.com/6.pdf",
+        ],
+      };
+      const result = CreateLogEntrySchema.safeParse(payload);
+      expect(result.success).toBe(false);
+    });
+
     it("rejects CreateLogEntrySchema when stepId is not a valid UUID", () => {
       const payload = {
         content: "Valid log entry description with enough characters",
@@ -222,10 +265,47 @@ describe("Project Log Module Tests", () => {
       ).rejects.toThrow("This week is locked");
     });
 
-    it("allows SUPER_ADMIN to post to a LOCKED week with backdated entryDate", async () => {
+    it("throws 422 when entryDate is from a past week (strict anti-backfill)", async () => {
+      const pastDate = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+
+      await expect(
+        ProjectLogService.createEntry(
+          "proj-1",
+          {
+            content: "Attempting to backfill update from two weeks ago",
+            category: LogEntryCategory.PROGRESS,
+            entryDate: pastDate,
+            attachments: [],
+          },
+          { sub: "usr-super", role: UserRole.SUPER_ADMIN, iat: 0, exp: 0 }
+        )
+      ).rejects.toThrow("Strict anti-backfill: Cannot log updates for past weeks");
+    });
+
+    it("throws 422 when entryDate is in the future", async () => {
+      const futureDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+      await expect(
+        ProjectLogService.createEntry(
+          "proj-1",
+          {
+            content: "Attempting to post for next week in advance",
+            category: LogEntryCategory.PROGRESS,
+            entryDate: futureDate,
+            attachments: [],
+          },
+          { sub: "usr-super", role: UserRole.SUPER_ADMIN, iat: 0, exp: 0 }
+        )
+      ).rejects.toThrow("Cannot log updates for future dates");
+    });
+
+    it("allows logging an earlier day within the current active week (day-wise logging)", async () => {
+      const bounds = getWeekBounds(new Date());
+      const mondayStr = bounds.startDate.toISOString();
+
       vi.mocked(prisma.projectLogWeek.upsert).mockResolvedValue({
-        id: "week-locked",
-        status: LogWeekStatus.LOCKED,
+        id: "week-current",
+        status: LogWeekStatus.OPEN,
       } as any);
 
       vi.mocked(prisma.project.findUniqueOrThrow).mockResolvedValue({
@@ -233,35 +313,35 @@ describe("Project Log Module Tests", () => {
       } as any);
 
       vi.mocked(prisma.projectLogEntry.create).mockResolvedValue({
-        id: "entry-backdated",
-        weekId: "week-locked",
+        id: "entry-monday",
+        weekId: "week-current",
         projectId: "proj-1",
-        authorId: "usr-super",
-        author: { id: "usr-super", name: "Super Admin" },
-        category: LogEntryCategory.NOTE,
+        authorId: "usr-lead",
+        author: { id: "usr-lead", name: "Lead Engineer" },
+        category: LogEntryCategory.PROGRESS,
         stage: LifecycleStage.COMMISSIONING,
         stepId: null,
         step: null,
-        content: "Backdated audit note for closed week",
+        content: "Logged Monday site work at end of week",
         blockers: null,
         nextAction: null,
         attachments: [],
-        entryDate: new Date("2026-10-15T00:00:00.000Z"),
+        entryDate: bounds.startDate,
         createdAt: new Date(),
       } as any);
 
       const result = await ProjectLogService.createEntry(
         "proj-1",
         {
-          content: "Backdated audit note for closed week",
-          category: LogEntryCategory.NOTE,
-          entryDate: "2026-10-15T00:00:00.000Z",
+          content: "Logged Monday site work at end of week",
+          category: LogEntryCategory.PROGRESS,
+          entryDate: mondayStr,
           attachments: [],
         },
-        { sub: "usr-super", role: UserRole.SUPER_ADMIN, iat: 0, exp: 0 }
+        { sub: "usr-lead", role: UserRole.COMMISSIONING_LEAD, iat: 0, exp: 0 }
       );
 
-      expect(result.id).toBe("entry-backdated");
+      expect(result.id).toBe("entry-monday");
       expect(prisma.projectLogEntry.create).toHaveBeenCalled();
     });
 

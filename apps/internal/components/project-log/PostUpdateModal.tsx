@@ -8,6 +8,7 @@ import {
   FileText,
   X,
   Plus,
+  Calendar,
 } from "lucide-react";
 import { LogEntryCategory, ProjectLogEntryDto } from "@systrol/types";
 import { postLogEntry } from "@/lib/project-log-api";
@@ -25,7 +26,32 @@ export function PostUpdateModal({
   onClose,
   onSuccess,
 }: PostUpdateModalProps) {
+  const getCurrentWeekDays = () => {
+    const now = new Date();
+    const dayNr = (now.getUTCDay() + 6) % 7;
+    const monday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - dayNr));
+
+    const days: Array<{ label: string; dateStr: string; isToday: boolean }> = [];
+    for (let i = 0; i <= dayNr; i++) {
+      const d = new Date(Date.UTC(monday.getUTCFullYear(), monday.getUTCMonth(), monday.getUTCDate() + i));
+      const dateStr = d.toISOString();
+      const weekday = d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" });
+      const dayDate = d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+      const isToday = i === dayNr;
+      days.push({
+        label: isToday ? `Today (${weekday}, ${dayDate})` : `${weekday}, ${dayDate}`,
+        dateStr,
+        isToday,
+      });
+    }
+    return days;
+  };
+
+  const weekDays = getCurrentWeekDays();
+  const defaultDay = weekDays[weekDays.length - 1]?.dateStr || new Date().toISOString();
+
   const [category, setCategory] = useState<LogEntryCategory>(LogEntryCategory.PROGRESS);
+  const [selectedDate, setSelectedDate] = useState<string>(defaultDay);
   const [stepId, setStepId] = useState<string>("");
   const [content, setContent] = useState<string>("");
   const [blockers, setBlockers] = useState<string>("");
@@ -37,6 +63,10 @@ export function PostUpdateModal({
 
   const handleAddAttachment = () => {
     if (!attachmentUrl.trim()) return;
+    if (attachments.length >= 5) {
+      setError("Maximum 5 attachments allowed per entry");
+      return;
+    }
     try {
       new URL(attachmentUrl.trim());
       setAttachments([...attachments, attachmentUrl.trim()]);
@@ -57,6 +87,11 @@ export function PostUpdateModal({
       return;
     }
 
+    if (content.trim().length > 3000) {
+      setError("Update content cannot exceed 3,000 characters");
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
 
@@ -64,6 +99,7 @@ export function PostUpdateModal({
       const created = await postLogEntry(projectId, {
         category,
         content: content.trim(),
+        entryDate: selectedDate,
         stepId: stepId ? stepId : undefined,
         blockers: blockers.trim() || undefined,
         nextAction: nextAction.trim() || undefined,
@@ -103,7 +139,7 @@ export function PostUpdateModal({
       <div
         style={{
           width: "100%",
-          maxWidth: "520px",
+          maxWidth: "540px",
           backgroundColor: "var(--bg-card)",
           borderRadius: "12px",
           border: "1px solid var(--border-subtle)",
@@ -130,7 +166,7 @@ export function PostUpdateModal({
               Post Project Update
             </h2>
             <p style={{ fontSize: "12.5px", color: "var(--text-muted)", margin: "4px 0 0 0" }}>
-              Log day-wise progress, milestones, or blockers.
+              Log today or record day-wise entries for the active week. Strictly no backfilling.
             </p>
           </div>
 
@@ -209,58 +245,107 @@ export function PostUpdateModal({
             </div>
           </div>
 
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "12.5px",
-                fontWeight: 600,
-                color: "var(--text-heading)",
-                marginBottom: "4px",
-              }}
-            >
-              Related Step (Optional)
-            </label>
-            <select
-              value={stepId}
-              onChange={(e) => setStepId(e.target.value)}
-              style={{
-                width: "100%",
-                boxSizing: "border-box",
-                padding: "8px 12px",
-                borderRadius: "6px",
-                border: "1px solid var(--border-subtle)",
-                backgroundColor: "var(--bg-canvas)",
-                color: "var(--text-heading)",
-                fontSize: "13px",
-              }}
-            >
-              <option value="">General Project Update (No Specific Step)</option>
-              {steps.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.title}
-                </option>
-              ))}
-            </select>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+            <div>
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  fontSize: "12.5px",
+                  fontWeight: 600,
+                  color: "var(--text-heading)",
+                  marginBottom: "4px",
+                }}
+              >
+                <Calendar size={13} />
+                <span>Day of Active Week</span>
+              </label>
+              <select
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                style={{
+                  width: "100%",
+                  boxSizing: "border-box",
+                  padding: "8px 10px",
+                  borderRadius: "6px",
+                  border: "1px solid var(--border-subtle)",
+                  backgroundColor: "var(--bg-canvas)",
+                  color: "var(--text-heading)",
+                  fontSize: "12.5px",
+                }}
+              >
+                {weekDays.map((d) => (
+                  <option key={d.dateStr} value={d.dateStr}>
+                    {d.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "12.5px",
+                  fontWeight: 600,
+                  color: "var(--text-heading)",
+                  marginBottom: "4px",
+                }}
+              >
+                Related Step (Optional)
+              </label>
+              <select
+                value={stepId}
+                onChange={(e) => setStepId(e.target.value)}
+                style={{
+                  width: "100%",
+                  boxSizing: "border-box",
+                  padding: "8px 10px",
+                  borderRadius: "6px",
+                  border: "1px solid var(--border-subtle)",
+                  backgroundColor: "var(--bg-canvas)",
+                  color: "var(--text-heading)",
+                  fontSize: "12.5px",
+                }}
+              >
+                <option value="">General Project Update</option>
+                {steps.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.title}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "12.5px",
-                fontWeight: 600,
-                color: "var(--text-heading)",
-                marginBottom: "4px",
-              }}
-            >
-              What happened today? *
-            </label>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+              <label
+                style={{
+                  fontSize: "12.5px",
+                  fontWeight: 600,
+                  color: "var(--text-heading)",
+                }}
+              >
+                What happened? *
+              </label>
+              <span
+                style={{
+                  fontSize: "11px",
+                  color: content.length > 2800 ? "#ef4444" : "var(--text-muted)",
+                  fontFamily: "var(--font-mono)",
+                }}
+              >
+                {content.length} / 3,000
+              </span>
+            </div>
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Describe work completed, milestones reached, or key technical updates..."
               rows={4}
+              maxLength={3000}
               required
               style={{
                 width: "100%",
@@ -277,22 +362,32 @@ export function PostUpdateModal({
           </div>
 
           <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "12.5px",
-                fontWeight: 600,
-                color: "var(--text-heading)",
-                marginBottom: "4px",
-              }}
-            >
-              Blockers / Impediments (Optional)
-            </label>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+              <label
+                style={{
+                  fontSize: "12.5px",
+                  fontWeight: 600,
+                  color: "var(--text-heading)",
+                }}
+              >
+                Blockers / Impediments (Optional)
+              </label>
+              <span
+                style={{
+                  fontSize: "11px",
+                  color: blockers.length > 700 ? "#ef4444" : "var(--text-muted)",
+                  fontFamily: "var(--font-mono)",
+                }}
+              >
+                {blockers.length} / 800
+              </span>
+            </div>
             <textarea
               value={blockers}
               onChange={(e) => setBlockers(e.target.value)}
               placeholder="Any issues blocking progress, client dependencies, supplier delays..."
               rows={2}
+              maxLength={800}
               style={{
                 width: "100%",
                 boxSizing: "border-box",
@@ -307,22 +402,32 @@ export function PostUpdateModal({
           </div>
 
           <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "12.5px",
-                fontWeight: 600,
-                color: "var(--text-heading)",
-                marginBottom: "4px",
-              }}
-            >
-              Planned Next Steps (Optional)
-            </label>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+              <label
+                style={{
+                  fontSize: "12.5px",
+                  fontWeight: 600,
+                  color: "var(--text-heading)",
+                }}
+              >
+                Planned Next Steps (Optional)
+              </label>
+              <span
+                style={{
+                  fontSize: "11px",
+                  color: nextAction.length > 400 ? "#ef4444" : "var(--text-muted)",
+                  fontFamily: "var(--font-mono)",
+                }}
+              >
+                {nextAction.length} / 500
+              </span>
+            </div>
             <input
               type="text"
               value={nextAction}
               onChange={(e) => setNextAction(e.target.value)}
               placeholder="e.g. Complete drive tuning stand 4, attend alignment review..."
+              maxLength={500}
               style={{
                 width: "100%",
                 boxSizing: "border-box",
@@ -337,23 +442,27 @@ export function PostUpdateModal({
           </div>
 
           <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "12.5px",
-                fontWeight: 600,
-                color: "var(--text-heading)",
-                marginBottom: "4px",
-              }}
-            >
-              Evidence / Attachments (Optional)
-            </label>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+              <label
+                style={{
+                  fontSize: "12.5px",
+                  fontWeight: 600,
+                  color: "var(--text-heading)",
+                }}
+              >
+                Evidence / Attachments (Optional)
+              </label>
+              <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+                {attachments.length} / 5 max
+              </span>
+            </div>
             <div style={{ display: "flex", gap: "8px" }}>
               <input
                 type="url"
                 value={attachmentUrl}
                 onChange={(e) => setAttachmentUrl(e.target.value)}
                 placeholder="https://... attachment or document URL"
+                disabled={attachments.length >= 5}
                 style={{
                   flex: 1,
                   boxSizing: "border-box",
@@ -368,6 +477,7 @@ export function PostUpdateModal({
               <button
                 type="button"
                 onClick={handleAddAttachment}
+                disabled={attachments.length >= 5}
                 style={{
                   padding: "8px 12px",
                   borderRadius: "6px",
@@ -376,10 +486,11 @@ export function PostUpdateModal({
                   color: "var(--text-heading)",
                   fontSize: "12.5px",
                   fontWeight: 600,
-                  cursor: "pointer",
+                  cursor: attachments.length >= 5 ? "not-allowed" : "pointer",
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "4px",
+                  opacity: attachments.length >= 5 ? 0.6 : 1,
                 }}
               >
                 <Plus size={14} />
@@ -403,7 +514,7 @@ export function PostUpdateModal({
                       fontSize: "12px",
                     }}
                   >
-                    <span style={{ truncate: true, maxWidth: "380px" } as any}>{url}</span>
+                    <span style={{ truncate: true, maxWidth: "400px" } as any}>{url}</span>
                     <button
                       type="button"
                       onClick={() => handleRemoveAttachment(i)}

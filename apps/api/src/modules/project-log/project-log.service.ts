@@ -236,10 +236,27 @@ export class ProjectLogService {
       throw error;
     }
 
-    const entryDate =
-      dto.entryDate && user.role === UserRole.SUPER_ADMIN
-        ? new Date(dto.entryDate)
-        : startOfDayUTC(new Date());
+    const entryDate = dto.entryDate
+      ? startOfDayUTC(new Date(dto.entryDate))
+      : startOfDayUTC(new Date());
+
+    const now = new Date();
+    const currentActiveWeek = getWeekBounds(now);
+
+    if (entryDate < currentActiveWeek.startDate) {
+      const error: any = new Error("Strict anti-backfill: Cannot log updates for past weeks");
+      error.statusCode = 422;
+      throw error;
+    }
+
+    const endOfToday = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999)
+    );
+    if (entryDate > endOfToday) {
+      const error: any = new Error("Cannot log updates for future dates");
+      error.statusCode = 422;
+      throw error;
+    }
 
     const { weekNumber, year, startDate, endDate } = getWeekBounds(entryDate);
 
@@ -262,7 +279,7 @@ export class ProjectLogService {
       update: {},
     });
 
-    if (week.status === LogWeekStatus.LOCKED && user.role !== UserRole.SUPER_ADMIN) {
+    if (week.status === LogWeekStatus.LOCKED) {
       const error: any = new Error("This week is locked");
       error.statusCode = 422;
       throw error;

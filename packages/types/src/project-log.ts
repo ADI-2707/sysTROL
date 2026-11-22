@@ -45,12 +45,24 @@ export interface ProjectLogWeekDto {
 
 export const CreateLogEntrySchema = z.object({
   category: z.nativeEnum(LogEntryCategory).default(LogEntryCategory.PROGRESS),
-  content: z.string().min(10, "Update must be at least 10 characters"),
-  blockers: z.string().optional(),
-  nextAction: z.string().optional(),
+  content: z
+    .string()
+    .min(10, "Update must be at least 10 characters")
+    .max(3000, "Content cannot exceed 3,000 characters"),
+  blockers: z
+    .string()
+    .max(800, "Blockers cannot exceed 800 characters")
+    .optional(),
+  nextAction: z
+    .string()
+    .max(500, "Next action cannot exceed 500 characters")
+    .optional(),
   stepId: z.string().uuid().optional(),
   entryDate: z.string().datetime().optional(),
-  attachments: z.array(z.string().url()).default([]),
+  attachments: z
+    .array(z.string().url().max(1000, "Attachment URL cannot exceed 1,000 characters"))
+    .max(5, "Maximum 5 attachments allowed")
+    .default([]),
 });
 
 export const LockWeekSchema = z.object({
