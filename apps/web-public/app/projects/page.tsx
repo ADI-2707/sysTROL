@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Navbar } from "@/components/layout/Navbar/Navbar";
@@ -14,6 +14,8 @@ import { CountUp } from "@/components/ui/CountUp/CountUp";
 import { PageHero } from "@/components/sections/PageHero/PageHero";
 import { CTASection } from "@/components/sections/CTASection/CTASection";
 import { projectsData } from "@/content/projects";
+import { Project } from "@/types";
+import { resolveProjects } from "@/lib/projects-resolver";
 import { ArrowRight, Info, Filter } from "lucide-react";
 import styles from "./Projects.module.css";
 
@@ -37,18 +39,35 @@ const sectors = [
 const serviceTypes = ["All", "Automation & Consultancy", "Trading & Spares"];
 
 export default function ProjectsPage() {
+  const [allProjects, setAllProjects] = useState<Project[]>(projectsData);
   const [selectedSector, setSelectedSector] = useState("All");
   const [selectedService, setSelectedService] = useState("All");
 
+  useEffect(() => {
+    async function loadPublished() {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://systrol-api.onrender.com";
+        const res = await fetch(`${apiUrl}/api/v1/public/projects`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.projects && Array.isArray(data.projects) && data.projects.length > 0) {
+            setAllProjects(resolveProjects(data.projects, projectsData));
+          }
+        }
+      } catch {}
+    }
+    loadPublished();
+  }, []);
+
   const filteredProjects = useMemo(() => {
-    return projectsData.filter((project) => {
+    return allProjects.filter((project) => {
       const matchSector =
         selectedSector === "All" || project.industry === selectedSector;
       const matchService =
         selectedService === "All" || project.serviceType === selectedService;
       return matchSector && matchService;
     });
-  }, [selectedSector, selectedService]);
+  }, [allProjects, selectedSector, selectedService]);
 
   return (
     <>
@@ -158,7 +177,7 @@ export default function ProjectsPage() {
                     >
                       <div className={styles.cardThumbnail}>
                         <Image
-                          src={projectThumbnails[project.id] || "/images/hero-rolling-mill.jpg"}
+                          src={project.thumbnailUrl || projectThumbnails[project.id] || "/images/hero-rolling-mill.jpg"}
                           alt={project.title}
                           fill
                           sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"

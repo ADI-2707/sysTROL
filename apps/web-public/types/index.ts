@@ -62,6 +62,7 @@ export interface Project {
     value: string;
   }[];
   gallery?: ProjectGalleryItem[];
+  thumbnailUrl?: string;
 }
 
 export interface ClientItem {

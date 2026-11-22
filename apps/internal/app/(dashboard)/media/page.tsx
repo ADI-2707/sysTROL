@@ -39,7 +39,6 @@ interface MediaAsset {
 const CATEGORIES = [
   { id: "ALL", label: "All Assets" },
   { id: "GALLERY", label: "Gallery" },
-  { id: "PROJECTS", label: "Project Case Studies" },
   { id: "PRODUCTS", label: "Products & Spares" },
   { id: "FACILITIES", label: "Facilities & Labs" },
   { id: "BRANDING", label: "Branding" },

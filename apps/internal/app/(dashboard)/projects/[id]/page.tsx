@@ -190,10 +190,15 @@ export default function ProjectDetailPage() {
   };
 
   const toggleProjectStatus = () => {
-    const nextStatus = project.status === "ONGOING" ? "COMMISSIONED" : "ONGOING";
+    let nextStatus: "ONGOING" | "COMMISSIONED" | "PUBLISHED" = "ONGOING";
+    if (project.status === "ONGOING") nextStatus = "COMMISSIONED";
+    else if (project.status === "COMMISSIONED") nextStatus = "PUBLISHED";
+    else nextStatus = "ONGOING";
+
     const updatedProject: ProjectItem = {
       ...project,
       status: nextStatus,
+      isPublished: nextStatus === "PUBLISHED",
     };
     setProject(updatedProject);
     updateProject(updatedProject);
@@ -254,14 +259,48 @@ export default function ProjectDetailPage() {
                   fontWeight: 600,
                   padding: "3px 10px",
                   borderRadius: "999px",
-                  backgroundColor: project.status === "ONGOING" ? "var(--sys-blue-subtle)" : "var(--sys-green-subtle)",
-                  color: project.status === "ONGOING" ? "var(--sys-blue-primary)" : "var(--sys-green-accent)",
-                  border: `1px solid ${project.status === "ONGOING" ? "var(--sys-blue-border)" : "var(--sys-green-border)"}`,
+                  backgroundColor:
+                    project.status === "PUBLISHED"
+                      ? "rgba(16, 185, 129, 0.12)"
+                      : project.status === "ONGOING"
+                      ? "var(--sys-blue-subtle)"
+                      : "var(--sys-green-subtle)",
+                  color:
+                    project.status === "PUBLISHED"
+                      ? "#10b981"
+                      : project.status === "ONGOING"
+                      ? "var(--sys-blue-primary)"
+                      : "var(--sys-green-accent)",
+                  border: `1px solid ${
+                    project.status === "PUBLISHED"
+                      ? "rgba(16, 185, 129, 0.3)"
+                      : project.status === "ONGOING"
+                      ? "var(--sys-blue-border)"
+                      : "var(--sys-green-border)"
+                  }`,
                   cursor: "pointer",
                 }}
               >
-                {project.status === "ONGOING" ? "Status: Ongoing" : "Status: Commissioned"} (Toggle)
+                Status: {project.status.charAt(0) + project.status.slice(1).toLowerCase()} (Toggle)
               </button>
+              {project.status === "PUBLISHED" && project.caseStudy?.slug && (
+                <a
+                  href={`https://systrol.vercel.app/projects/${project.caseStudy.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    fontSize: "12px",
+                    color: "var(--sys-blue-primary)",
+                    textDecoration: "none",
+                    fontWeight: 600,
+                  }}
+                >
+                  <span>View on Public Site</span>
+                </a>
+              )}
             </div>
 
             <h1

@@ -6,6 +6,8 @@ import {
   DeviateStageDto,
   CreateProjectDto,
   UpdateStepStatusDto,
+  PublishProjectDto,
+  UnpublishProjectDto,
 } from "@systrol/types";
 import { StageGateEngine } from "./stage-gate.engine.js";
 
@@ -401,6 +403,199 @@ export class ProjectsService {
     return {
       previous: step,
       current: updated,
+    };
+  }
+
+  static async publishProject(
+    id: string,
+    dto: PublishProjectDto,
+    userId: string
+  ) {
+    const project = await prisma.project.findUnique({
+      where: { id },
+    });
+
+    if (!project) {
+      const error: any = new Error(`Project '${id}' not found`);
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const uncompletedStages = [
+      LifecycleStage.ENQUIRY,
+      LifecycleStage.SALES_VISIT,
+      LifecycleStage.PROCUREMENT,
+      LifecycleStage.ENGINEERING,
+      LifecycleStage.MANUFACTURING,
+      LifecycleStage.DISPATCH,
+      LifecycleStage.ERECTION,
+    ];
+
+    if (uncompletedStages.includes(project.currentStage as any)) {
+      const error: any = new Error("Only completed or commissioned projects can be published to the public website");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const [updated] = await prisma.$transaction([
+      prisma.project.update({
+        where: { id },
+        data: {
+          isPublished: true,
+          publishedAt: new Date(),
+          publishedById: userId,
+          publicSlug: dto.caseStudy.slug,
+          caseStudy: dto.caseStudy as any,
+        },
+      }),
+      prisma.auditLog.create({
+        data: {
+          projectId: id,
+          actorId: userId,
+          action: "PROJECT_PUBLISHED",
+          entityType: "PROJECT",
+          entityId: id,
+          diff: {
+            slug: dto.caseStudy.slug,
+            projectName: dto.caseStudy.projectName,
+          },
+        },
+      }),
+    ]);
+
+    this.triggerPublicRevalidation(dto.caseStudy.slug);
+
+    return updated;
+  }
+
+  static async triggerPublicRevalidation(slug?: string) {
+    try {
+      const publicUrl = process.env.PUBLIC_SITE_URL || "http://localhost:3000";
+      const secret = process.env.REVALIDATION_SECRET || "systrol-revalidate-secret-2026";
+      const params = new URLSearchParams({
+        secret,
+        path: slug ? `/projects/${slug}` : "/projects",
+        tag: "projects",
+      });
+      await fetch(`${publicUrl}/api/revalidate?${params.toString()}`, {
+        method: "POST",
+      });
+    } catch {}
+  }
+
+  static async unpublishProject(
+    id: string,
+    userId: string,
+    dto?: UnpublishProjectDto
+  ) {
+    const project = await prisma.project.findUnique({
+      where: { id },
+    });
+
+    if (!project) {
+      const error: any = new Error(`Project '${id}' not found`);
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const [updated] = await prisma.$transaction([
+      prisma.project.update({
+        where: { id },
+        data: {
+          isPublished: false,
+        },
+      }),
+      prisma.auditLog.create({
+        data: {
+          projectId: id,
+          actorId: userId,
+          action: "PROJECT_UNPUBLISHED",
+          entityType: "PROJECT",
+          entityId: id,
+          diff: {
+            reason: dto?.reason || null,
+          },
+        },
+      }),
+    ]);
+
+    this.triggerPublicRevalidation(project.publicSlug || undefined);
+
+    return updated;
+  }
+
+  static async listPublicProjects() {
+    const projects = await prisma.project.findMany({
+      where: { isPublished: true },
+      include: { client: true },
+      orderBy: { publishedAt: "desc" },
+    });
+
+    return projects.map((p) => {
+      const cs = (p.caseStudy as any) || {};
+      const cardImg = cs.images?.find((img: any) => img.isShowingCard) || cs.images?.[0];
+      return {
+        id: p.id,
+        slug: p.publicSlug || cs.slug || p.id,
+        title: cs.projectName || p.name,
+        clientRepresentative: p.client?.name || "Client Representative",
+        industry: p.millType || "Steel Rolling Mills",
+        serviceType: "Automation & Consultancy",
+        shortBlurb: cs.challengeDescription?.slice(0, 160) || "",
+        featured: true,
+        year: p.publishedAt ? new Date(p.publishedAt).getFullYear().toString() : "2026",
+        location: p.plantLocation,
+        challenge: cs.challengeDescription || "",
+        solution: cs.solutionDescription || "",
+        outcomes: cs.kpiCards?.map((k: any) => `${k.label}: ${k.value}`) || [],
+        technologies: cs.technologies || [],
+        metrics: cs.kpiCards?.map((k: any) => ({ label: k.label, value: k.value })) || [],
+        gallery: cs.images?.map((img: any) => ({
+          url: img.url,
+          caption: img.caption || "",
+          tag: img.isShowingCard ? "Card Thumbnail" : "Technical Gallery",
+        })) || [],
+        thumbnailUrl: cardImg?.url || "",
+      };
+    });
+  }
+
+  static async getPublicProjectBySlug(slug: string) {
+    const project = await prisma.project.findFirst({
+      where: {
+        publicSlug: slug,
+        isPublished: true,
+      },
+      include: { client: true },
+    });
+
+    if (!project) return null;
+
+    const cs = (project.caseStudy as any) || {};
+    const cardImg = cs.images?.find((img: any) => img.isShowingCard) || cs.images?.[0];
+
+    return {
+      id: project.id,
+      slug: project.publicSlug || cs.slug || project.id,
+      title: cs.projectName || project.name,
+      clientRepresentative: project.client?.name || "Client Representative",
+      industry: project.millType || "Steel Rolling Mills",
+      serviceType: "Automation & Consultancy",
+      shortBlurb: cs.challengeDescription?.slice(0, 160) || "",
+      featured: true,
+      year: project.publishedAt ? new Date(project.publishedAt).getFullYear().toString() : "2026",
+      location: project.plantLocation,
+      challenge: cs.challengeDescription || "",
+      solution: cs.solutionDescription || "",
+      outcomes: cs.kpiCards?.map((k: any) => `${k.label}: ${k.value}`) || [],
+      technologies: cs.technologies || [],
+      metrics: cs.kpiCards?.map((k: any) => ({ label: k.label, value: k.value })) || [],
+      gallery: cs.images?.map((img: any) => ({
+        url: img.url,
+        caption: img.caption || "",
+        tag: img.isShowingCard ? "Card Thumbnail" : "Technical Gallery",
+      })) || [],
+      thumbnailUrl: cardImg?.url || "",
     };
   }
 }

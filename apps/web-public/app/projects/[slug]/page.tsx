@@ -11,6 +11,7 @@ import { CountUp } from "@/components/ui/CountUp/CountUp";
 import { CTASection } from "@/components/sections/CTASection/CTASection";
 import { ProjectGallery } from "@/components/sections/ProjectGallery/ProjectGallery";
 import { projectsData } from "@/content/projects";
+import { Project } from "@/types";
 import {
   ArrowLeft,
   ArrowRight,
@@ -22,6 +23,30 @@ import {
   Calendar,
   Layers,
 } from "lucide-react";
+
+async function getProject(slug: string): Promise<Project | null> {
+  const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "https://systrol-api.onrender.com";
+  try {
+    const res = await fetch(`${apiUrl}/api/v1/public/projects/${slug}`, {
+      next: { revalidate: 60, tags: ["projects", `project-${slug}`] },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.project) {
+        return data.project;
+      }
+    }
+    if (res.status === 404) {
+      const data = await res.json().catch(() => null);
+      if (data?.isUnpublished) {
+        return null;
+      }
+    }
+  } catch {}
+
+  const fallback = projectsData.find((p) => p.slug === slug);
+  return fallback || null;
+}
 
 export async function generateStaticParams() {
   return projectsData.map((project) => ({
@@ -35,7 +60,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const project = projectsData.find((p) => p.slug === slug);
+  const project = await getProject(slug);
   if (!project) return { title: "Project Not Found" };
 
   return {
@@ -53,7 +78,7 @@ export default async function ProjectDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const project = projectsData.find((p) => p.slug === slug);
+  const project = await getProject(slug);
 
   if (!project) {
     notFound();

@@ -15,6 +15,12 @@ import {
   Activity,
   Layers,
   Sparkles,
+  Globe,
+  ExternalLink,
+  Edit3,
+  RotateCcw,
+  Star,
+  Check,
 } from "lucide-react";
 import {
   getProjects,
@@ -22,15 +28,21 @@ import {
   ProjectItem,
   PREDEFINED_STEP_NAMES,
   syncProjectToApi,
+  unpublishProject,
 } from "@/lib/projects-data";
+import { TabGroup } from "@/components/ui/tab-group";
 import { useDebounce } from "@/lib/use-debounce";
+import { PublishCaseStudyModal } from "./PublishCaseStudyModal";
 
 export default function ProjectManagementPage() {
   const [projects, setProjects] = useState<ProjectItem[]>([]);
-  const [activeTab, setActiveTab] = useState<"ONGOING" | "COMMISSIONED">("ONGOING");
+  const [activeTab, setActiveTab] = useState<"ONGOING" | "COMMISSIONED" | "PUBLISHED">("ONGOING");
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 350);
   const [showModal, setShowModal] = useState(false);
+
+  const [publishModalProject, setPublishModalProject] = useState<ProjectItem | null>(null);
+  const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
 
   const [newClient, setNewClient] = useState("");
   const [newLine, setNewLine] = useState("");
@@ -43,17 +55,21 @@ export default function ProjectManagementPage() {
 
   const ongoingCount = projects.filter((p) => p.status === "ONGOING").length;
   const commissionedCount = projects.filter((p) => p.status === "COMMISSIONED").length;
+  const publishedCount = projects.filter((p) => p.status === "PUBLISHED").length;
+
+  const effectiveSearch = (debouncedSearch || searchQuery).trim().toLowerCase();
 
   const filteredProjects = projects
     .filter((p) => p.status === activeTab)
     .filter((p) => {
-      if (!debouncedSearch.trim()) return true;
-      const q = debouncedSearch.toLowerCase();
+      if (!effectiveSearch) return true;
       return (
-        p.clientName.toLowerCase().includes(q) ||
-        p.lineName.toLowerCase().includes(q) ||
-        p.location.toLowerCase().includes(q) ||
-        p.projectCode.toLowerCase().includes(q)
+        p.name.toLowerCase().includes(effectiveSearch) ||
+        p.clientName.toLowerCase().includes(effectiveSearch) ||
+        p.lineName.toLowerCase().includes(effectiveSearch) ||
+        p.location.toLowerCase().includes(effectiveSearch) ||
+        p.projectCode.toLowerCase().includes(effectiveSearch) ||
+        (p.caseStudy?.projectName && p.caseStudy.projectName.toLowerCase().includes(effectiveSearch))
       );
     });
 
@@ -97,6 +113,32 @@ export default function ProjectManagementPage() {
     setNewLocation("");
   };
 
+  const handleOpenPublishModal = (proj: ProjectItem, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setPublishModalProject(proj);
+    setIsPublishModalOpen(true);
+  };
+
+  const handleUnpublish = (projId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!window.confirm("Are you sure you want to unpublish this case study? It will be removed from the public website and reverted to Commissioned status.")) {
+      return;
+    }
+    const updated = unpublishProject(projId);
+    if (updated) {
+      const refreshed = getProjects();
+      setProjects(refreshed);
+    }
+  };
+
+  const handlePublishSuccess = (updatedProj: ProjectItem) => {
+    const refreshed = getProjects();
+    setProjects(refreshed);
+    setActiveTab("PUBLISHED");
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "16px" }}>
@@ -116,7 +158,7 @@ export default function ProjectManagementPage() {
             Project Management
           </h1>
           <p style={{ fontSize: "14px", color: "var(--text-muted)", marginTop: "4px", marginBottom: 0 }}>
-            Track client rolling mill lines, stage progression, and on-site engineering personnel.
+            Track client rolling mill lines, stage progression, on-site personnel, and public website case studies.
           </p>
         </div>
 
@@ -154,75 +196,30 @@ export default function ProjectManagementPage() {
           paddingBottom: "12px",
         }}
       >
-        <div style={{ display: "flex", gap: "8px" }}>
-          <button
-            type="button"
-            onClick={() => setActiveTab("ONGOING")}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "8px 18px",
-              borderRadius: "8px",
-              border: "1px solid",
-              borderColor: activeTab === "ONGOING" ? "var(--sys-blue-primary)" : "var(--border-subtle)",
-              backgroundColor: activeTab === "ONGOING" ? "var(--sys-blue-subtle)" : "transparent",
-              color: activeTab === "ONGOING" ? "var(--sys-blue-primary)" : "var(--text-muted)",
-              fontWeight: 600,
-              fontSize: "14px",
-              cursor: "pointer",
-              transition: "all 0.15s ease",
-            }}
-          >
-            <Activity size={16} />
-            <span>Ongoing Projects</span>
-            <span
-              style={{
-                fontSize: "12px",
-                padding: "2px 7px",
-                borderRadius: "999px",
-                backgroundColor: activeTab === "ONGOING" ? "var(--sys-blue-primary)" : "var(--bg-hover)",
-                color: activeTab === "ONGOING" ? "#ffffff" : "var(--text-muted)",
-              }}
-            >
-              {ongoingCount}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("COMMISSIONED")}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "8px 18px",
-              borderRadius: "8px",
-              border: "1px solid",
-              borderColor: activeTab === "COMMISSIONED" ? "var(--sys-green-accent)" : "var(--border-subtle)",
-              backgroundColor: activeTab === "COMMISSIONED" ? "var(--sys-green-subtle)" : "transparent",
-              color: activeTab === "COMMISSIONED" ? "var(--sys-green-accent)" : "var(--text-muted)",
-              fontWeight: 600,
-              fontSize: "14px",
-              cursor: "pointer",
-              transition: "all 0.15s ease",
-            }}
-          >
-            <CheckCircle2 size={16} />
-            <span>Commissioned Projects</span>
-            <span
-              style={{
-                fontSize: "12px",
-                padding: "2px 7px",
-                borderRadius: "999px",
-                backgroundColor: activeTab === "COMMISSIONED" ? "var(--sys-green-accent)" : "var(--bg-hover)",
-                color: activeTab === "COMMISSIONED" ? "#ffffff" : "var(--text-muted)",
-              }}
-            >
-              {commissionedCount}
-            </span>
-          </button>
-        </div>
+        <TabGroup
+          tabs={[
+            {
+              id: "ONGOING",
+              label: "Ongoing Projects",
+              icon: <Activity size={15} />,
+              badge: ongoingCount,
+            },
+            {
+              id: "COMMISSIONED",
+              label: "Commissioned Projects",
+              icon: <CheckCircle2 size={15} />,
+              badge: commissionedCount,
+            },
+            {
+              id: "PUBLISHED",
+              label: "Published on Website",
+              icon: <Globe size={15} />,
+              badge: publishedCount,
+            },
+          ]}
+          activeTab={activeTab}
+          onChange={(tabId) => setActiveTab(tabId as "ONGOING" | "COMMISSIONED" | "PUBLISHED")}
+        />
 
         <div style={{ position: "relative", minWidth: "260px" }}>
           <span
@@ -287,43 +284,90 @@ export default function ProjectManagementPage() {
             const totalSteps = project.steps.length;
             const progressPct = Math.round((completedSteps / Math.max(totalSteps, 1)) * 100);
             const activeStep = project.steps.find((s) => s.status === "IN_PROGRESS") || project.steps[project.steps.length - 1];
+            const showingImg = project.caseStudy?.images.find((i) => i.isShowingCard) || project.caseStudy?.images[0];
 
             return (
-              <Link
+              <div
                 key={project.id}
-                href={`/projects/${project.id}`}
                 style={{
-                  textDecoration: "none",
-                  color: "inherit",
+                  backgroundColor: "var(--bg-card)",
+                  borderRadius: "12px",
+                  border: "1px solid var(--border-subtle)",
+                  boxShadow: "var(--shadow-card)",
                   display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  transition: "transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease",
+                  overflow: "hidden",
                 }}
               >
-                <div
-                  style={{
-                    flex: 1,
-                    backgroundColor: "var(--bg-card)",
-                    borderRadius: "12px",
-                    border: "1px solid var(--border-subtle)",
-                    boxShadow: "var(--shadow-card)",
-                    padding: "20px",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "space-between",
-                    gap: "16px",
-                    cursor: "pointer",
-                    transition: "transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "translateY(-2px)";
-                    e.currentTarget.style.boxShadow = "var(--shadow-lg)";
-                    e.currentTarget.style.borderColor = activeTab === "ONGOING" ? "var(--sys-blue-border)" : "var(--sys-green-border)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "none";
-                    e.currentTarget.style.boxShadow = "var(--shadow-card)";
-                    e.currentTarget.style.borderColor = "var(--border-subtle)";
-                  }}
-                >
+                {project.status === "PUBLISHED" && showingImg && (
+                  <div
+                    style={{
+                      position: "relative",
+                      width: "100%",
+                      height: "140px",
+                      backgroundColor: "var(--bg-surface)",
+                      borderBottom: "1px solid var(--border-subtle)",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <img
+                      src={showingImg.url}
+                      alt={showingImg.altText || project.name}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
+                    />
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "8px",
+                        left: "8px",
+                        padding: "3px 8px",
+                        borderRadius: "4px",
+                        backgroundColor: "rgba(5, 8, 17, 0.8)",
+                        backdropFilter: "blur(4px)",
+                        color: "#ffffff",
+                        fontSize: "10px",
+                        fontWeight: 700,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                      }}
+                    >
+                      <Star size={11} color="#eab308" />
+                      <span>Card Display Photo</span>
+                    </div>
+
+                    <a
+                      href={`https://systrol.vercel.app/projects/${project.caseStudy?.slug || ""}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Open Live Case Study"
+                      style={{
+                        position: "absolute",
+                        top: "8px",
+                        right: "8px",
+                        width: "28px",
+                        height: "28px",
+                        borderRadius: "6px",
+                        backgroundColor: "rgba(5, 8, 17, 0.85)",
+                        color: "#ffffff",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        textDecoration: "none",
+                      }}
+                    >
+                      <ExternalLink size={13} />
+                    </a>
+                  </div>
+                )}
+
+                <div style={{ padding: "20px", display: "flex", flexDirection: "column", flex: 1, gap: "14px" }}>
                   <div>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginBottom: "10px" }}>
                       <span
@@ -337,105 +381,156 @@ export default function ProjectManagementPage() {
                       >
                         {project.projectCode}
                       </span>
-                      <span
-                        style={{
-                          fontSize: "11.5px",
-                          fontWeight: 600,
-                          padding: "3px 8px",
-                          borderRadius: "999px",
-                          backgroundColor: project.status === "ONGOING" ? "var(--sys-blue-subtle)" : "var(--sys-green-subtle)",
-                          color: project.status === "ONGOING" ? "var(--sys-blue-primary)" : "var(--sys-green-accent)",
-                          border: `1px solid ${project.status === "ONGOING" ? "var(--sys-blue-border)" : "var(--sys-green-border)"}`,
-                        }}
-                      >
-                        {project.status === "ONGOING" ? "Ongoing" : "Commissioned"}
-                      </span>
+
+                      {project.status === "PUBLISHED" ? (
+                        <span
+                          style={{
+                            fontSize: "11.5px",
+                            fontWeight: 700,
+                            padding: "3px 9px",
+                            borderRadius: "999px",
+                            backgroundColor: "rgba(16, 185, 129, 0.12)",
+                            color: "#10b981",
+                            border: "1px solid rgba(16, 185, 129, 0.3)",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
+                          }}
+                        >
+                          <Globe size={12} />
+                          <span>Published Live</span>
+                        </span>
+                      ) : (
+                        <span
+                          style={{
+                            fontSize: "11.5px",
+                            fontWeight: 600,
+                            padding: "3px 8px",
+                            borderRadius: "999px",
+                            backgroundColor: project.status === "ONGOING" ? "var(--sys-blue-subtle)" : "var(--sys-green-subtle)",
+                            color: project.status === "ONGOING" ? "var(--sys-blue-primary)" : "var(--sys-green-accent)",
+                            border: `1px solid ${project.status === "ONGOING" ? "var(--sys-blue-border)" : "var(--sys-green-border)"}`,
+                          }}
+                        >
+                          {project.status === "ONGOING" ? "Ongoing" : "Commissioned"}
+                        </span>
+                      )}
                     </div>
 
-                    <div style={{ display: "flex", alignItems: "flex-start", gap: "8px", marginBottom: "6px" }}>
-                      <Building size={16} color="var(--sys-blue-primary)" style={{ marginTop: "3px", flexShrink: 0 }} />
-                      <h3
-                        style={{
-                          fontSize: "16px",
-                          fontWeight: 700,
-                          color: "var(--text-heading)",
-                          margin: 0,
-                          lineHeight: 1.3,
-                        }}
-                      >
-                        {project.clientName}
-                      </h3>
-                    </div>
-
-                    <div
-                      style={{
-                        fontSize: "14px",
-                        fontWeight: 600,
-                        color: "var(--text-body)",
-                        marginBottom: "10px",
-                        paddingLeft: "24px",
-                      }}
+                    <Link
+                      href={`/projects/${project.id}`}
+                      style={{ textDecoration: "none", color: "inherit" }}
                     >
-                      {project.lineName}
-                    </div>
-
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        fontSize: "13px",
-                        color: "var(--text-muted)",
-                        paddingLeft: "24px",
-                      }}
-                    >
-                      <MapPin size={14} color="var(--text-muted)" style={{ flexShrink: 0 }} />
-                      <span>{project.location}</span>
-                    </div>
-                  </div>
-
-                  <div style={{ paddingTop: "12px", borderTop: "1px solid var(--border-subtle)" }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
-                      <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-                        Current: <strong style={{ color: "var(--text-heading)" }}>{activeStep?.title || "Enquiry"}</strong>
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: "8px", marginBottom: "6px" }}>
+                        <Building size={16} color="var(--sys-blue-primary)" style={{ marginTop: "3px", flexShrink: 0 }} />
+                        <h3
+                          style={{
+                            fontSize: "16px",
+                            fontWeight: 700,
+                            color: "var(--text-heading)",
+                            margin: 0,
+                            lineHeight: 1.3,
+                          }}
+                        >
+                          {project.caseStudy?.projectName || project.name}
+                        </h3>
                       </div>
-                      <div style={{ fontSize: "12px", fontFamily: "var(--font-mono)", fontWeight: 600, color: "var(--text-heading)" }}>
-                        {progressPct}%
-                      </div>
-                    </div>
 
-                    <div
-                      style={{
-                        width: "100%",
-                        height: "6px",
-                        backgroundColor: "var(--bg-hover)",
-                        borderRadius: "999px",
-                        overflow: "hidden",
-                        marginBottom: "12px",
-                      }}
-                    >
                       <div
                         style={{
-                          width: `${progressPct}%`,
-                          height: "100%",
-                          backgroundColor: project.status === "ONGOING" ? "var(--sys-blue-primary)" : "var(--sys-green-accent)",
-                          borderRadius: "999px",
-                          transition: "width 0.3s ease",
+                          fontSize: "13.5px",
+                          fontWeight: 600,
+                          color: "var(--text-body)",
+                          marginBottom: "4px",
+                          paddingLeft: "24px",
                         }}
-                      />
-                    </div>
-
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12.5px", color: "var(--text-muted)" }}>
-                        <Users size={15} />
-                        <span>
-                          <strong style={{ color: "var(--text-heading)" }}>{project.onSiteEmployees.length}</strong> on-site
-                        </span>
+                      >
+                        {project.clientName} — {project.lineName}
                       </div>
 
                       <div
                         style={{
                           display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          fontSize: "13px",
+                          color: "var(--text-muted)",
+                          paddingLeft: "24px",
+                        }}
+                      >
+                        <MapPin size={14} color="var(--text-muted)" style={{ flexShrink: 0 }} />
+                        <span>{project.location}</span>
+                      </div>
+                    </Link>
+                  </div>
+
+                  {project.status === "PUBLISHED" && project.caseStudy && (
+                    <div
+                      style={{
+                        padding: "10px 12px",
+                        borderRadius: "8px",
+                        backgroundColor: "var(--bg-canvas)",
+                        border: "1px solid var(--border-subtle)",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "6px",
+                      }}
+                    >
+                      <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>
+                        Verified KPIs on Public Card:
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
+                        {project.caseStudy.kpiCards.slice(0, 2).map((kpi, kIdx) => (
+                          <div key={kIdx} style={{ fontSize: "11px" }}>
+                            <span style={{ fontWeight: 700, color: "var(--sys-green-accent)" }}>{kpi.value}</span>{" "}
+                            <span style={{ color: "var(--text-muted)" }}>{kpi.label}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div style={{ paddingTop: "12px", borderTop: "1px solid var(--border-subtle)", marginTop: "auto" }}>
+                    {project.status !== "PUBLISHED" && (
+                      <>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+                          <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                            Current: <strong style={{ color: "var(--text-heading)" }}>{activeStep?.title || "Enquiry"}</strong>
+                          </div>
+                          <div style={{ fontSize: "12px", fontFamily: "var(--font-mono)", fontWeight: 600, color: "var(--text-heading)" }}>
+                            {progressPct}%
+                          </div>
+                        </div>
+
+                        <div
+                          style={{
+                            width: "100%",
+                            height: "6px",
+                            backgroundColor: "var(--bg-hover)",
+                            borderRadius: "999px",
+                            overflow: "hidden",
+                            marginBottom: "12px",
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: `${progressPct}%`,
+                              height: "100%",
+                              backgroundColor: project.status === "ONGOING" ? "var(--sys-blue-primary)" : "var(--sys-green-accent)",
+                              borderRadius: "999px",
+                              transition: "width 0.3s ease",
+                            }}
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+                      <Link
+                        href={`/projects/${project.id}`}
+                        style={{
+                          textDecoration: "none",
+                          display: "inline-flex",
                           alignItems: "center",
                           gap: "4px",
                           fontSize: "12.5px",
@@ -443,13 +538,85 @@ export default function ProjectManagementPage() {
                           color: "var(--sys-blue-primary)",
                         }}
                       >
-                        <span>View Project</span>
+                        <span>Project Detail</span>
                         <ArrowRight size={14} />
-                      </div>
+                      </Link>
+
+                      {project.status === "COMMISSIONED" && (
+                        <button
+                          type="button"
+                          onClick={(e) => handleOpenPublishModal(project, e)}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            padding: "6px 12px",
+                            borderRadius: "6px",
+                            backgroundColor: "var(--sys-green-accent)",
+                            color: "#ffffff",
+                            border: "none",
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            boxShadow: "var(--shadow-sm)",
+                          }}
+                        >
+                          <Globe size={13} />
+                          <span>Publish to Website</span>
+                        </button>
+                      )}
+
+                      {project.status === "PUBLISHED" && (
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          <button
+                            type="button"
+                            onClick={(e) => handleOpenPublishModal(project, e)}
+                            title="Edit Published Case Study"
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              padding: "5px 10px",
+                              borderRadius: "6px",
+                              border: "1px solid var(--border-subtle)",
+                              backgroundColor: "var(--bg-canvas)",
+                              color: "var(--text-heading)",
+                              fontSize: "11.5px",
+                              fontWeight: 600,
+                              cursor: "pointer",
+                            }}
+                          >
+                            <Edit3 size={12} />
+                            <span>Edit Case Study</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={(e) => handleUnpublish(project.id, e)}
+                            title="Unpublish from website"
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              padding: "5px 8px",
+                              borderRadius: "6px",
+                              border: "1px solid rgba(239, 68, 68, 0.25)",
+                              backgroundColor: "rgba(239, 68, 68, 0.06)",
+                              color: "#ef4444",
+                              fontSize: "11.5px",
+                              fontWeight: 600,
+                              cursor: "pointer",
+                            }}
+                          >
+                            <RotateCcw size={12} />
+                            <span>Unpublish</span>
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
-              </Link>
+              </div>
             );
           })}
         </div>
@@ -614,6 +781,16 @@ export default function ProjectManagementPage() {
           </div>
         </div>
       )}
+
+      <PublishCaseStudyModal
+        isOpen={isPublishModalOpen}
+        project={publishModalProject}
+        onClose={() => {
+          setIsPublishModalOpen(false);
+          setPublishModalProject(null);
+        }}
+        onSuccess={handlePublishSuccess}
+      />
     </div>
   );
 }
