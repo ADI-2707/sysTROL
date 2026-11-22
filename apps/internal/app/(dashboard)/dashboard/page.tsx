@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
-  LayoutDashboard,
   Briefcase,
   Users,
   CheckCircle2,
@@ -86,12 +85,8 @@ export default function DashboardPage() {
               fontWeight: 700,
               color: "var(--text-heading)",
               margin: 0,
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
             }}
           >
-            <LayoutDashboard size={26} color="var(--sys-blue-primary)" />
             Enterprise Operations Dashboard
           </h1>
           <p style={{ fontSize: "14px", color: "var(--text-muted)", marginTop: "4px", marginBottom: 0 }}>
