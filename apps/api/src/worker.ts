@@ -4,6 +4,8 @@ import { createLogger } from "@systrol/logger";
 import { redis } from "./common/redis.js";
 import { processApplicationNotification } from "./modules/careers/jobs/notify-application.job.js";
 import { processPOSentNotification } from "./modules/procurement/jobs/po-sent-notification.job.js";
+import { processAutoLockWeeks } from "./modules/project-log/jobs/auto-lock-weeks.job.js";
+import { processWeeklyDigest } from "./modules/project-log/jobs/weekly-digest.job.js";
 
 const logger = createLogger("bullmq-worker");
 
@@ -30,6 +32,10 @@ export const emailWorker = new Worker(
       await processApplicationNotification(job.data);
     } else if (job.name === "po-sent") {
       await processPOSentNotification(job.data);
+    } else if (job.name === "auto-lock-weeks") {
+      await processAutoLockWeeks();
+    } else if (job.name === "weekly-digest") {
+      await processWeeklyDigest();
     }
     return { success: true, processedAt: new Date() };
   },
