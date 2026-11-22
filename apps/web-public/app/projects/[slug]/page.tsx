@@ -23,6 +23,27 @@ import {
   Layers,
 } from "lucide-react";
 
+async function getProject(slug: string): Promise<Project | null> {
+  const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "https://systrol-api.onrender.com";
+  try {
+    const res = await fetch(`${apiUrl}/api/v1/public/projects/${slug}`, {
+      next: { revalidate: 60, tags: ["projects", `project-${slug}`] },
+    });
+    if (res.status === 404) {
+      return null;
+    }
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.project) {
+        return data.project;
+      }
+    }
+  } catch {}
+
+  const fallback = projectsData.find((p) => p.slug === slug);
+  return fallback || null;
+}
+
 export async function generateStaticParams() {
   return projectsData.map((project) => ({
     slug: project.slug,
@@ -35,17 +56,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  let project = projectsData.find((p) => p.slug === slug);
-  if (!project) {
-    try {
-      const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "https://systrol-api.onrender.com";
-      const res = await fetch(`${apiUrl}/api/v1/public/projects/${slug}`);
-      if (res.ok) {
-        const data = await res.json();
-        project = data?.project;
-      }
-    } catch {}
-  }
+  const project = await getProject(slug);
   if (!project) return { title: "Project Not Found" };
 
   return {
@@ -63,17 +74,7 @@ export default async function ProjectDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  let project = projectsData.find((p) => p.slug === slug);
-  if (!project) {
-    try {
-      const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "https://systrol-api.onrender.com";
-      const res = await fetch(`${apiUrl}/api/v1/public/projects/${slug}`, { next: { revalidate: 60 } });
-      if (res.ok) {
-        const data = await res.json();
-        project = data?.project;
-      }
-    } catch {}
-  }
+  const project = await getProject(slug);
 
   if (!project) {
     notFound();

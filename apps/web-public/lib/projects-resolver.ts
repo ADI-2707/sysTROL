@@ -12,6 +12,14 @@ export function resolveProjects(
   const merged = [...fallbackProjects];
 
   for (const dyn of dynamicProjects) {
+    if (dyn.isPublished === false) {
+      const idx = merged.findIndex((p) => p.slug === dyn.slug || p.id === dyn.id);
+      if (idx !== -1) {
+        merged.splice(idx, 1);
+      }
+      continue;
+    }
+
     const cardThumbnail = dyn.thumbnailUrl || dyn.gallery?.find((g: any) => g.tag === "Card Thumbnail")?.url;
 
     const mapped: Project = {
