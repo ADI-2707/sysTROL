@@ -502,4 +502,79 @@ export class ProjectsService {
 
     return updated;
   }
+
+  static async listPublicProjects() {
+    const projects = await prisma.project.findMany({
+      where: { isPublished: true },
+      include: { client: true },
+      orderBy: { publishedAt: "desc" },
+    });
+
+    return projects.map((p) => {
+      const cs = (p.caseStudy as any) || {};
+      const cardImg = cs.images?.find((img: any) => img.isShowingCard) || cs.images?.[0];
+      return {
+        id: p.id,
+        slug: p.publicSlug || cs.slug || p.id,
+        title: cs.projectName || p.name,
+        clientRepresentative: p.client?.name || "Client Representative",
+        industry: p.millType || "Steel Rolling Mills",
+        serviceType: "Automation & Consultancy",
+        shortBlurb: cs.challengeDescription?.slice(0, 160) || "",
+        featured: true,
+        year: p.publishedAt ? new Date(p.publishedAt).getFullYear().toString() : "2026",
+        location: p.plantLocation,
+        challenge: cs.challengeDescription || "",
+        solution: cs.solutionDescription || "",
+        outcomes: cs.kpiCards?.map((k: any) => `${k.label}: ${k.value}`) || [],
+        technologies: cs.technologies || [],
+        metrics: cs.kpiCards?.map((k: any) => ({ label: k.label, value: k.value })) || [],
+        gallery: cs.images?.map((img: any) => ({
+          url: img.url,
+          caption: img.caption || "",
+          tag: img.isShowingCard ? "Card Thumbnail" : "Technical Gallery",
+        })) || [],
+        thumbnailUrl: cardImg?.url || "",
+      };
+    });
+  }
+
+  static async getPublicProjectBySlug(slug: string) {
+    const project = await prisma.project.findFirst({
+      where: {
+        publicSlug: slug,
+        isPublished: true,
+      },
+      include: { client: true },
+    });
+
+    if (!project) return null;
+
+    const cs = (project.caseStudy as any) || {};
+    const cardImg = cs.images?.find((img: any) => img.isShowingCard) || cs.images?.[0];
+
+    return {
+      id: project.id,
+      slug: project.publicSlug || cs.slug || project.id,
+      title: cs.projectName || project.name,
+      clientRepresentative: project.client?.name || "Client Representative",
+      industry: project.millType || "Steel Rolling Mills",
+      serviceType: "Automation & Consultancy",
+      shortBlurb: cs.challengeDescription?.slice(0, 160) || "",
+      featured: true,
+      year: project.publishedAt ? new Date(project.publishedAt).getFullYear().toString() : "2026",
+      location: project.plantLocation,
+      challenge: cs.challengeDescription || "",
+      solution: cs.solutionDescription || "",
+      outcomes: cs.kpiCards?.map((k: any) => `${k.label}: ${k.value}`) || [],
+      technologies: cs.technologies || [],
+      metrics: cs.kpiCards?.map((k: any) => ({ label: k.label, value: k.value })) || [],
+      gallery: cs.images?.map((img: any) => ({
+        url: img.url,
+        caption: img.caption || "",
+        tag: img.isShowingCard ? "Card Thumbnail" : "Technical Gallery",
+      })) || [],
+      thumbnailUrl: cardImg?.url || "",
+    };
+  }
 }

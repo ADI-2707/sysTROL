@@ -11,6 +11,8 @@ vi.mock("@systrol/database", () => {
   const mPrisma = {
     project: {
       findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
       update: vi.fn(),
     },
     auditLog: {
@@ -219,6 +221,58 @@ describe("Project Publishing & Case Study Lifecycle Tests", () => {
       await expect(
         ProjectsService.unpublishProject("proj-missing", "user-super-admin")
       ).rejects.toThrow("Project 'proj-missing' not found");
+    });
+  });
+
+  describe("ProjectsService public endpoints", () => {
+    it("listPublicProjects returns published projects with card thumbnail and kpis", async () => {
+      const mockPublished = [
+        {
+          id: "proj-1",
+          publicSlug: "bar-mill-l2",
+          name: "Bar Mill L2",
+          plantLocation: "Eastern India",
+          millType: "Steel Rolling Mills",
+          publishedAt: new Date("2026-01-01"),
+          client: { name: "Client A" },
+          caseStudy: validCaseStudyPayload.caseStudy,
+        },
+      ];
+
+      vi.mocked(prisma.project.findMany).mockResolvedValue(mockPublished as any);
+
+      const result = await ProjectsService.listPublicProjects();
+      expect(result.length).toBe(1);
+      expect(result[0].slug).toBe("bar-mill-l2");
+      expect(result[0].thumbnailUrl).toBe("/images/hero-rolling-mill.jpg");
+      expect(result[0].metrics.length).toBe(2);
+    });
+
+    it("getPublicProjectBySlug returns public case study details", async () => {
+      const mockProject = {
+        id: "proj-1",
+        publicSlug: "bar-mill-l2",
+        name: "Bar Mill L2",
+        plantLocation: "Eastern India",
+        millType: "Steel Rolling Mills",
+        publishedAt: new Date("2026-01-01"),
+        client: { name: "Client A" },
+        caseStudy: validCaseStudyPayload.caseStudy,
+      };
+
+      vi.mocked(prisma.project.findFirst).mockResolvedValue(mockProject as any);
+
+      const result = await ProjectsService.getPublicProjectBySlug("bar-mill-l2");
+      expect(result).not.toBeNull();
+      expect(result?.title).toBe(validCaseStudyPayload.caseStudy.projectName);
+      expect(result?.thumbnailUrl).toBe("/images/hero-rolling-mill.jpg");
+    });
+
+    it("getPublicProjectBySlug returns null when slug does not exist", async () => {
+      vi.mocked(prisma.project.findFirst).mockResolvedValue(null);
+
+      const result = await ProjectsService.getPublicProjectBySlug("non-existent");
+      expect(result).toBeNull();
     });
   });
 });
