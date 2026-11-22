@@ -110,4 +110,29 @@ describe("Dashboard responsive layout & mobile lock screen tests", () => {
     expect(aside).toBeDefined();
     expect(aside?.style.width).toBe("60px");
   });
+
+  it("renders persistent logout button in expanded sidebar with Log Out label", () => {
+    render(
+      <DashboardLayout>
+        <div>Content</div>
+      </DashboardLayout>
+    );
+
+    const logoutButton = screen.getByRole("button", { name: /Log Out/i });
+    expect(logoutButton).toBeDefined();
+    expect(logoutButton.textContent).toContain("Log Out");
+  });
+
+  it("maintains persistent logout button in collapsed sidebar with accessible title", () => {
+    Object.defineProperty(window, "innerWidth", { writable: true, configurable: true, value: 800 });
+
+    render(
+      <DashboardLayout>
+        <div>Content</div>
+      </DashboardLayout>
+    );
+
+    const logoutButton = screen.getByTitle("Log Out of sysTROL");
+    expect(logoutButton).toBeDefined();
+  });
 });

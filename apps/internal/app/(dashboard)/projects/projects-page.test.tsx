@@ -22,6 +22,10 @@ describe("ProjectManagementPage with 3-tab system and publishing workflow", () =
 
     expect(screen.getByRole("heading", { name: /Project Management/i })).toBeDefined();
 
+    const heading = screen.getByRole("heading", { name: /Project Management/i });
+    expect(heading.querySelector("svg")).toBeNull();
+    expect(heading.textContent?.trim()).toBe("Project Management");
+
     const ongoingTab = screen.getByRole("button", { name: /Ongoing Projects/i });
     const commissionedTab = screen.getByRole("button", { name: /Commissioned Projects/i });
     const publishedTab = screen.getByRole("button", { name: /Published on Website/i });
