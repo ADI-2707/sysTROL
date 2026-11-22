@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Hammer, CheckCircle2, AlertTriangle, ShieldCheck, Plus, RefreshCw, FileText, Clock, Layers } from "lucide-react";
+import { CheckCircle2, AlertTriangle, ShieldCheck, Plus, RefreshCw, FileText, Clock, Layers } from "lucide-react";
 import { Button, KpiCard } from "@/components/ui";
 
 interface Batch {
@@ -79,8 +79,7 @@ export default function BatchesPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-            <Hammer className="h-6 w-6 text-amber-500" />
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
             Manufacturing & Panel Assembly Batches
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400">

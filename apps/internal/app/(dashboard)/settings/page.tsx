@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import {
-  Settings,
   KeyRound,
   User,
   Shield,
@@ -90,12 +89,8 @@ export default function SettingsPage() {
             fontWeight: 700,
             color: "var(--text-heading)",
             margin: 0,
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
           }}
         >
-          <Settings size={26} color="var(--sys-blue-primary)" />
           Account & Security Settings
         </h1>
         <p style={{ fontSize: "14px", color: "var(--text-muted)", marginTop: "6px", marginBottom: 0 }}>

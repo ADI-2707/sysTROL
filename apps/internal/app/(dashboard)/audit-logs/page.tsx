@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
-  ShieldAlert,
   Search,
   Filter,
   RefreshCw,
@@ -186,12 +185,9 @@ export default function AuditLogsPage() {
     <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "24px" }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
         <div>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <ShieldAlert size={26} color="var(--sys-blue-primary)" />
-            <h1 style={{ fontSize: "22px", fontWeight: 700, color: "var(--text-heading)", margin: 0 }}>
-              Audit Trail & Compliance Ledger
-            </h1>
-          </div>
+          <h1 style={{ fontSize: "22px", fontWeight: 700, color: "var(--text-heading)", margin: 0 }}>
+            Audit Trail & Compliance Ledger
+          </h1>
           <p style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "6px", marginBottom: 0 }}>
             Unified dual-channel observability for internal operations governance and public visitor telemetry.
           </p>

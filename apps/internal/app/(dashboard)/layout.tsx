@@ -446,89 +446,98 @@ export default function DashboardLayout({
 
         <div
           style={{
-            padding: isCollapsed ? "10px 6px" : "12px 12px",
+            padding: isCollapsed ? "10px 8px" : "12px 12px",
             borderTop: "1px solid var(--border-subtle)",
             backgroundColor: "var(--bg-card)",
             display: "flex",
             flexDirection: "column",
             gap: "8px",
             flexShrink: 0,
+            transition: "padding 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
           }}
         >
-          {isCollapsed ? (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
-              <button
-                type="button"
-                onClick={logout}
-                onMouseEnter={() => setLogoutHovered(true)}
-                onMouseLeave={() => setLogoutHovered(false)}
-                title="Log Out of sysTROL"
-                style={{
-                  width: "32px",
-                  height: "32px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius: "6px",
-                  backgroundColor: logoutHovered ? "#ef4444" : "rgba(239, 68, 68, 0.08)",
-                  border: logoutHovered ? "1px solid #dc2626" : "1px solid rgba(239, 68, 68, 0.25)",
-                  color: logoutHovered ? "#ffffff" : "#ef4444",
-                  boxShadow: logoutHovered ? "0 4px 12px rgba(239, 68, 68, 0.35)" : "none",
-                  transform: logoutHovered ? "scale(1.06)" : "scale(1)",
-                  cursor: "pointer",
-                  transition: "all 0.18s cubic-bezier(0.4, 0, 0.2, 1)",
-                }}
-              >
-                <LogOut size={15} />
-              </button>
-              <div style={{ fontSize: "8.5px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", textAlign: "center" }}>
-                {process.env.NEXT_PUBLIC_APP_VERSION || "v2.4.0"}
-              </div>
-            </div>
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={logout}
-                onMouseEnter={() => setLogoutHovered(true)}
-                onMouseLeave={() => setLogoutHovered(false)}
-                style={{
-                  width: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "6px",
-                  padding: "7px 10px",
-                  borderRadius: "6px",
-                  backgroundColor: logoutHovered ? "#ef4444" : "rgba(239, 68, 68, 0.08)",
-                  border: logoutHovered ? "1px solid #dc2626" : "1px solid rgba(239, 68, 68, 0.25)",
-                  color: logoutHovered ? "#ffffff" : "#ef4444",
-                  boxShadow: logoutHovered ? "0 4px 14px rgba(239, 68, 68, 0.35)" : "none",
-                  transform: logoutHovered ? "translateY(-1px)" : "translateY(0)",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  transition: "all 0.18s cubic-bezier(0.4, 0, 0.2, 1)",
-                }}
-              >
-                <LogOut
-                  size={14}
-                  style={{
-                    transform: logoutHovered ? "translateX(-1px)" : "none",
-                    transition: "transform 0.18s ease",
-                  }}
-                />
-                <span>Log Out</span>
-              </button>
+          <button
+            type="button"
+            onClick={logout}
+            onMouseEnter={() => setLogoutHovered(true)}
+            onMouseLeave={() => setLogoutHovered(false)}
+            title={isCollapsed ? "Log Out of sysTROL" : undefined}
+            style={{
+              width: "100%",
+              height: "34px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: "6px",
+              backgroundColor: logoutHovered ? "#ef4444" : "rgba(239, 68, 68, 0.08)",
+              border: logoutHovered ? "1px solid #dc2626" : "1px solid rgba(239, 68, 68, 0.25)",
+              color: logoutHovered ? "#ffffff" : "#ef4444",
+              boxShadow: logoutHovered ? "0 4px 14px rgba(239, 68, 68, 0.35)" : "none",
+              transform: logoutHovered ? "scale(1.02)" : "scale(1)",
+              cursor: "pointer",
+              padding: isCollapsed ? "0" : "0 10px",
+              overflow: "hidden",
+              transition: "all 0.18s cubic-bezier(0.4, 0, 0.2, 1), padding 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+            }}
+          >
+            <LogOut
+              size={15}
+              style={{
+                flexShrink: 0,
+                transform: logoutHovered && !isCollapsed ? "translateX(-1px)" : "none",
+                transition: "transform 0.18s ease",
+              }}
+            />
+            <span
+              style={{
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                fontSize: "12px",
+                fontWeight: 600,
+                maxWidth: isCollapsed ? "0px" : "90px",
+                opacity: isCollapsed ? 0 : 1,
+                marginLeft: isCollapsed ? "0px" : "8px",
+                transition: "max-width 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease, margin 0.25s ease",
+              }}
+            >
+              Log Out
+            </span>
+          </button>
 
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "2px 4px 0 4px" }}>
-                <span style={{ fontSize: "10px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", letterSpacing: "0.5px" }}>
-                  PORTAL {process.env.NEXT_PUBLIC_APP_VERSION || "v2.4.0"}
-                </span>
-                <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#10b981", display: "inline-block" }} />
-              </div>
-            </>
-          )}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: isCollapsed ? "center" : "space-between",
+              padding: "2px 4px 0 4px",
+              overflow: "hidden",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <span
+              style={{
+                fontSize: isCollapsed ? "8.5px" : "10px",
+                color: "var(--text-muted)",
+                fontFamily: "var(--font-mono)",
+                letterSpacing: "0.5px",
+                transition: "font-size 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+              }}
+            >
+              {isCollapsed ? process.env.NEXT_PUBLIC_APP_VERSION || "v2.4.0" : `PORTAL ${process.env.NEXT_PUBLIC_APP_VERSION || "v2.4.0"}`}
+            </span>
+            {!isCollapsed && (
+              <span
+                style={{
+                  width: "6px",
+                  height: "6px",
+                  borderRadius: "50%",
+                  backgroundColor: "#10b981",
+                  display: "inline-block",
+                  flexShrink: 0,
+                }}
+              />
+            )}
+          </div>
         </div>
       </aside>
 

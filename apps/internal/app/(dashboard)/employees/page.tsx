@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
-  Users,
   Search,
   Plus,
   Phone,
@@ -218,12 +217,8 @@ export default function EmployeeManagementPage() {
               fontWeight: 700,
               color: "var(--text-heading)",
               margin: 0,
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
             }}
           >
-            <Users size={26} color="var(--sys-blue-primary)" />
             Employee Management
           </h1>
           <p style={{ fontSize: "14px", color: "var(--text-muted)", marginTop: "4px", marginBottom: 0 }}>

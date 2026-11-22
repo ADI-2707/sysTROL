@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import {
-  DollarSign,
   Plus,
   FileText,
   ShieldCheck,
@@ -140,8 +139,7 @@ export default function FinancePage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
-            <DollarSign className="h-6 w-6" style={{ color: "var(--sys-green-accent)" }} />
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
             Finance & Contractual Retention
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">

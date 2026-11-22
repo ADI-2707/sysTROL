@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
-  Briefcase,
   MapPin,
   Users,
   CheckCircle2,
@@ -150,12 +149,8 @@ export default function ProjectManagementPage() {
               fontWeight: 700,
               color: "var(--text-heading)",
               margin: 0,
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
             }}
           >
-            <Briefcase size={26} color="var(--sys-blue-primary)" />
             Project Management
           </h1>
           <p style={{ fontSize: "14px", color: "var(--text-muted)", marginTop: "4px", marginBottom: 0 }}>
