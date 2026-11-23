@@ -24,3 +24,16 @@ export type {
   ToastItem,
   ToastContextValue,
 } from "./components/toast/toast-types.js";
+
+export {
+  Skeleton,
+  SkeletonCard,
+  SkeletonKpiCard,
+  SkeletonTableRow,
+} from "./components/skeleton/skeleton.js";
+export type {
+  SkeletonProps,
+  SkeletonCardProps,
+  SkeletonKpiCardProps,
+  SkeletonTableRowProps,
+} from "./components/skeleton/skeleton.js";

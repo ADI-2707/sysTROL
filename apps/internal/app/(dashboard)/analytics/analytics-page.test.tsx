@@ -54,16 +54,20 @@ const mockEmployees = {
   totalOverseasSites: 3,
 };
 
+let currentProjectsResponse: any = mockProjects;
+let currentCtaResponse: any = mockCta;
+let currentEmployeesResponse: any = mockEmployees;
+
 vi.mock("@/lib/api-client", () => ({
   apiClient: vi.fn((url: string) => {
     if (url.includes("/api/v1/analytics/projects")) {
-      return Promise.resolve({ ok: true, json: async () => mockProjects });
+      return Promise.resolve({ ok: true, json: async () => currentProjectsResponse });
     }
     if (url.includes("/api/v1/analytics/cta")) {
-      return Promise.resolve({ ok: true, json: async () => mockCta });
+      return Promise.resolve({ ok: true, json: async () => currentCtaResponse });
     }
     if (url.includes("/api/v1/analytics/employees")) {
-      return Promise.resolve({ ok: true, json: async () => mockEmployees });
+      return Promise.resolve({ ok: true, json: async () => currentEmployeesResponse });
     }
     return Promise.resolve({ ok: true, json: async () => ({}) });
   }),
@@ -72,6 +76,9 @@ vi.mock("@/lib/api-client", () => ({
 describe("multi-tab analytics dashboard tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    currentProjectsResponse = mockProjects;
+    currentCtaResponse = mockCta;
+    currentEmployeesResponse = mockEmployees;
   });
 
   it("renders page title and all three tab headers", () => {
@@ -83,7 +90,7 @@ describe("multi-tab analytics dashboard tests", () => {
     expect(screen.getByText("Employee Site Deployments")).toBeDefined();
   });
 
-  it("renders Projects tab metrics by default", async () => {
+  it("renders Projects tab metrics by default with real populated data", async () => {
     render(<AnalyticsDashboardPage />);
 
     await waitFor(() => {
@@ -91,11 +98,36 @@ describe("multi-tab analytics dashboard tests", () => {
       expect(screen.getByText("Top Mill Lines")).toBeDefined();
       expect(screen.getByText("Top Material & Line Combination")).toBeDefined();
       expect(screen.getByText("Fastest Cutover Execution Record")).toBeDefined();
+      expect(screen.getByText("Test Cutover Project")).toBeDefined();
+      expect(screen.getByText("PRJ-2024-TEST")).toBeDefined();
       expect(screen.getByText("Top Clients Over the Years")).toBeDefined();
+      expect(screen.getByText("Tata Steel Ltd")).toBeDefined();
     });
   });
 
-  it("switches to CTA tab and displays CTA conversion metrics", async () => {
+  it("renders clean empty states without hardcoded mock records when database is empty", async () => {
+    currentProjectsResponse = {
+      mostDoneMaterial: [],
+      mostDoneLines: [],
+      topClientsOverYears: [],
+      topMaterialAndLineCombinations: [],
+      fastestExecutionCombination: null,
+    };
+
+    render(<AnalyticsDashboardPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("No commissioned project materials recorded yet.")).toBeDefined();
+      expect(screen.getByText("No mill lines recorded yet.")).toBeDefined();
+      expect(screen.getByText("No material and line combinations recorded yet.")).toBeDefined();
+      expect(screen.getByText("No recorded cutovers yet.")).toBeDefined();
+      expect(screen.getByText("No client project commissioning records found.")).toBeDefined();
+    });
+
+    expect(screen.queryByText("Jindal Angul 24-Stand Bar Mill Cutover")).toBeNull();
+  });
+
+  it("switches to CTA tab and displays real CTA conversion metrics", async () => {
     render(<AnalyticsDashboardPage />);
 
     const ctaTab = screen.getByRole("button", { name: /CTA & Conversion Attributions/i });
@@ -105,6 +137,7 @@ describe("multi-tab analytics dashboard tests", () => {
       expect(screen.getByText("Direct WhatsApp Conversions")).toBeDefined();
       expect(screen.getByText("Most Inquired Landing Pages")).toBeDefined();
       expect(screen.getByText("Most Effective CTA Buttons")).toBeDefined();
+      expect(screen.getByText("floating_whatsapp")).toBeDefined();
     });
   });
 
@@ -119,6 +152,7 @@ describe("multi-tab analytics dashboard tests", () => {
       expect(screen.getByText("India Sites (Domestic)")).toBeDefined();
       expect(screen.getByText("Overseas Sites (Global)")).toBeDefined();
       expect(screen.getByText("Engineer Site Deployments & Field Records")).toBeDefined();
+      expect(screen.getByText("Rajesh Sharma")).toBeDefined();
     });
   });
 });

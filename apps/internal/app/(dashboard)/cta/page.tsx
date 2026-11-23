@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 import { useAuth } from "@/lib/auth-context";
+import { Skeleton, SkeletonKpiCard } from "@/components/ui";
 
 interface EnquiryItem {
   id: string;
@@ -114,94 +115,28 @@ export default function CtaInquiriesPage() {
     }
   };
 
-  const fallbackEnquiries: EnquiryItem[] = [
-    {
-      id: "demo-enq-1",
-      enquiryCode: "ENQ-2026-0038",
-      source: "WEB_RFQ",
-      prospectName: "Rakesh Singhania (Jindal Steel & Power)",
-      contactEmail: "rakesh.singhania@jindalsteel.com",
-      contactPhone: "+91 98450 11223",
-      requirement: "[L2 Automation Consultancy] Seeking Level-2 cooling bed tracking and roll gap optimization model for our 18-stand continuous bar mill in Raigarh.",
-      status: "OPEN",
-      ctaId: "navbar_get_in_touch",
-      pagePath: "/services/automation-consultancy",
-      utmSource: "linkedin",
-      utmMedium: "cpc",
-      utmCampaign: "bar_mill_modernization_2026",
-      referrer: "https://www.linkedin.com/",
-      createdAt: new Date(Date.now() - 42 * 60 * 1000).toISOString(),
-    },
-    {
-      id: "demo-enq-2",
-      enquiryCode: "ENQ-2026-0037",
-      source: "WEB_RFQ",
-      prospectName: "M. El-Mansouri (Al Ezz Dekheila Steel)",
-      contactEmail: "melmansouri@ezzsteel.com",
-      contactPhone: "+20 100 234 5678",
-      requirement: "[Imported Spares Sourcing] Urgent procurement inquiry for 8 pairs of tungsten carbide composite rolls (Dia 340mm) and high-response servo valves for roughing stands.",
-      status: "QUALIFIED",
-      ctaId: "contact_page_form",
-      pagePath: "/contact",
-      utmSource: "google",
-      utmMedium: "organic",
-      utmCampaign: "spares_middle_east",
-      referrer: "https://www.google.com/",
-      createdAt: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
-    },
-    {
-      id: "demo-enq-3",
-      enquiryCode: "ENQ-2026-0036",
-      source: "WEB_RFQ",
-      prospectName: "Sanjay Deshmukh (Sunflag Iron & Steel)",
-      contactEmail: "sdeshmukh@sunflagsteel.com",
-      contactPhone: "+91 94221 88990",
-      requirement: "[Rolling Mill Modernization] Complete revamp of finishing stands drives and optical loop sensors for high-speed wire rod block.",
-      status: "CONVERTED",
-      ctaId: "mobile_drawer_get_in_touch",
-      pagePath: "/projects",
-      utmSource: "direct",
-      referrer: "https://sys-trol.com/projects",
-      createdAt: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
-    },
-  ];
-
-  const fallbackCtaEvents: CtaEventItem[] = [
-    {
-      id: "demo-evt-1",
-      eventType: "WHATSAPP_CLICK",
-      ctaId: "floating_whatsapp",
-      pagePath: "/services/automation-consultancy",
-      utmSource: "linkedin",
-      utmMedium: "cpc",
-      utmCampaign: "q3_automation",
-      createdAt: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-    },
-    {
-      id: "demo-evt-2",
-      eventType: "WHATSAPP_CLICK",
-      ctaId: "mobile_drawer_whatsapp",
-      pagePath: "/contact",
-      utmSource: "google",
-      utmMedium: "organic",
-      createdAt: new Date(Date.now() - 110 * 60 * 1000).toISOString(),
-    },
-    {
-      id: "demo-evt-3",
-      eventType: "PHONE_CLICK",
-      ctaId: "floating_call",
-      pagePath: "/services/trading",
-      utmSource: "direct",
-      createdAt: new Date(Date.now() - 4 * 3600 * 1000).toISOString(),
-    },
-  ];
-
-  const effectiveEnquiries = enquiries.length > 0 ? enquiries : fallbackEnquiries;
-  const effectiveEvents = ctaEvents.length > 0 ? ctaEvents : fallbackCtaEvents;
+  const effectiveEnquiries = enquiries;
+  const effectiveEvents = ctaEvents;
 
   const totalLeads = effectiveEnquiries.length + effectiveEvents.length;
   const openCount = effectiveEnquiries.filter((e) => e.status === "OPEN").length;
   const whatsappCount = effectiveEvents.filter((e) => e.eventType === "WHATSAPP_CLICK").length;
+
+  const pageActionCounts: Record<string, number> = {};
+  for (const e of enquiries) {
+    if (e.pagePath) {
+      pageActionCounts[e.pagePath] = (pageActionCounts[e.pagePath] || 0) + 1;
+    }
+  }
+  for (const ev of ctaEvents) {
+    if (ev.pagePath) {
+      pageActionCounts[ev.pagePath] = (pageActionCounts[ev.pagePath] || 0) + 1;
+    }
+  }
+  const topPageEntry = Object.entries(pageActionCounts).sort((a, b) => b[1] - a[1])[0];
+  const topPagePath = topPageEntry ? topPageEntry[0] : "None recorded";
+  const topPageCount = topPageEntry ? topPageEntry[1] : 0;
+  const topPagePct = totalLeads > 0 ? Math.round((topPageCount / totalLeads) * 100) : 0;
 
   const filteredFeed = useMemo(() => {
     type UnifiedItem =
@@ -303,45 +238,56 @@ export default function CtaInquiriesPage() {
         </button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px", marginBottom: "28px" }}>
-        <div style={{ backgroundColor: "var(--bg-card)", padding: "18px 20px", borderRadius: "12px", border: "1px solid var(--border-subtle)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-            <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>Total Actions</span>
-            <Sparkles size={16} color="var(--sys-green-accent)" />
-          </div>
-          <div style={{ fontSize: "28px", fontWeight: 700, color: "var(--text-heading)" }}>{totalLeads}</div>
-          <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px" }}>Web RFQs & Direct CTA Clicks</div>
+      {isLoading ? (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px", marginBottom: "28px" }}>
+          <SkeletonKpiCard />
+          <SkeletonKpiCard />
+          <SkeletonKpiCard />
+          <SkeletonKpiCard />
         </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px", marginBottom: "28px" }}>
+          <div style={{ backgroundColor: "var(--bg-card)", padding: "18px 20px", borderRadius: "12px", border: "1px solid var(--border-subtle)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+              <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>Total Actions</span>
+              <Sparkles size={16} color="var(--sys-green-accent)" />
+            </div>
+            <div style={{ fontSize: "28px", fontWeight: 700, color: "var(--text-heading)" }}>{totalLeads}</div>
+            <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px" }}>Web RFQs & Direct CTA Clicks</div>
+          </div>
 
-        <div style={{ backgroundColor: "var(--bg-card)", padding: "18px 20px", borderRadius: "12px", border: "1px solid var(--border-subtle)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-            <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>Pending Review</span>
-            <Clock size={16} color="#f59e0b" />
+          <div style={{ backgroundColor: "var(--bg-card)", padding: "18px 20px", borderRadius: "12px", border: "1px solid var(--border-subtle)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+              <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>Pending Review</span>
+              <Clock size={16} color="#f59e0b" />
+            </div>
+            <div style={{ fontSize: "28px", fontWeight: 700, color: "#f59e0b" }}>{openCount}</div>
+            <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px" }}>Awaiting Sales Qualification</div>
           </div>
-          <div style={{ fontSize: "28px", fontWeight: 700, color: "#f59e0b" }}>{openCount}</div>
-          <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px" }}>Awaiting Sales Qualification</div>
-        </div>
 
-        <div style={{ backgroundColor: "var(--bg-card)", padding: "18px 20px", borderRadius: "12px", border: "1px solid var(--border-subtle)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-            <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>Direct WhatsApp</span>
-            <MessageSquare size={16} color="#10b981" />
+          <div style={{ backgroundColor: "var(--bg-card)", padding: "18px 20px", borderRadius: "12px", border: "1px solid var(--border-subtle)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+              <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>Direct WhatsApp</span>
+              <MessageSquare size={16} color="#10b981" />
+            </div>
+            <div style={{ fontSize: "28px", fontWeight: 700, color: "#10b981" }}>{whatsappCount}</div>
+            <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px" }}>Instant Mobile Inquiries</div>
           </div>
-          <div style={{ fontSize: "28px", fontWeight: 700, color: "#10b981" }}>{whatsappCount}</div>
-          <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px" }}>Instant Mobile Inquiries</div>
-        </div>
 
-        <div style={{ backgroundColor: "var(--bg-card)", padding: "18px 20px", borderRadius: "12px", border: "1px solid var(--border-subtle)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-            <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>Top Landing Page</span>
-            <Globe size={16} color="var(--sys-blue-primary)" />
+          <div style={{ backgroundColor: "var(--bg-card)", padding: "18px 20px", borderRadius: "12px", border: "1px solid var(--border-subtle)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+              <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>Top Landing Page</span>
+              <Globe size={16} color="var(--sys-blue-primary)" />
+            </div>
+            <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-heading)", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
+              {topPagePath}
+            </div>
+            <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px" }}>
+              {totalLeads > 0 ? `${topPageCount} actions (${topPagePct}% of total)` : "Awaiting user interactions"}
+            </div>
           </div>
-          <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-heading)", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
-            /services/automation-consultancy
-          </div>
-          <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px" }}>Driving 48% of Inbound RFQs</div>
         </div>
-      </div>
+      )}
 
       <div style={{ display: "flex", gap: "12px", marginBottom: "20px", flexWrap: "wrap", alignItems: "center" }}>
         <div style={{ position: "relative", flex: "1 1 280px" }}>
@@ -410,7 +356,13 @@ export default function CtaInquiriesPage() {
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-        {filteredFeed.length === 0 ? (
+        {isLoading ? (
+          <>
+            <Skeleton height="76px" borderRadius="10px" />
+            <Skeleton height="76px" borderRadius="10px" />
+            <Skeleton height="76px" borderRadius="10px" />
+          </>
+        ) : filteredFeed.length === 0 ? (
           <div
             style={{
               padding: "48px 24px",

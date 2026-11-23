@@ -7,9 +7,6 @@ import {
 } from "@systrol/types";
 
 export class AnalyticsService {
-  /**
-   * 1. Stage Dwell Time: Average duration projects spend in each lifecycle stage.
-   */
   static async getStageDwellTimes(): Promise<StageDwellDto[]> {
     const history = await prisma.projectStageHistory.findMany({
       include: {
@@ -37,7 +34,7 @@ export class AnalyticsService {
       }
     }
 
-    const results: StageDwellDto[] = Object.entries(dwellBuckets).map(([key, data]) => {
+    return Object.entries(dwellBuckets).map(([key, data]) => {
       const stage = key.split("_")[0];
       return {
         stage,
@@ -46,24 +43,8 @@ export class AnalyticsService {
         projectCount: data.count,
       };
     });
-
-    // Fallback default demonstration read models if history is nascent
-    if (results.length === 0) {
-      return [
-        { stage: "ENGINEERING", millType: "HOT_STRIP_MILL", avgDays: 28, projectCount: 4 },
-        { stage: "MANUFACTURING", millType: "HOT_STRIP_MILL", avgDays: 45, projectCount: 4 },
-        { stage: "COMMISSIONING", millType: "HOT_STRIP_MILL", avgDays: 21, projectCount: 3 },
-        { stage: "ENGINEERING", millType: "WIRE_ROD_MILL", avgDays: 22, projectCount: 5 },
-        { stage: "MANUFACTURING", millType: "WIRE_ROD_MILL", avgDays: 35, projectCount: 5 },
-      ];
-    }
-
-    return results;
   }
 
-  /**
-   * 2. Enquiry Conversion Funnel by Source.
-   */
   static async getEnquiryFunnel(): Promise<EnquiryFunnelDto[]> {
     const enquiries = await prisma.enquiry.findMany();
 
@@ -84,9 +65,6 @@ export class AnalyticsService {
     }));
   }
 
-  /**
-   * 3. Payment Aging Buckets: Current, 30 days, 60 days, 90+ days.
-   */
   static async getPaymentAging(): Promise<PaymentAgingDto[]> {
     const invoices = await prisma.invoice.findMany({
       where: {
@@ -174,8 +152,8 @@ export class AnalyticsService {
     } | null = null;
 
     for (const p of projects) {
-      const mat = p.material || "Carbon Steel (IS 2062)";
-      const line = p.lineType || p.millType || "Bar & Rod Mill";
+      const mat = p.material?.trim() || "Unspecified";
+      const line = p.lineType?.trim() || p.millType?.trim() || "Unspecified";
 
       materialCounts[mat] = (materialCounts[mat] || 0) + 1;
       lineCounts[line] = (lineCounts[line] || 0) + 1;
@@ -199,22 +177,23 @@ export class AnalyticsService {
       }
 
       if (p.actualCutoverDate && p.startDate) {
-        const diffDays = Math.max(
-          1,
-          Math.round(
-            (new Date(p.actualCutoverDate).getTime() - new Date(p.startDate).getTime()) /
-              (1000 * 60 * 60 * 24)
-          )
-        );
+        const start = new Date(p.startDate).getTime();
+        const actual = new Date(p.actualCutoverDate).getTime();
+        if (actual > start) {
+          const diffDays = Math.max(
+            1,
+            Math.round((actual - start) / (1000 * 60 * 60 * 24))
+          );
 
-        if (!fastestCombo || diffDays < fastestCombo.minDays) {
-          fastestCombo = {
-            material: mat,
-            lineType: line,
-            minDays: diffDays,
-            projectCode: p.projectCode,
-            projectName: p.name,
-          };
+          if (!fastestCombo || diffDays < fastestCombo.minDays) {
+            fastestCombo = {
+              material: mat,
+              lineType: line,
+              minDays: diffDays,
+              projectCode: p.projectCode,
+              projectName: p.name,
+            };
+          }
         }
       }
     }
@@ -239,42 +218,6 @@ export class AnalyticsService {
     const topMaterialAndLineCombinations = Object.values(comboCounts).sort(
       (a, b) => b.count - a.count
     );
-
-    if (mostDoneMaterial.length === 0) {
-      return {
-        mostDoneMaterial: [
-          { material: "Carbon Steel (IS 2062)", count: 18 },
-          { material: "Alloy Steel (EN19/EN24)", count: 12 },
-          { material: "Stainless Steel (SS 304/316)", count: 7 },
-          { material: "Special Wire Rods", count: 5 },
-        ],
-        topClientsOverYears: [
-          { clientId: "c-1", clientName: "Tata Steel Long Products", projectCount: 8, years: [2022, 2023, 2024, 2025, 2026] },
-          { clientId: "c-2", clientName: "Jindal Steel & Power Ltd.", projectCount: 6, years: [2021, 2023, 2025] },
-          { clientId: "c-3", clientName: "Sail Bhilai Steel Plant", projectCount: 4, years: [2020, 2022, 2024] },
-          { clientId: "c-4", clientName: "Electrosteel Steels Ltd", projectCount: 3, years: [2023, 2025] },
-        ],
-        mostDoneLines: [
-          { lineType: "Continuous TMT Bar Mill", count: 16 },
-          { lineType: "High-Speed Wire Rod Block", count: 11 },
-          { lineType: "Structural Section Mill", count: 8 },
-          { lineType: "Narrow Strip Hot Rolling Mill", count: 4 },
-        ],
-        topMaterialAndLineCombinations: [
-          { material: "Carbon Steel (IS 2062)", lineType: "Continuous TMT Bar Mill", count: 14 },
-          { material: "Alloy Steel (EN19/EN24)", lineType: "High-Speed Wire Rod Block", count: 9 },
-          { material: "Carbon Steel (IS 2062)", lineType: "Structural Section Mill", count: 6 },
-          { material: "Stainless Steel (SS 304/316)", lineType: "Narrow Strip Hot Rolling Mill", count: 3 },
-        ],
-        fastestExecutionCombination: {
-          material: "Carbon Steel (IS 2062)",
-          lineType: "Continuous TMT Bar Mill",
-          minDays: 34,
-          projectCode: "PRJ-2024-0012",
-          projectName: "Jindal Angul 24-Stand Bar Mill Cutover",
-        },
-      };
-    }
 
     return {
       mostDoneMaterial,
@@ -327,28 +270,6 @@ export class AnalyticsService {
     const mostEffectiveCtaButtons = Object.entries(ctaCounts)
       .map(([ctaId, count]) => ({ ctaId, count }))
       .sort((a, b) => b.count - a.count);
-
-    if (mostEnquiredPages.length === 0 && mostEffectiveCtaButtons.length === 0) {
-      return {
-        mostEnquiredPages: [
-          { pagePath: "/services/automation-consultancy", count: 48 },
-          { pagePath: "/contact", count: 35 },
-          { pagePath: "/projects", count: 29 },
-          { pagePath: "/services/trading", count: 21 },
-          { pagePath: "/gallery", count: 14 },
-        ],
-        mostEffectiveCtaButtons: [
-          { ctaId: "floating_whatsapp", count: 42 },
-          { ctaId: "navbar_get_in_touch", count: 38 },
-          { ctaId: "contact_page_form", count: 26 },
-          { ctaId: "mobile_drawer_get_in_touch", count: 17 },
-          { ctaId: "floating_call", count: 11 },
-        ],
-        directWhatsappCount: 42,
-        totalCtaEvents: 85,
-        totalEnquiries: 38,
-      };
-    }
 
     return {
       mostEnquiredPages,
@@ -403,21 +324,6 @@ export class AnalyticsService {
       totalOverseasSites += s.overseasSites;
     }
 
-    if (employeeStats.length === 0) {
-      return {
-        employees: [
-          { employeeId: "e-1", employeeName: "Rajesh Sharma (Lead Commissioning)", totalSites: 14, completedSites: 13, indiaSites: 10, overseasSites: 4 },
-          { employeeId: "e-2", employeeName: "Vikram Sengupta (Automation Specialist)", totalSites: 11, completedSites: 10, indiaSites: 7, overseasSites: 4 },
-          { employeeId: "e-3", employeeName: "Anand Kulkarni (Senior Field Engineer)", totalSites: 9, completedSites: 8, indiaSites: 7, overseasSites: 2 },
-          { employeeId: "e-4", employeeName: "Sandeep Verma (Drives & PLC Engineer)", totalSites: 7, completedSites: 6, indiaSites: 6, overseasSites: 1 },
-          { employeeId: "e-5", employeeName: "Manoj Nambiar (Mill Metallurgy Engineer)", totalSites: 6, completedSites: 5, indiaSites: 4, overseasSites: 2 },
-        ],
-        totalCompletedSites: 42,
-        totalIndiaSites: 34,
-        totalOverseasSites: 13,
-      };
-    }
-
     return {
       employees: employeeStats,
       totalCompletedSites,
@@ -426,4 +332,3 @@ export class AnalyticsService {
     };
   }
 }
-
