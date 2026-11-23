@@ -77,6 +77,27 @@ describe("Audit Logs Module & Service Tests", () => {
       );
     });
 
+    it("applies filters for employeeCode, clientIp, and statusCode", async () => {
+      (prisma.auditLog.findMany as any).mockResolvedValueOnce([]);
+      (prisma.auditLog.count as any).mockResolvedValueOnce(0);
+
+      await AuditService.listAuditLogs({
+        employeeCode: "EMP-001",
+        clientIp: "192.168.1.1",
+        statusCode: 200,
+      });
+
+      expect(prisma.auditLog.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            employeeCode: { contains: "EMP-001", mode: "insensitive" },
+            clientIp: { contains: "192.168.1.1", mode: "insensitive" },
+            statusCode: 200,
+          }),
+        })
+      );
+    });
+
     it("fetches a single audit log by id", async () => {
       const mockItem = {
         id: "log-99",
@@ -209,6 +230,18 @@ describe("Audit Logs Module & Service Tests", () => {
       });
 
       expect(prisma.auditLog.create).not.toHaveBeenCalled();
+    });
+
+    it("returns x-request-id correlation header in responses", async () => {
+      const res = await server.inject({
+        method: "GET",
+        url: "/api/v1/health",
+        headers: {
+          "x-request-id": "req-custom-trace-123",
+        },
+      });
+
+      expect(res.headers["x-request-id"]).toBe("req-custom-trace-123");
     });
   });
 });
