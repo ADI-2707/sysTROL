@@ -41,6 +41,8 @@ describe("AuditLogsPage Tests", () => {
           {
             id: "audit-1",
             actorId: "usr-admin-01",
+            employeeCode: "EMP-001",
+            statusCode: 201,
             action: "POST /api/v1/projects",
             entityType: "projects",
             entityId: "prj-88",
@@ -60,6 +62,8 @@ describe("AuditLogsPage Tests", () => {
     await waitFor(() => {
       expect(screen.getByText("POST /api/v1/projects")).toBeDefined();
       expect(screen.getByText("PRJ-01")).toBeDefined();
+      expect(screen.getByText("EMP-001")).toBeDefined();
+      expect(screen.getByText("201")).toBeDefined();
     });
   });
 
