@@ -96,6 +96,11 @@ describe("SEO and Metadata Scenarios", () => {
 
   it("generates dynamic metadata with canonical paths for projects/[slug]", async () => {
     const targetProject = projectsData[0];
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ project: targetProject }),
+    } as Response);
+
     const meta = await generateProjectMetadata({
       params: Promise.resolve({ slug: targetProject.slug }),
     });
@@ -106,6 +111,12 @@ describe("SEO and Metadata Scenarios", () => {
   });
 
   it("handles non-existent slug gracefully in projects/[slug]", async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+      json: async () => ({ isUnpublished: true }),
+    } as Response);
+
     const meta = await generateProjectMetadata({
       params: Promise.resolve({ slug: "non-existent-slug" }),
     });
