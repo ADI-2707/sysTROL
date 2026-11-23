@@ -117,6 +117,28 @@ export async function buildServer() {
     done();
   });
 
+  server.setErrorHandler((error, request, reply) => {
+    const statusCode = error.statusCode && error.statusCode >= 400 ? error.statusCode : 500;
+    request.log.error(
+      {
+        err: {
+          message: error.message,
+          stack: error.stack,
+          code: (error as any).code,
+        },
+        statusCode,
+        url: request.url,
+        method: request.method,
+      },
+      "Request error occurred"
+    );
+    return reply.status(statusCode).send({
+      statusCode,
+      error: error.name || "Internal Server Error",
+      message: statusCode === 500 && env.NODE_ENV === "production" ? "Internal Server Error" : error.message,
+    });
+  });
+
   server.get("/", async () => {
     return {
       service: "sysTROL Industrial Engineering API",

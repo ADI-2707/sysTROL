@@ -5,6 +5,7 @@ import { TotpService } from "../../common/auth/totp.service.js";
 import { UserRole } from "@systrol/types";
 import { env } from "@systrol/config";
 import { AuthRateLimiter } from "../../common/auth/rate-limiter.js";
+import { redis } from "../../common/redis.js";
 
 const loginSchema = z.object({
   email: z.string().email(),
