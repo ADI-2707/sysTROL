@@ -140,6 +140,7 @@ describe("attribution tracker and session storage tests", () => {
     const [endpoint, options] = fetchMock.mock.calls[0];
     expect(endpoint).toContain("/api/v1/public/cta-event");
     expect(options.keepalive).toBe(true);
+    expect(options.headers["x-request-id"]).toBeDefined();
     const body = JSON.parse(options.body);
     expect(body.eventType).toBe("PHONE_CLICK");
     expect(body.ctaId).toBe("floating_call");
