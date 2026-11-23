@@ -12,6 +12,12 @@ export default function RootError({
   reset: () => void;
 }) {
   useEffect(() => {
+    console.error("[InternalOps:RuntimeError]", {
+      message: error.message,
+      digest: error.digest,
+      stack: error.stack,
+      timestamp: new Date().toISOString(),
+    });
   }, [error]);
 
   return (
