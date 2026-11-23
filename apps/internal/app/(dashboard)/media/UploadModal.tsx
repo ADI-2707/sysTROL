@@ -3,6 +3,7 @@
 import React, { useState, useRef } from "react";
 import { X, Upload, Image as ImageIcon, AlertCircle, CheckCircle2, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@systrol/ui";
 
 const ALLOWED_MIME_TYPES = ["image/webp", "image/jpeg", "image/png", "image/avif"];
 const MAX_SIZE_BYTES = 5 * 1024 * 1024;
@@ -27,6 +28,7 @@ interface ImageMetadata {
 }
 
 export function UploadModal({ isOpen, onClose, onSuccess, token, apiUrl }: UploadModalProps) {
+  const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -212,12 +214,14 @@ export function UploadModal({ isOpen, onClose, onSuccess, token, apiUrl }: Uploa
 
       setUploadProgress(100);
       setUploadStep("Uploaded successfully!");
+      toast.success("Media asset uploaded successfully!");
 
       setTimeout(() => {
         onSuccess();
         handleClose();
       }, 500);
     } catch (err: any) {
+      toast.error(err.message || "An unexpected error occurred during upload.");
       setError(err.message || "An unexpected error occurred during upload.");
     } finally {
       setIsUploading(false);

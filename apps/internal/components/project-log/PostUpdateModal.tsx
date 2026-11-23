@@ -9,6 +9,7 @@ import {
 import { LogEntryCategory, ProjectLogEntryDto } from "@systrol/types";
 import { postLogEntry } from "@/lib/project-log-api";
 import { CATEGORY_OPTIONS } from "./category-meta.js";
+import { useToast } from "@systrol/ui";
 
 export interface PostUpdateModalProps {
   projectId: string;
@@ -44,6 +45,7 @@ export function PostUpdateModal({
   onClose,
   onSuccess,
 }: PostUpdateModalProps) {
+  const { toast } = useToast();
   const weekDays = useMemo(() => getCurrentWeekDays(), []);
   const defaultDay = weekDays[weekDays.length - 1]?.dateStr || new Date().toISOString();
 
@@ -103,9 +105,11 @@ export function PostUpdateModal({
         attachments,
       });
 
+      toast.success("Project update recorded successfully!");
       onSuccess(created);
       onClose();
     } catch (err: any) {
+      toast.error(err?.message || "Failed to post log entry");
       setError(err?.message || "Failed to post log entry");
     } finally {
       setSubmitting(false);

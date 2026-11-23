@@ -33,8 +33,10 @@ import { TabGroup } from "@/components/ui/tab-group";
 import { useDebounce } from "@/lib/use-debounce";
 import { PublishCaseStudyModal } from "./PublishCaseStudyModal";
 import { resolveMediaUrl, FALLBACK_PROJECT_IMAGE } from "@/lib/media-utils";
+import { useToast } from "@systrol/ui";
 
 export default function ProjectManagementPage() {
+  const { toast } = useToast();
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [activeTab, setActiveTab] = useState<"ONGOING" | "COMMISSIONED" | "PUBLISHED">("ONGOING");
   const [searchQuery, setSearchQuery] = useState("");
@@ -128,6 +130,7 @@ export default function ProjectManagementPage() {
     }
     const updated = unpublishProject(projId);
     if (updated) {
+      toast.info("Case study unpublished and returned to Commissioned status.");
       const refreshed = getProjects();
       setProjects(refreshed);
     }
