@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseJwt, isTokenValid } from "./token-utils.js";
+import { parseJwt, isTokenValid, isTokenExpiringSoon } from "./token-utils.js";
 
 function createJwt(payload: Record<string, unknown>): string {
   const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
@@ -80,6 +80,38 @@ describe("token-utils unit tests", () => {
     it("returns false for completely malformed token strings", () => {
       expect(isTokenValid("not.a.valid.jwt")).toBe(false);
       expect(isTokenValid("random-garbage")).toBe(false);
+    });
+  });
+
+  describe("isTokenExpiringSoon", () => {
+    it("returns false for a token with ample remaining time", () => {
+      const futureExp = Math.floor(Date.now() / 1000) + 1800;
+      const token = createJwt({ sub: "user-abc", exp: futureExp });
+      expect(isTokenExpiringSoon(token, 30)).toBe(false);
+    });
+
+    it("returns true for a token expiring within the buffer window", () => {
+      const soonExp = Math.floor(Date.now() / 1000) + 20;
+      const token = createJwt({ sub: "user-abc", exp: soonExp });
+      expect(isTokenExpiringSoon(token, 30)).toBe(true);
+    });
+
+    it("returns true for an already expired token", () => {
+      const pastExp = Math.floor(Date.now() / 1000) - 10;
+      const token = createJwt({ sub: "user-abc", exp: pastExp });
+      expect(isTokenExpiringSoon(token, 30)).toBe(true);
+    });
+
+    it("returns true for null, undefined, empty string, or invalid token", () => {
+      expect(isTokenExpiringSoon(null)).toBe(true);
+      expect(isTokenExpiringSoon(undefined)).toBe(true);
+      expect(isTokenExpiringSoon("")).toBe(true);
+      expect(isTokenExpiringSoon("not-a-token")).toBe(true);
+    });
+
+    it("returns true if token lacks an exp claim", () => {
+      const tokenWithoutExp = createJwt({ sub: "user-1" });
+      expect(isTokenExpiringSoon(tokenWithoutExp)).toBe(true);
     });
   });
 });
