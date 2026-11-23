@@ -1,5 +1,13 @@
 # @systrol/api
 
+## 2.9.1
+
+### Patch Changes
+
+- da74795: Synchronize showcase projects with database, harden case study publishing, and ensure honest toast notifications.
+- Updated dependencies [da74795]
+  - @systrol/database@0.3.1
+
 ## 2.9.0
 
 ### Minor Changes

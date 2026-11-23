@@ -1,5 +1,11 @@
 # @systrol/internal
 
+## 2.10.1
+
+### Patch Changes
+
+- da74795: Synchronize showcase projects with database, harden case study publishing, and ensure honest toast notifications.
+
 ## 2.10.0
 
 ### Minor Changes
