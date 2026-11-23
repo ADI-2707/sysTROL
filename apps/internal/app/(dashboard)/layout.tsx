@@ -417,21 +417,6 @@ export default function DashboardLayout({
             flexDirection: "column",
           }}
         >
-          {!isCollapsed && (
-            <div
-              style={{
-                fontSize: "10.5px",
-                fontWeight: 700,
-                color: "var(--text-muted)",
-                textTransform: "uppercase",
-                padding: "0 10px 8px 10px",
-                letterSpacing: "0.6px",
-                flexShrink: 0,
-              }}
-            >
-              Core Operations
-            </div>
-          )}
           <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
             {visibleNavItems.map((item) => (
               <NavLink
