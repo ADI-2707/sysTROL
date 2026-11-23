@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import sitemap from "../../app/sitemap.js";
 import robots from "../../app/robots.js";
 import { metadata as aboutMetadata } from "../../app/about/page.js";
@@ -177,7 +177,7 @@ describe("SEO and Metadata Scenarios", () => {
       json: async () => {
         throw new Error("SyntaxError: Unexpected token");
       },
-    } as Response);
+    } as unknown as Response);
 
     const meta = await generateCareerMetadata({
       params: Promise.resolve({ id: "malformed-json-job" }),
