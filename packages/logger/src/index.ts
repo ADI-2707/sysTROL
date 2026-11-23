@@ -12,5 +12,23 @@ export function createLogger(name: string): Logger {
     level,
     timestamp: pino.stdTimeFunctions.isoTime,
     base: { service: name },
+    redact: {
+      paths: [
+        "req.headers.authorization",
+        "req.headers.cookie",
+        "password",
+        "hashedPassword",
+        "token",
+        "refreshToken",
+        "totpSecret",
+        "bankAccount",
+        "panNumber",
+        "*.password",
+        "*.hashedPassword",
+        "*.token",
+        "*.totpSecret",
+      ],
+      censor: "[REDACTED]",
+    },
   });
 }
