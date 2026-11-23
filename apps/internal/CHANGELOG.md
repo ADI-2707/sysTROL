@@ -1,5 +1,11 @@
 # @systrol/internal
 
+## 2.10.3
+
+### Patch Changes
+
+- 52cb8f7: Eliminate vertical content shifting and row height swelling during sidebar expansion animation.
+
 ## 2.10.2
 
 ### Patch Changes
