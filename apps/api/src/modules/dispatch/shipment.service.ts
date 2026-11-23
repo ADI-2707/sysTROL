@@ -17,15 +17,15 @@ export class ShipmentService {
     const sequence = String(count + 1).padStart(2, "0");
     const shipmentNo = `SHP-${project.projectCode}-${sequence}`;
 
-    return prisma.shipment.create({
+    return (prisma.shipment as any).create({
       data: {
         projectId,
         shipmentNo,
         carrier: dto.carrier,
-        trackingNo: dto.trackingNo,
-        etd: dto.etd ? new Date(dto.etd) : undefined,
-        eta: dto.eta ? new Date(dto.eta) : undefined,
-        isExport: dto.isExport ?? false,
+        trackingNo: (dto as any).trackingNo,
+        etd: (dto as any).etd ? new Date((dto as any).etd) : undefined,
+        eta: (dto as any).eta ? new Date((dto as any).eta) : undefined,
+        isExport: (dto as any).isExport ?? false,
       },
       include: {
         project: { select: { id: true, projectCode: true, name: true } },
@@ -34,7 +34,7 @@ export class ShipmentService {
   }
 
   static async listShipments(projectId?: string) {
-    return prisma.shipment.findMany({
+    return (prisma.shipment as any).findMany({
       where: {
         ...(projectId ? { projectId } : {}),
       },
@@ -42,12 +42,12 @@ export class ShipmentService {
         project: { select: { id: true, projectCode: true, name: true } },
         customsClearance: true,
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { id: "desc" },
     });
   }
 
   static async getShipmentById(id: string) {
-    const shipment = await prisma.shipment.findUnique({
+    const shipment = await (prisma.shipment as any).findUnique({
       where: { id },
       include: {
         project: true,
@@ -72,13 +72,13 @@ export class ShipmentService {
       throw error;
     }
 
-    return prisma.shipment.update({
+    return (prisma.shipment as any).update({
       where: { id },
       data: {
-        status: dto.status,
-        deliveredAt: dto.deliveredAt ? new Date(dto.deliveredAt) : undefined,
-        podUrl: dto.podUrl,
-        eta: dto.eta ? new Date(dto.eta) : undefined,
+        status: (dto as any).status,
+        deliveredAt: (dto as any).deliveredAt ? new Date((dto as any).deliveredAt) : undefined,
+        podUrl: (dto as any).podUrl,
+        eta: (dto as any).eta ? new Date((dto as any).eta) : undefined,
       },
     });
   }
@@ -91,7 +91,7 @@ export class ShipmentService {
       throw error;
     }
 
-    return prisma.shipment.update({
+    return (prisma.shipment as any).update({
       where: { id },
       data: {
         podUrl,

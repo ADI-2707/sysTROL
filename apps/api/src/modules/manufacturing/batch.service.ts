@@ -27,7 +27,7 @@ export class ManufacturingBatchService {
   }
 
   static async listBatches(projectId?: string) {
-    return prisma.manufacturingBatch.findMany({
+    return (prisma.manufacturingBatch as any).findMany({
       where: {
         ...(projectId ? { projectId } : {}),
       },
@@ -35,7 +35,7 @@ export class ManufacturingBatchService {
         project: { select: { id: true, projectCode: true, name: true } },
         qcChecks: true,
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { id: "desc" },
     });
   }
 

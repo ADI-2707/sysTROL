@@ -117,14 +117,14 @@ export async function buildServer() {
     done();
   });
 
-  server.setErrorHandler((error, request, reply) => {
+  server.setErrorHandler((error: any, request, reply) => {
     const statusCode = error.statusCode && error.statusCode >= 400 ? error.statusCode : 500;
     request.log.error(
       {
         err: {
           message: error.message,
           stack: error.stack,
-          code: (error as any).code,
+          code: error.code,
         },
         statusCode,
         url: request.url,
