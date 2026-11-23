@@ -1,5 +1,16 @@
 # @systrol/internal
 
+## 2.10.0
+
+### Minor Changes
+
+- 9ee18c4: Introduce shared `@systrol/ui` package with core primitives, custom bottom-right bouncy toast notification engine with real-time progress bar, and 60-30-10 light/dark theme harmonization.
+
+### Patch Changes
+
+- Updated dependencies [9ee18c4]
+  - @systrol/ui@0.3.0
+
 ## 2.9.2
 
 ### Patch Changes
