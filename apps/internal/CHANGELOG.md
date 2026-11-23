@@ -1,5 +1,13 @@
 # @systrol/internal
 
+## 2.10.2
+
+### Patch Changes
+
+- a965af6: Eliminate hardcoded analytics fallbacks, ensure strictly accurate calculations, and introduce reusable shimmering skeleton loaders across internal operations dashboards.
+- Updated dependencies [a965af6]
+  - @systrol/ui@0.3.1
+
 ## 2.10.1
 
 ### Patch Changes

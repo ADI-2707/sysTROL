@@ -1,5 +1,11 @@
 # @systrol/ui
 
+## 0.3.1
+
+### Patch Changes
+
+- a965af6: Eliminate hardcoded analytics fallbacks, ensure strictly accurate calculations, and introduce reusable shimmering skeleton loaders across internal operations dashboards.
+
 ## 0.3.0
 
 ### Minor Changes
