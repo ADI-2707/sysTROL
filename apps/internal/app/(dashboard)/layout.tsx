@@ -59,6 +59,9 @@ function NavLink({
           display: "flex",
           alignItems: "center",
           justifyContent: isCollapsed ? "center" : "flex-start",
+          height: "36px",
+          minHeight: "36px",
+          boxSizing: "border-box",
           gap: "10px",
           padding: isCollapsed ? "7px 0" : "7px 10px",
           borderRadius: "7px",
@@ -67,6 +70,7 @@ function NavLink({
           borderLeft: isCollapsed ? "none" : isActive ? "3px solid var(--sys-green-accent)" : "3px solid transparent",
           fontSize: "13px",
           fontWeight: isActive ? 600 : 500,
+          overflow: "hidden",
           transition: "all 0.18s ease",
         }}
       >
@@ -76,17 +80,30 @@ function NavLink({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            flexShrink: 0,
             transform: isActive ? "scale(1.05)" : "scale(1)",
             transition: "transform 0.18s ease",
           }}
         >
           {item.icon}
         </span>
-        {!isCollapsed && <span>{item.label}</span>}
+        {!isCollapsed && (
+          <span
+            style={{
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {item.label}
+          </span>
+        )}
         {!isCollapsed && typeof item.badgeCount === "number" && item.badgeCount > 0 && (
           <span
             style={{
               marginLeft: "auto",
+              flexShrink: 0,
+              whiteSpace: "nowrap",
               backgroundColor: "#ef4444",
               color: "#ffffff",
               fontSize: "10px",
@@ -411,10 +428,11 @@ export default function DashboardLayout({
         <nav
           style={{
             flex: 1,
-            padding: isCollapsed ? "10px 6px" : "12px 10px",
+            padding: isCollapsed ? "10px 6px" : "10px 10px",
             overflow: "hidden",
             display: "flex",
             flexDirection: "column",
+            transition: "padding 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
           }}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
