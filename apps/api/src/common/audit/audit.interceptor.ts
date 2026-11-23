@@ -71,18 +71,6 @@ async function auditInterceptorPlugin(fastify: FastifyInstance) {
       return payload;
     }
 
-    if (reply.statusCode >= 400) {
-      return payload;
-    }
-
-    if (
-      request.url.includes("/auth/login") ||
-      request.url.includes("/auth/refresh") ||
-      request.url.includes("/public/")
-    ) {
-      return payload;
-    }
-
     const user = request.user;
     const actorId = user?.sub || "system";
     const userId = user?.sub && isValidUuid(user.sub) ? user.sub : null;
@@ -95,6 +83,46 @@ async function auditInterceptorPlugin(fastify: FastifyInstance) {
     const pathSegments = request.url.split("?")[0].split("/").filter(Boolean);
     const entityType = pathSegments.find((s) => !["api", "v1", "public", "admin"].includes(s)) || "unknown";
     const params = (request.params as Record<string, string>) || {};
+
+    if (reply.statusCode >= 400) {
+      if (reply.statusCode === 401 || reply.statusCode === 403 || request.url.includes("/auth/login")) {
+        const securityEndpoint = request.url.split("?")[0];
+        setImmediate(async () => {
+          try {
+            await prisma.auditLog.create({
+              data: {
+                requestId,
+                actorId,
+                userId,
+                employeeCode,
+                actorRole: actorRole || "UNAUTHORIZED",
+                clientIp,
+                userAgent,
+                httpMethod: method,
+                endpoint: securityEndpoint,
+                statusCode: reply.statusCode,
+                action: `${method} ${securityEndpoint} [${reply.statusCode}]`,
+                entityType: entityType === "unknown" ? "auth" : entityType,
+                entityId: params.id || "security",
+                projectId: null,
+                diff: { error: typeof payload === "string" ? payload : JSON.stringify(payload) } as any,
+              },
+            });
+          } catch (err: any) {
+            log.warn({ err: err.message, url: request.url }, "Failed to write security audit log record");
+          }
+        });
+      }
+      return payload;
+    }
+
+    if (
+      request.url.includes("/auth/login") ||
+      request.url.includes("/auth/refresh") ||
+      request.url.includes("/public/")
+    ) {
+      return payload;
+    }
     
     let afterData: unknown = null;
     if (typeof payload === "string") {
