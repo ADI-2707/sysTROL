@@ -334,4 +334,100 @@ describe("apiClient & silentRefreshToken unit tests", () => {
     expect(tok3).toBe("mutexToken123");
     expect(networkCalls).toBe(1);
   });
+
+  it("resolves token pre-flight and dispatches request with fresh token without initial 401", async () => {
+    const expiredToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
+      btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) - 200 })) +
+      ".sig";
+    setInMemoryToken(expiredToken);
+
+    const freshToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
+      btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 })) +
+      ".sig";
+    const callsLog: Array<{ url: string; authHeader: string | null }> = [];
+
+    const mockFetch = vi.fn().mockImplementation((url: string, init?: RequestInit) => {
+      let authHeader: string | null = null;
+      if (init?.headers) {
+        if (init.headers instanceof Headers) {
+          authHeader = init.headers.get("Authorization");
+        } else if (Array.isArray(init.headers)) {
+          const entry = init.headers.find(([k]) => k.toLowerCase() === "authorization");
+          authHeader = entry ? entry[1] : null;
+        } else {
+          authHeader = (init.headers as Record<string, string>)["Authorization"] || (init.headers as Record<string, string>)["authorization"] || null;
+        }
+      }
+      callsLog.push({ url, authHeader });
+
+      if (url.includes("/auth/refresh")) {
+        return Promise.resolve(
+          new Response(JSON.stringify({ accessToken: freshToken }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          })
+        );
+      }
+
+      if (url.includes("/api/proxy/v1/projects")) {
+        return Promise.resolve(new Response(JSON.stringify({ projects: [] }), { status: 200 }));
+      }
+
+      return Promise.resolve(new Response("{}", { status: 404 }));
+    });
+    global.fetch = mockFetch;
+
+    const res = await apiClient("/api/v1/projects");
+    expect(res.status).toBe(200);
+
+    expect(callsLog).toHaveLength(2);
+    expect(callsLog[0].url).toContain("/api/proxy/v1/auth/refresh");
+    expect(callsLog[1].url).toBe("/api/proxy/v1/projects");
+    expect(callsLog[1].authHeader).toBe(`Bearer ${freshToken}`);
+  });
+
+  it("pre-emptively refreshes token when within 30-second leeway buffer", async () => {
+    const soonExpiringToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
+      btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 15 })) +
+      ".sig";
+
+    const refreshedToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
+      btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 })) +
+      ".sig";
+    let refreshed = false;
+
+    const mockFetch = vi.fn().mockImplementation((url: string, init?: RequestInit) => {
+      if (url.includes("/auth/refresh")) {
+        refreshed = true;
+        return Promise.resolve(
+          new Response(JSON.stringify({ accessToken: refreshedToken }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          })
+        );
+      }
+
+      let authHeader: string | null = null;
+      if (init?.headers) {
+        if (init.headers instanceof Headers) {
+          authHeader = init.headers.get("Authorization");
+        } else if (Array.isArray(init.headers)) {
+          const entry = init.headers.find(([k]) => k.toLowerCase() === "authorization");
+          authHeader = entry ? entry[1] : null;
+        } else {
+          authHeader = (init.headers as Record<string, string>)["Authorization"] || (init.headers as Record<string, string>)["authorization"] || null;
+        }
+      }
+
+      expect(authHeader).toBe(`Bearer ${refreshedToken}`);
+      return Promise.resolve(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+    });
+    global.fetch = mockFetch;
+    setInMemoryToken(soonExpiringToken);
+
+    const res = await apiClient("/api/v1/cta/metrics");
+    expect(res.status).toBe(200);
+    expect(refreshed).toBe(true);
+    expect(getInMemoryToken()).toBe(refreshedToken);
+  });
 });
