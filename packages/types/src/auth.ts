@@ -13,8 +13,18 @@ export enum UserRole {
 export interface JWTPayload {
   sub: string;
   role: UserRole;
+  employeeCode?: string;
+  email?: string;
   iat: number;
   exp: number;
+}
+
+export interface UserSummary {
+  id: string;
+  employeeCode?: string | null;
+  name: string;
+  email: string;
+  role: UserRole;
 }
 
 export interface RefreshPayload {

@@ -85,8 +85,8 @@ export function trackCtaEvent(params: {
     metadata: params.metadata,
   };
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://systrol-api.onrender.com";
-  const endpoint = `${apiUrl}/api/v1/public/cta-event`;
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+  const endpoint = apiUrl ? `${apiUrl}/api/v1/public/cta-event` : "/api/v1/public/cta-event";
   const body = JSON.stringify(payload);
 
   if (typeof navigator !== "undefined" && navigator.sendBeacon) {
@@ -97,7 +97,10 @@ export function trackCtaEvent(params: {
 
   fetch(endpoint, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "x-request-id": typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+    },
     body,
     keepalive: true,
   }).catch(() => {});

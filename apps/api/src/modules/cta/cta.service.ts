@@ -1,6 +1,13 @@
 import { prisma } from "@systrol/database";
 import { PublicCtaEventDto } from "@systrol/types";
 import { redis } from "../../common/redis.js";
+import crypto from "node:crypto";
+
+function hashClientIp(ip?: string): string | null {
+  if (!ip || typeof ip !== "string") return null;
+  const salt = process.env.JWT_SECRET || "systrol-ip-salt-2026";
+  return crypto.createHmac("sha256", salt).update(ip.trim()).digest("hex").slice(0, 32);
+}
 
 export class CtaService {
   static async recordCtaEvent(dto: PublicCtaEventDto, ip?: string, userAgent?: string) {
@@ -9,7 +16,7 @@ export class CtaService {
         eventType: dto.eventType,
         pagePath: dto.pagePath,
         ctaId: dto.ctaId,
-        ipHash: ip || null,
+        ipHash: hashClientIp(ip),
         userAgent: userAgent || null,
         utmSource: dto.utmSource || null,
         utmMedium: dto.utmMedium || null,

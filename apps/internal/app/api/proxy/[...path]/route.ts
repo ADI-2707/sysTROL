@@ -22,6 +22,15 @@ async function handleProxy(req: NextRequest, { params }: { params: Promise<{ pat
     }
   });
 
+  const clientIp = req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip");
+  if (clientIp) {
+    forwardHeaders.set("x-forwarded-for", clientIp);
+  }
+  const requestId = req.headers.get("x-request-id");
+  if (requestId) {
+    forwardHeaders.set("x-request-id", requestId);
+  }
+
   const cookieHeader = req.headers.get("cookie") || (req.cookies ? req.cookies.toString() : "");
   if (cookieHeader) {
     forwardHeaders.set("cookie", cookieHeader);

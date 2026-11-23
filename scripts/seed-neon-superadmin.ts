@@ -17,11 +17,13 @@ async function main() {
   const adminCom = await prisma.user.upsert({
     where: { email: "admin@systrol.com" },
     update: {
+      employeeCode: "SYS-EMP-0001",
       hashedPassword: hashPassword("admin123"),
       role: UserRole.SUPER_ADMIN,
       name: "Admin Controls",
     },
     create: {
+      employeeCode: "SYS-EMP-0001",
       email: "admin@systrol.com",
       name: "Admin Controls",
       role: UserRole.SUPER_ADMIN,
@@ -32,11 +34,13 @@ async function main() {
   const adminIn = await prisma.user.upsert({
     where: { email: "admin@systrol.in" },
     update: {
+      employeeCode: "SYS-EMP-0002",
       hashedPassword: hashPassword("dev-admin-secret-2026"),
       role: UserRole.SUPER_ADMIN,
       name: "System Admin",
     },
     create: {
+      employeeCode: "SYS-EMP-0002",
       email: "admin@systrol.in",
       name: "System Admin",
       role: UserRole.SUPER_ADMIN,

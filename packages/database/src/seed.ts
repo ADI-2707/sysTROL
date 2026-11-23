@@ -11,8 +11,11 @@ function hashPassword(password: string): string {
 async function main() {
   const admin = await prisma.user.upsert({
     where: { email: "admin@systrol.in" },
-    update: {},
+    update: {
+      employeeCode: "SYS-EMP-0002",
+    },
     create: {
+      employeeCode: "SYS-EMP-0002",
       email: "admin@systrol.in",
       name: "System Admin",
       role: UserRole.SUPER_ADMIN,
@@ -23,11 +26,13 @@ async function main() {
   await prisma.user.upsert({
     where: { email: "admin@systrol.com" },
     update: {
+      employeeCode: "SYS-EMP-0001",
       name: "Admin Controls",
       role: UserRole.SUPER_ADMIN,
       hashedPassword: hashPassword("admin123"),
     },
     create: {
+      employeeCode: "SYS-EMP-0001",
       email: "admin@systrol.com",
       name: "Admin Controls",
       role: UserRole.SUPER_ADMIN,
@@ -37,8 +42,11 @@ async function main() {
 
   const hr = await prisma.user.upsert({
     where: { email: "hr@systrol.in" },
-    update: {},
+    update: {
+      employeeCode: "SYS-EMP-0003",
+    },
     create: {
+      employeeCode: "SYS-EMP-0003",
       email: "hr@systrol.in",
       name: "HR Manager",
       role: UserRole.HR_RECRUITER,
@@ -48,8 +56,11 @@ async function main() {
 
   const lead = await prisma.user.upsert({
     where: { email: "lead@systrol.in" },
-    update: {},
+    update: {
+      employeeCode: "SYS-EMP-0004",
+    },
     create: {
+      employeeCode: "SYS-EMP-0004",
       email: "lead@systrol.in",
       name: "Commissioning Lead",
       role: UserRole.COMMISSIONING_LEAD,

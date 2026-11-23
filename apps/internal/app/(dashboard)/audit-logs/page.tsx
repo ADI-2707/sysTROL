@@ -292,6 +292,8 @@ export default function AuditLogsPage() {
                 <option value="dispatch">Dispatch</option>
                 <option value="media">Media CMS</option>
                 <option value="careers">Careers & Jobs</option>
+                <option value="sales-visits">Sales Visits</option>
+                <option value="auth">Authentication & Security</option>
               </select>
             </div>
 
@@ -314,8 +316,9 @@ export default function AuditLogsPage() {
                 <thead>
                   <tr style={{ backgroundColor: "var(--bg-canvas)", borderBottom: "1px solid var(--border-subtle)" }}>
                     <th style={{ padding: "10px 14px", color: "var(--text-muted)", fontWeight: 600 }}>Timestamp</th>
-                    <th style={{ padding: "10px 14px", color: "var(--text-muted)", fontWeight: 600 }}>Actor</th>
+                    <th style={{ padding: "10px 14px", color: "var(--text-muted)", fontWeight: 600 }}>Employee / Actor</th>
                     <th style={{ padding: "10px 14px", color: "var(--text-muted)", fontWeight: 600 }}>Action</th>
+                    <th style={{ padding: "10px 14px", color: "var(--text-muted)", fontWeight: 600 }}>Status</th>
                     <th style={{ padding: "10px 14px", color: "var(--text-muted)", fontWeight: 600 }}>Entity</th>
                     <th style={{ padding: "10px 14px", color: "var(--text-muted)", fontWeight: 600 }}>Target ID</th>
                     <th style={{ padding: "10px 14px", color: "var(--text-muted)", fontWeight: 600 }}>Project</th>
@@ -325,15 +328,15 @@ export default function AuditLogsPage() {
                 <tbody>
                   {isLoading ? (
                     <>
-                      <SkeletonTableRow columns={7} />
-                      <SkeletonTableRow columns={7} />
-                      <SkeletonTableRow columns={7} />
-                      <SkeletonTableRow columns={7} />
-                      <SkeletonTableRow columns={7} />
+                      <SkeletonTableRow columns={8} />
+                      <SkeletonTableRow columns={8} />
+                      <SkeletonTableRow columns={8} />
+                      <SkeletonTableRow columns={8} />
+                      <SkeletonTableRow columns={8} />
                     </>
                   ) : logs.length === 0 ? (
                     <tr>
-                      <td colSpan={7} style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
+                      <td colSpan={8} style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
                         No matching audit log records found.
                       </td>
                     </tr>
@@ -349,11 +352,36 @@ export default function AuditLogsPage() {
                         <td style={{ padding: "10px 14px", fontFamily: "var(--font-mono)", color: "var(--text-body)", whiteSpace: "nowrap" }}>
                           {new Date(item.createdAt).toLocaleString()}
                         </td>
-                        <td style={{ padding: "10px 14px", fontFamily: "var(--font-mono)", color: "var(--text-heading)", fontWeight: 600 }}>
-                          {item.actorId.slice(0, 12)}
+                        <td style={{ padding: "10px 14px", color: "var(--text-heading)", fontWeight: 600 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            {item.user?.employeeCode || item.employeeCode ? (
+                              <span style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "var(--sys-blue-subtle)", color: "var(--sys-blue-primary)", fontSize: "11px", fontWeight: 700, fontFamily: "var(--font-mono)" }}>
+                                {item.user?.employeeCode || item.employeeCode}
+                              </span>
+                            ) : null}
+                            <span>{item.user?.name || item.actorId.slice(0, 12)}</span>
+                          </div>
                         </td>
                         <td style={{ padding: "10px 14px", fontFamily: "var(--font-mono)", color: "var(--sys-blue-primary)" }}>
                           {item.action}
+                        </td>
+                        <td style={{ padding: "10px 14px" }}>
+                          {item.statusCode ? (
+                            <span
+                              style={{
+                                fontSize: "11px",
+                                fontWeight: 700,
+                                padding: "2px 6px",
+                                borderRadius: "4px",
+                                backgroundColor: item.statusCode >= 400 ? "rgba(239, 68, 68, 0.12)" : "rgba(16, 185, 129, 0.12)",
+                                color: item.statusCode >= 400 ? "#ef4444" : "var(--sys-green-accent)",
+                              }}
+                            >
+                              {item.statusCode}
+                            </span>
+                          ) : (
+                            <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>--</span>
+                          )}
                         </td>
                         <td style={{ padding: "10px 14px", textTransform: "capitalize", color: "var(--text-heading)", fontWeight: 500 }}>
                           {item.entityType}

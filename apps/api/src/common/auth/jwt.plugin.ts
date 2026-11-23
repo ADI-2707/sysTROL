@@ -10,7 +10,7 @@ import { prisma } from "@systrol/database";
 
 declare module "@fastify/jwt" {
   interface FastifyJWT {
-    payload: { sub: string; role: UserRole; iat?: number; exp?: number };
+    payload: { sub: string; role: UserRole; employeeCode?: string; email?: string; iat?: number; exp?: number };
     user: JWTPayload;
   }
 }
@@ -25,7 +25,9 @@ declare module "fastify" {
     issueTokens: (
       userId: string,
       role: UserRole,
-      reply: FastifyReply
+      reply: FastifyReply,
+      employeeCode?: string,
+      email?: string
     ) => Promise<{ accessToken: string; refreshToken: string }>;
     refreshTokens: (
       request: FastifyRequest,
@@ -97,10 +99,34 @@ async function jwtPluginAsync(fastify: FastifyInstance) {
     async function (
       userId: string,
       role: UserRole,
-      reply: FastifyReply
+      reply: FastifyReply,
+      employeeCode?: string,
+      email?: string
     ): Promise<{ accessToken: string; refreshToken: string }> {
+      let resolvedCode = employeeCode;
+      let resolvedEmail = email;
+      if (!resolvedCode || !resolvedEmail) {
+        try {
+          const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { employeeCode: true, email: true },
+          });
+          if (user) {
+            resolvedCode = resolvedCode || user.employeeCode || undefined;
+            resolvedEmail = resolvedEmail || user.email || undefined;
+          }
+        } catch {}
+      }
+
+      const signPayload: { sub: string; role: UserRole; employeeCode?: string; email?: string } = {
+        sub: userId,
+        role,
+      };
+      if (resolvedCode) signPayload.employeeCode = resolvedCode;
+      if (resolvedEmail) signPayload.email = resolvedEmail;
+
       const accessToken = fastify.jwt.sign(
-        { sub: userId, role },
+        signPayload,
         { expiresIn: Number(env.JWT_ACCESS_TTL) }
       );
 
@@ -240,7 +266,7 @@ async function jwtPluginAsync(fastify: FastifyInstance) {
       }
 
       const role = (foundRole || user.role) as UserRole;
-      const tokens = await fastify.issueTokens(user.id, role, reply);
+      const tokens = await fastify.issueTokens(user.id, role, reply, user.employeeCode || undefined, user.email || undefined);
 
       try {
         if (matchingKey && matchingKey !== `session:${rawToken}`) {

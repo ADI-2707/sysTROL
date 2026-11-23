@@ -27,6 +27,7 @@ import { auditRoutes } from "./modules/audit/audit.routes.js";
 import { projectLogRoutes } from "./modules/project-log/project-log.routes.js";
 import { latencyTracker } from "./common/metrics/latency-tracker.js";
 import fs from "node:fs";
+import crypto from "node:crypto";
 
 const logger = createLogger("api-server");
 
@@ -43,7 +44,9 @@ function getApiVersion(): string {
 
 export async function buildServer() {
   const server = Fastify({
-    logger: false,
+    loggerInstance: logger,
+    trustProxy: true,
+    genReqId: (req) => (req.headers["x-request-id"] as string) || crypto.randomUUID(),
   });
 
   await server.register(cors, {
@@ -96,9 +99,44 @@ export async function buildServer() {
   // 7. Audit interceptor
   await server.register(auditPlugin);
 
+  server.addHook("onRequest", async (request, reply) => {
+    reply.header("x-request-id", request.id);
+  });
+
+  server.addHook("preHandler", async (request) => {
+    request.log = logger.child({
+      requestId: request.id,
+      ip: request.ip,
+      employeeCode: request.user?.employeeCode || "ANONYMOUS",
+      role: request.user?.role || "GUEST",
+    });
+  });
+
   server.addHook("onResponse", (request, reply, done) => {
     latencyTracker.recordLatency(reply.elapsedTime);
     done();
+  });
+
+  server.setErrorHandler((error: any, request, reply) => {
+    const statusCode = error.statusCode && error.statusCode >= 400 ? error.statusCode : 500;
+    request.log.error(
+      {
+        err: {
+          message: error.message,
+          stack: error.stack,
+          code: error.code,
+        },
+        statusCode,
+        url: request.url,
+        method: request.method,
+      },
+      "Request error occurred"
+    );
+    return reply.status(statusCode).send({
+      statusCode,
+      error: error.name || "Internal Server Error",
+      message: statusCode === 500 && env.NODE_ENV === "production" ? "Internal Server Error" : error.message,
+    });
   });
 
   server.get("/", async () => {
