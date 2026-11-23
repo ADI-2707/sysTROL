@@ -44,7 +44,7 @@ function getApiVersion(): string {
 
 export async function buildServer() {
   const server = Fastify({
-    logger: false,
+    loggerInstance: logger,
     trustProxy: true,
     genReqId: (req) => (req.headers["x-request-id"] as string) || crypto.randomUUID(),
   });
