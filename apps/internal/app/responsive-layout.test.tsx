@@ -135,4 +135,41 @@ describe("Dashboard responsive layout & mobile lock screen tests", () => {
     const logoutButton = screen.getByTitle("Log Out of sysTROL");
     expect(logoutButton).toBeDefined();
   });
+
+  it("locks navigation links to a fixed height with non-wrapping labels", () => {
+    const { container } = render(
+      <DashboardLayout>
+        <div>Content</div>
+      </DashboardLayout>
+    );
+
+    const links = container.querySelectorAll("nav a");
+    expect(links.length).toBeGreaterThan(0);
+
+    links.forEach((link) => {
+      const el = link as HTMLElement;
+      expect(el.style.height).toBe("36px");
+      expect(el.style.boxSizing).toBe("border-box");
+      expect(el.style.overflow).toBe("hidden");
+    });
+
+    const labels = container.querySelectorAll("nav a span:nth-child(2)");
+    labels.forEach((label) => {
+      const el = label as HTMLElement;
+      expect(el.style.whiteSpace).toBe("nowrap");
+      expect(el.style.overflow).toBe("hidden");
+    });
+  });
+
+  it("maintains consistent vertical padding on navigation container across states", () => {
+    const { container } = render(
+      <DashboardLayout>
+        <div>Content</div>
+      </DashboardLayout>
+    );
+
+    const nav = container.querySelector("nav") as HTMLElement;
+    expect(nav.style.paddingTop).toBe("10px");
+    expect(nav.style.paddingBottom).toBe("10px");
+  });
 });
