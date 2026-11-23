@@ -5,6 +5,9 @@ export interface AuditLogQuery {
   limit?: string | number;
   entityType?: string;
   actorId?: string;
+  employeeCode?: string;
+  clientIp?: string;
+  statusCode?: string | number;
   projectId?: string;
   action?: string;
   startDate?: string;
@@ -25,6 +28,18 @@ export class AuditService {
 
     if (query.actorId && query.actorId.trim() !== "") {
       where.actorId = query.actorId.trim();
+    }
+
+    if (query.employeeCode && query.employeeCode.trim() !== "") {
+      where.employeeCode = { contains: query.employeeCode.trim(), mode: "insensitive" };
+    }
+
+    if (query.clientIp && query.clientIp.trim() !== "") {
+      where.clientIp = { contains: query.clientIp.trim(), mode: "insensitive" };
+    }
+
+    if (query.statusCode !== undefined && query.statusCode !== "") {
+      where.statusCode = Number(query.statusCode);
     }
 
     if (query.projectId && query.projectId.trim() !== "") {
@@ -52,6 +67,15 @@ export class AuditService {
         take: limit,
         orderBy: { createdAt: "desc" },
         include: {
+          user: {
+            select: {
+              id: true,
+              employeeCode: true,
+              name: true,
+              email: true,
+              role: true,
+            },
+          },
           project: {
             select: {
               id: true,
@@ -79,6 +103,15 @@ export class AuditService {
     const item = await prisma.auditLog.findUnique({
       where: { id },
       include: {
+        user: {
+          select: {
+            id: true,
+            employeeCode: true,
+            name: true,
+            email: true,
+            role: true,
+          },
+        },
         project: {
           select: {
             id: true,
