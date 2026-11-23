@@ -6,6 +6,46 @@ import { createLogger } from "@systrol/logger";
 const log = createLogger("audit-interceptor");
 
 async function auditInterceptorPlugin(fastify: FastifyInstance) {
+  fastify.addHook("preHandler", async (request: FastifyRequest) => {
+    const method = request.method.toUpperCase();
+    if (!["PATCH", "PUT", "DELETE"].includes(method)) {
+      return;
+    }
+
+    if (request.auditBefore) {
+      return;
+    }
+
+    const params = (request.params as Record<string, string>) || {};
+    const targetId = params.stepId || params.id;
+    if (!targetId) {
+      return;
+    }
+
+    const pathSegments = request.url.split("?")[0].split("/").filter(Boolean);
+    const entityType = pathSegments.find((s) => !["api", "v1", "public", "admin"].includes(s)) || "unknown";
+
+    try {
+      let snapshot: unknown = null;
+      if (entityType === "projects" && (prisma as any).project) {
+        snapshot = await (prisma as any).project.findUnique({ where: { id: targetId } });
+      } else if (entityType === "enquiries" && (prisma as any).enquiry) {
+        snapshot = await (prisma as any).enquiry.findUnique({ where: { id: targetId } });
+      } else if (entityType === "trials" && (prisma as any).trial) {
+        snapshot = await (prisma as any).trial.findUnique({ where: { id: targetId } });
+      } else if (entityType === "careers" && (prisma as any).jobPosting) {
+        snapshot = await (prisma as any).jobPosting.findUnique({ where: { id: targetId } });
+      } else if (entityType === "media" && (prisma as any).mediaAsset) {
+        snapshot = await (prisma as any).mediaAsset.findUnique({ where: { id: targetId } });
+      } else if (entityType === "procurement" && (prisma as any).purchaseOrder) {
+        snapshot = await (prisma as any).purchaseOrder.findUnique({ where: { id: targetId } });
+      }
+      if (snapshot) {
+        request.auditBefore = snapshot;
+      }
+    } catch {}
+  });
+
   fastify.addHook("onSend", async (request: FastifyRequest, reply: FastifyReply, payload: unknown) => {
     const method = request.method.toUpperCase();
     if (!["POST", "PATCH", "PUT", "DELETE"].includes(method)) {
