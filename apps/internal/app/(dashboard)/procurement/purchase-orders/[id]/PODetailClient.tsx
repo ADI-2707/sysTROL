@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Send, CheckCircle2, Truck, Calendar, DollarSign, Package, Loader2 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
+import { useToast } from "@systrol/ui";
 
 interface PODetailProps {
   po: {
@@ -28,6 +29,7 @@ interface PODetailProps {
 
 export function PODetailClient({ po }: PODetailProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const [status, setStatus] = useState(po.status);
   const [loading, setLoading] = useState(false);
 
@@ -40,7 +42,7 @@ export function PODetailClient({ po }: PODetailProps) {
 
       if (res.ok) {
         setStatus("SENT_TO_VENDOR");
-        alert("Purchase Order successfully dispatched to vendor with email confirmation!");
+        toast.success("Purchase Order successfully dispatched to vendor with email confirmation!");
         router.refresh();
       }
     } finally {

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "@systrol/ui/styles/animations.css";
+import { ToastProvider } from "@systrol/ui";
 import { ThemeProvider } from "./theme-provider";
 import { TopProgressBar } from "./top-progress-bar";
 import { AuthProvider } from "../lib/auth-context";
@@ -24,7 +26,9 @@ export default function RootLayout({
       <body>
         <TopProgressBar />
         <ThemeProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <ToastProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>

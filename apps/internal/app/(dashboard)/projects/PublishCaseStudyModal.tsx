@@ -21,6 +21,7 @@ import {
 import { ProjectCaseStudy, ProjectCaseStudyImage, ProjectKpiCard } from "@systrol/types";
 import { useAuth } from "@/lib/auth-context";
 import { apiClient } from "@/lib/api-client";
+import { useToast } from "@systrol/ui";
 import { resolveMediaUrl, FALLBACK_PROJECT_IMAGE } from "@/lib/media-utils";
 
 interface PublishCaseStudyModalProps {
@@ -51,6 +52,7 @@ export function PublishCaseStudyModal({
   onClose,
   onSuccess,
 }: PublishCaseStudyModalProps) {
+  const { toast } = useToast();
   const { user } = useAuth();
   const [projectName, setProjectName] = useState("");
   const [slug, setSlug] = useState("");
@@ -319,10 +321,12 @@ export function PublishCaseStudyModal({
       } catch {}
 
       if (updated) {
+        toast.success("Case study published to public website!");
         onSuccess(updated);
       }
       onClose();
     } catch {
+      toast.error("Failed to publish case study. Please review your entries and try again.");
       setErrorMsg("Failed to publish case study. Please review your entries and try again.");
     } finally {
       setIsSubmitting(false);

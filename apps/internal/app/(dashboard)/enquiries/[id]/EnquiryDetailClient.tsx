@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle2, XCircle, ArrowRight, ShieldCheck, Clock, Building, Calendar, Layers, Loader2 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
+import { useToast } from "@systrol/ui";
 
 interface EnquiryDetailProps {
   enquiry: {
@@ -33,6 +34,7 @@ interface EnquiryDetailProps {
 
 export function EnquiryDetailClient({ enquiry }: EnquiryDetailProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const [status, setStatus] = useState(enquiry.status);
   const [loading, setLoading] = useState(false);
   const [showConvertModal, setShowConvertModal] = useState(false);
@@ -88,7 +90,7 @@ export function EnquiryDetailClient({ enquiry }: EnquiryDetailProps) {
 
       if (res.ok) {
         const data = await res.json();
-        alert(`Successfully converted! Active Project Created: ${data.project?.projectCode}`);
+        toast.success(`Successfully converted! Active Project Created: ${data.project?.projectCode}`);
         setStatus("CONVERTED");
         setShowConvertModal(false);
         router.push("/projects");

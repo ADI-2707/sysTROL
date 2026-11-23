@@ -10,16 +10,16 @@
   --sys-green-subtle: rgba(31, 122, 77, 0.12);
   --sys-green-border: rgba(31, 122, 77, 0.25);
 
-  --bg-canvas: #f8fafc;
+  --bg-canvas: #ffffff;
   --bg-surface: #ffffff;
   --bg-card: #ffffff;
   --bg-sidebar: #ffffff;
   --bg-header: #ffffff;
-  --bg-hover: #f1f5f9;
+  --bg-hover: #f8fafc;
   --bg-nav-active: rgba(22, 55, 91, 0.08);
 
   --border-subtle: #e2e8f0;
-  --border-focus: #1f7a4d;
+  --border-focus: #16375b;
 
   --text-heading: #0f172a;
   --text-body: #334155;
@@ -32,6 +32,22 @@
   --btn-accent-bg: #1f7a4d;
   --btn-accent-hover: #166339;
   --btn-accent-text: #ffffff;
+
+  --status-success: #1f7a4d;
+  --status-success-subtle: rgba(31, 122, 77, 0.12);
+  --status-success-border: rgba(31, 122, 77, 0.25);
+
+  --status-danger: #ef4444;
+  --status-danger-subtle: rgba(239, 68, 68, 0.12);
+  --status-danger-border: rgba(239, 68, 68, 0.25);
+
+  --status-warning: #f59e0b;
+  --status-warning-subtle: rgba(245, 158, 11, 0.12);
+  --status-warning-border: rgba(245, 158, 11, 0.25);
+
+  --status-info: #16375b;
+  --status-info-subtle: rgba(22, 55, 91, 0.08);
+  --status-info-border: rgba(22, 55, 91, 0.2);
 
   --tooltip-bg: #0f172a;
   --tooltip-text: #ffffff;
@@ -65,16 +81,16 @@
   --sys-green-subtle: rgba(31, 122, 77, 0.18);
   --sys-green-border: rgba(31, 122, 77, 0.4);
 
-  --bg-canvas: #09090b;
-  --bg-surface: #101014;
-  --bg-card: #141418;
+  --bg-canvas: #000000;
+  --bg-surface: #0e0e12;
+  --bg-card: #121217;
   --bg-sidebar: #060608;
   --bg-header: #060608;
-  --bg-hover: #1b1b20;
-  --bg-nav-active: #17171c;
+  --bg-hover: #181820;
+  --bg-nav-active: #15151c;
 
-  --border-subtle: #232328;
-  --border-focus: #1f7a4d;
+  --border-subtle: #1e1e24;
+  --border-focus: #235d9b;
 
   --text-heading: #f4f4f7;
   --text-body: #d1d1d6;
@@ -88,16 +104,32 @@
   --btn-accent-hover: #26935d;
   --btn-accent-text: #ffffff;
 
-  --tooltip-bg: #141418;
+  --status-success: #1f7a4d;
+  --status-success-subtle: rgba(31, 122, 77, 0.18);
+  --status-success-border: rgba(31, 122, 77, 0.4);
+
+  --status-danger: #ef4444;
+  --status-danger-subtle: rgba(239, 68, 68, 0.18);
+  --status-danger-border: rgba(239, 68, 68, 0.4);
+
+  --status-warning: #f59e0b;
+  --status-warning-subtle: rgba(245, 158, 11, 0.18);
+  --status-warning-border: rgba(245, 158, 11, 0.4);
+
+  --status-info: #235d9b;
+  --status-info-subtle: rgba(35, 93, 155, 0.18);
+  --status-info-border: rgba(35, 93, 155, 0.4);
+
+  --tooltip-bg: #121217;
   --tooltip-text: #f4f4f7;
   --tooltip-border: #235d9b;
 
   --highlight-bg: rgba(31, 122, 77, 0.18);
   --highlight-text: #34d399;
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.7);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.8);
 
   --bg-primary: var(--bg-canvas);
   --bg-secondary: var(--bg-sidebar);

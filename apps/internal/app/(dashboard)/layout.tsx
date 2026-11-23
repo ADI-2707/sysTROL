@@ -417,21 +417,6 @@ export default function DashboardLayout({
             flexDirection: "column",
           }}
         >
-          {!isCollapsed && (
-            <div
-              style={{
-                fontSize: "10.5px",
-                fontWeight: 700,
-                color: "var(--text-muted)",
-                textTransform: "uppercase",
-                padding: "0 10px 8px 10px",
-                letterSpacing: "0.6px",
-                flexShrink: 0,
-              }}
-            >
-              Core Operations
-            </div>
-          )}
           <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
             {visibleNavItems.map((item) => (
               <NavLink
@@ -559,22 +544,6 @@ export default function DashboardLayout({
             <div style={{ fontSize: "13px", color: "var(--text-body)", fontWeight: 600 }}>
               sysTROL Enterprise Lifecycle & Automation
             </div>
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "4px",
-                padding: "1.5px 6px",
-                borderRadius: "4px",
-                backgroundColor: "var(--sys-blue-subtle)",
-                color: "var(--sys-blue-primary)",
-                fontSize: "10.5px",
-                fontFamily: "var(--font-mono)",
-                fontWeight: 600,
-              }}
-            >
-              {process.env.NEXT_PUBLIC_APP_VERSION || "v2.4.0"} Core
-            </span>
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>

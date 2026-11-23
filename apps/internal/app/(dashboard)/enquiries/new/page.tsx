@@ -4,9 +4,11 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Save } from "lucide-react";
+import { useToast } from "@systrol/ui";
 
 export default function NewEnquiryPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,9 +46,11 @@ export default function NewEnquiryPage() {
         throw new Error(data.message || "Failed to create enquiry");
       }
 
+      toast.success("New industrial enquiry logged successfully!");
       router.push("/enquiries");
       router.refresh();
     } catch (err: any) {
+      toast.error(err.message || "Failed to create enquiry");
       setError(err.message);
     } finally {
       setLoading(false);

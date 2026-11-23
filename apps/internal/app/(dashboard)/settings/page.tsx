@@ -20,8 +20,10 @@ import { useAuth } from "@/lib/auth-context";
 import { canAccessAuditLogs } from "@/lib/permissions";
 import { apiClient } from "@/lib/api-client";
 import { ThemeToggle } from "../../theme-toggle";
+import { useToast } from "@systrol/ui";
 
 export default function SettingsPage() {
+  const { toast } = useToast();
   const { user, changePassword } = useAuth();
 
   const [currentPassword, setCurrentPassword] = useState("");
@@ -71,11 +73,13 @@ export default function SettingsPage() {
     setIsSubmitting(false);
 
     if (res.success) {
+      toast.success("Password changed successfully! Keep your new credentials secure.");
       setStatusMessage({ type: "success", text: "Password changed successfully! Keep your new credentials secure." });
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } else {
+      toast.error(res.error || "Failed to change password.");
       setStatusMessage({ type: "error", text: res.error || "Failed to change password." });
     }
   };

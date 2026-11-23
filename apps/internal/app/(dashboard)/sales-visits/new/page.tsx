@@ -5,9 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Save, Plus, Loader2 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
+import { useToast } from "@systrol/ui";
 
 function SalesVisitForm() {
   const router = useRouter();
+  const { toast } = useToast();
   const searchParams = useSearchParams();
   const defaultEnquiryId = searchParams.get("enquiryId") || "";
 
@@ -54,9 +56,11 @@ function SalesVisitForm() {
         throw new Error(data.message || "Failed to log sales visit");
       }
 
+      toast.success("Sales visit report submitted successfully!");
       router.push("/sales-visits");
       router.refresh();
     } catch (err: any) {
+      toast.error(err.message || "Failed to log sales visit");
       setError(err.message);
     } finally {
       setLoading(false);
