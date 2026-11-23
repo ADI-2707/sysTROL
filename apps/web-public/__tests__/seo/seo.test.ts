@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import sitemap from "../../app/sitemap.js";
 import robots from "../../app/robots.js";
 import { metadata as aboutMetadata } from "../../app/about/page.js";
@@ -96,6 +96,11 @@ describe("SEO and Metadata Scenarios", () => {
 
   it("generates dynamic metadata with canonical paths for projects/[slug]", async () => {
     const targetProject = projectsData[0];
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ project: targetProject }),
+    } as Response);
+
     const meta = await generateProjectMetadata({
       params: Promise.resolve({ slug: targetProject.slug }),
     });
@@ -106,6 +111,12 @@ describe("SEO and Metadata Scenarios", () => {
   });
 
   it("handles non-existent slug gracefully in projects/[slug]", async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+      json: async () => ({ isUnpublished: true }),
+    } as Response);
+
     const meta = await generateProjectMetadata({
       params: Promise.resolve({ slug: "non-existent-slug" }),
     });
@@ -166,7 +177,7 @@ describe("SEO and Metadata Scenarios", () => {
       json: async () => {
         throw new Error("SyntaxError: Unexpected token");
       },
-    } as Response);
+    } as unknown as Response);
 
     const meta = await generateCareerMetadata({
       params: Promise.resolve({ id: "malformed-json-job" }),

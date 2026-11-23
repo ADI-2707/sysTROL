@@ -135,7 +135,7 @@ export class ProjectsService {
   }
 
   static async getProjectDocs(projectId: string) {
-    return prisma.engineeringDoc.findMany({
+    return prisma.engineeringDocument.findMany({
       where: { projectId },
       orderBy: { createdAt: "desc" },
     });
@@ -144,14 +144,14 @@ export class ProjectsService {
   static async getProjectBatches(projectId: string) {
     return prisma.manufacturingBatch.findMany({
       where: { projectId },
-      orderBy: { createdAt: "desc" },
+      orderBy: { batchCode: "desc" },
     });
   }
 
   static async getProjectShipments(projectId: string) {
     return prisma.shipment.findMany({
       where: { projectId },
-      orderBy: { createdAt: "desc" },
+      orderBy: { dispatchedAt: "desc" },
     });
   }
 
@@ -171,11 +171,20 @@ export class ProjectsService {
         currentStage: project.currentStage as LifecycleStage,
         boqItems: project.boqItems,
         purchaseOrders: project.purchaseOrders,
-        engineeringDocs: project.engineeringDocs,
-        manufacturingBatches: project.manufacturingBatches,
+        engineeringDocs: project.engineeringDocs?.map((d: any) => ({
+          id: d.id,
+          status: d.reviewStatus,
+        })),
+        manufacturingBatches: project.manufacturingBatches?.map((b: any) => ({
+          id: b.id,
+          fatPassed: Boolean(b.fatPassed),
+        })),
         shipments: project.shipments,
         steps: project.steps,
-        minutesOfMeetings: project.minutesOfMeetings,
+        minutesOfMeetings: project.minutesOfMeetings?.map((m: any) => ({
+          id: m.id,
+          signedAt: m.signedByClient ? m.meetingDate : null,
+        })),
       },
     });
 
@@ -411,9 +420,13 @@ export class ProjectsService {
     dto: PublishProjectDto,
     userId: string
   ) {
-    const project = await prisma.project.findUnique({
-      where: { id },
-    });
+    const project =
+      (await prisma.project.findUnique({ where: { id } }).catch(() => null)) ||
+      (await prisma.project.findFirst({
+        where: {
+          OR: [{ id }, { projectCode: id }, { publicSlug: id }],
+        },
+      }));
 
     if (!project) {
       const error: any = new Error(`Project '${id}' not found`);
@@ -439,8 +452,9 @@ export class ProjectsService {
 
     const [updated] = await prisma.$transaction([
       prisma.project.update({
-        where: { id },
+        where: { id: project.id },
         data: {
+          name: dto.caseStudy.projectName,
           isPublished: true,
           publishedAt: new Date(),
           publishedById: userId,
@@ -450,11 +464,11 @@ export class ProjectsService {
       }),
       prisma.auditLog.create({
         data: {
-          projectId: id,
+          projectId: project.id,
           actorId: userId,
           action: "PROJECT_PUBLISHED",
           entityType: "PROJECT",
-          entityId: id,
+          entityId: project.id,
           diff: {
             slug: dto.caseStudy.slug,
             projectName: dto.caseStudy.projectName,
@@ -470,7 +484,12 @@ export class ProjectsService {
 
   static async triggerPublicRevalidation(slug?: string) {
     try {
-      const publicUrl = process.env.PUBLIC_SITE_URL || "http://localhost:3000";
+      const publicUrl =
+        process.env.PUBLIC_SITE_URL ||
+        process.env.PUBLIC_APP_URL ||
+        (process.env.NODE_ENV === "production"
+          ? "https://systrol.vercel.app"
+          : "http://localhost:3000");
       const secret = process.env.REVALIDATION_SECRET || "systrol-revalidate-secret-2026";
       const params = new URLSearchParams({
         secret,
@@ -480,7 +499,7 @@ export class ProjectsService {
       await fetch(`${publicUrl}/api/revalidate?${params.toString()}`, {
         method: "POST",
       });
-    } catch {}
+    } catch { }
   }
 
   static async unpublishProject(
@@ -488,9 +507,13 @@ export class ProjectsService {
     userId: string,
     dto?: UnpublishProjectDto
   ) {
-    const project = await prisma.project.findUnique({
-      where: { id },
-    });
+    const project =
+      (await prisma.project.findUnique({ where: { id } }).catch(() => null)) ||
+      (await prisma.project.findFirst({
+        where: {
+          OR: [{ id }, { projectCode: id }, { publicSlug: id }],
+        },
+      }));
 
     if (!project) {
       const error: any = new Error(`Project '${id}' not found`);
@@ -500,18 +523,18 @@ export class ProjectsService {
 
     const [updated] = await prisma.$transaction([
       prisma.project.update({
-        where: { id },
+        where: { id: project.id },
         data: {
           isPublished: false,
         },
       }),
       prisma.auditLog.create({
         data: {
-          projectId: id,
+          projectId: project.id,
           actorId: userId,
           action: "PROJECT_UNPUBLISHED",
           entityType: "PROJECT",
-          entityId: id,
+          entityId: project.id,
           diff: {
             reason: dto?.reason || null,
           },

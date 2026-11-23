@@ -1,5 +1,6 @@
 import { PrismaClient, UserRole, EnquirySource, LifecycleStage, JobPostingStatus } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { SHOWCASE_CLIENTS, SHOWCASE_PROJECTS } from "./showcase-projects.js";
 
 const prisma = new PrismaClient();
 
@@ -79,6 +80,63 @@ async function main() {
       contactEmail: "automation@tatasteel.com",
     },
   });
+
+  for (const client of SHOWCASE_CLIENTS) {
+    await prisma.clientCompany.upsert({
+      where: { id: client.id },
+      update: {
+        name: client.name,
+        country: client.country,
+        sector: client.sector,
+        contactEmail: client.contactEmail,
+      },
+      create: client,
+    });
+  }
+
+  for (const p of SHOWCASE_PROJECTS) {
+    await prisma.project.upsert({
+      where: { id: p.id },
+      update: {
+        projectCode: p.projectCode,
+        name: p.name,
+        clientId: p.clientId,
+        plantLocation: p.plantLocation,
+        country: p.country,
+        millType: p.millType,
+        standCount: p.standCount,
+        currentStage: p.currentStage,
+        startDate: p.startDate,
+        targetCutoverDate: p.targetCutoverDate,
+        actualCutoverDate: p.actualCutoverDate,
+        isPublished: p.isPublished,
+        publishedAt: p.publishedAt,
+        publishedById: admin.id,
+        publicSlug: p.publicSlug,
+        caseStudy: p.caseStudy,
+      },
+      create: {
+        id: p.id,
+        projectCode: p.projectCode,
+        name: p.name,
+        clientId: p.clientId,
+        plantLocation: p.plantLocation,
+        country: p.country,
+        millType: p.millType,
+        standCount: p.standCount,
+        currentStage: p.currentStage,
+        createdById: admin.id,
+        startDate: p.startDate,
+        targetCutoverDate: p.targetCutoverDate,
+        actualCutoverDate: p.actualCutoverDate,
+        isPublished: p.isPublished,
+        publishedAt: p.publishedAt,
+        publishedById: admin.id,
+        publicSlug: p.publicSlug,
+        caseStudy: p.caseStudy,
+      },
+    });
+  }
 
   const project = await prisma.project.upsert({
     where: { projectCode: "PROJ-2026-0001" },

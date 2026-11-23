@@ -193,10 +193,54 @@ describe("Project Publishing & Case Study Lifecycle Tests", () => {
 
     it("throws 404 when project id does not exist", async () => {
       vi.mocked(prisma.project.findUnique).mockResolvedValue(null);
+      vi.mocked(prisma.project.findFirst).mockResolvedValue(null);
 
       await expect(
         ProjectsService.publishProject("proj-nonexistent", validCaseStudyPayload, "user-super-admin")
       ).rejects.toThrow("Project 'proj-nonexistent' not found");
+    });
+
+    it("falls back to findFirst and synchronizes project name when publishing", async () => {
+      const mockProject = {
+        id: "proj-1-actual-uuid",
+        projectCode: "PRJ-001",
+        name: "Old Project Name",
+        currentStage: LifecycleStage.COMMISSIONING,
+        isPublished: false,
+      };
+
+      vi.mocked(prisma.project.findUnique).mockResolvedValue(null);
+      vi.mocked(prisma.project.findFirst).mockResolvedValue(mockProject as any);
+      vi.mocked(prisma.project.update).mockResolvedValue({
+        ...mockProject,
+        name: validCaseStudyPayload.caseStudy.projectName,
+        isPublished: true,
+      } as any);
+      vi.mocked(prisma.auditLog.create).mockResolvedValue({ id: "audit-3" } as any);
+
+      const result = await ProjectsService.publishProject(
+        "PRJ-001",
+        validCaseStudyPayload,
+        "user-super-admin"
+      );
+
+      expect(prisma.project.findFirst).toHaveBeenCalledWith({
+        where: {
+          OR: [
+            { id: "PRJ-001" },
+            { projectCode: "PRJ-001" },
+            { publicSlug: "PRJ-001" },
+          ],
+        },
+      });
+      expect(prisma.project.update).toHaveBeenCalledWith({
+        where: { id: "proj-1-actual-uuid" },
+        data: expect.objectContaining({
+          name: validCaseStudyPayload.caseStudy.projectName,
+          isPublished: true,
+        }),
+      });
+      expect(result.name).toBe(validCaseStudyPayload.caseStudy.projectName);
     });
   });
 
@@ -237,6 +281,7 @@ describe("Project Publishing & Case Study Lifecycle Tests", () => {
 
     it("throws 404 when unpublishing non-existent project", async () => {
       vi.mocked(prisma.project.findUnique).mockResolvedValue(null);
+      vi.mocked(prisma.project.findFirst).mockResolvedValue(null);
 
       await expect(
         ProjectsService.unpublishProject("proj-missing", "user-super-admin")
