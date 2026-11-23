@@ -1,4 +1,4 @@
-import { isTokenValid, parseJwt } from "./token-utils.js";
+import { isTokenValid, isTokenExpiringSoon, parseJwt } from "./token-utils.js";
 import {
   getStoredSession,
   clearStoredSession,
@@ -178,7 +178,23 @@ export async function apiClient(
   const url = resolveApiUrl(endpoint);
   const headers = new Headers(options.headers || {});
   const session = getStoredSession();
-  const tokenToUse = inMemoryAccessToken || (session as any)?.token;
+
+  const isAuthEndpoint =
+    url.includes("/auth/login") ||
+    url.includes("/auth/refresh");
+
+  if (!isAuthEndpoint) {
+    const hasSession = Boolean(session?.user || inMemoryAccessToken);
+    if (hasSession) {
+      const currentToken = inMemoryAccessToken || (session as any)?.token;
+      if (!currentToken || isTokenExpiringSoon(currentToken, 30)) {
+        await silentRefreshToken();
+      }
+    }
+  }
+
+  const latestSession = getStoredSession();
+  const tokenToUse = inMemoryAccessToken || (latestSession as any)?.token;
 
   if (tokenToUse && isTokenValid(tokenToUse)) {
     if (!headers.has("Authorization")) {
