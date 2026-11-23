@@ -34,6 +34,7 @@ import { useDebounce } from "@/lib/use-debounce";
 import { PublishCaseStudyModal } from "./PublishCaseStudyModal";
 import { resolveMediaUrl, FALLBACK_PROJECT_IMAGE } from "@/lib/media-utils";
 import { useToast } from "@systrol/ui";
+import { apiClient } from "@/lib/api-client";
 
 export default function ProjectManagementPage() {
   const { toast } = useToast();
@@ -53,6 +54,41 @@ export default function ProjectManagementPage() {
 
   useEffect(() => {
     setProjects(getProjects());
+
+    async function fetchLiveProjects() {
+      try {
+        const res = await apiClient("/api/v1/projects?limit=100");
+        if (res.ok) {
+          const json = await res.json();
+          if (json?.data && Array.isArray(json.data) && json.data.length > 0) {
+            const local = getProjects();
+            const merged = [...local];
+            for (const serverItem of json.data) {
+              const idx = merged.findIndex(
+                (p) => p.id === serverItem.id || p.projectCode === serverItem.projectCode
+              );
+              if (idx !== -1) {
+                merged[idx] = {
+                  ...merged[idx],
+                  name: serverItem.name || merged[idx].name,
+                  status: serverItem.isPublished
+                    ? "PUBLISHED"
+                    : serverItem.currentStage === "COMMISSIONING" || serverItem.currentStage === "AMC"
+                    ? "COMMISSIONED"
+                    : "ONGOING",
+                  isPublished: serverItem.isPublished,
+                  caseStudy: (serverItem.caseStudy as any) || merged[idx].caseStudy,
+                };
+              }
+            }
+            saveProjects(merged);
+            setProjects(merged);
+          }
+        }
+      } catch {}
+    }
+
+    fetchLiveProjects();
   }, []);
 
   const ongoingCount = projects.filter((p) => p.status === "ONGOING").length;
@@ -122,12 +158,19 @@ export default function ProjectManagementPage() {
     setIsPublishModalOpen(true);
   };
 
-  const handleUnpublish = (projId: string, e: React.MouseEvent) => {
+  const handleUnpublish = async (projId: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (!window.confirm("Are you sure you want to unpublish this case study? It will be removed from the public website and reverted to Commissioned status.")) {
       return;
     }
+    try {
+      await apiClient(`/api/v1/projects/${projId}/unpublish`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: "Unpublished from internal ops" }),
+      });
+    } catch {}
     const updated = unpublishProject(projId);
     if (updated) {
       toast.info("Case study unpublished and returned to Commissioned status.");

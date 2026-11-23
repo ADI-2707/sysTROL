@@ -310,24 +310,32 @@ export function PublishCaseStudyModal({
     setIsSubmitting(true);
 
     try {
+      const res = await apiClient(`/api/v1/projects/${project.id}/publish`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ caseStudy: caseStudyPayload }),
+      });
+
+      if (!res.ok) {
+        let errorData: any = null;
+        try {
+          errorData = await res.json();
+        } catch {}
+        throw new Error(
+          errorData?.message || `Server responded with status ${res.status}`
+        );
+      }
+
       const updated = publishProject(project.id, caseStudyPayload);
-
-      try {
-        await apiClient(`/api/v1/projects/${project.id}/publish`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ caseStudy: caseStudyPayload }),
-        });
-      } catch {}
-
       if (updated) {
         toast.success("Case study published to public website!");
         onSuccess(updated);
       }
       onClose();
-    } catch {
-      toast.error("Failed to publish case study. Please review your entries and try again.");
-      setErrorMsg("Failed to publish case study. Please review your entries and try again.");
+    } catch (err: any) {
+      const msg = err?.message || "Failed to publish case study to server.";
+      toast.error(msg);
+      setErrorMsg(msg);
     } finally {
       setIsSubmitting(false);
     }
