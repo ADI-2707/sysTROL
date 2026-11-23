@@ -13,6 +13,7 @@
   "dependencies": {
     "@hookform/resolvers": "3.10.0",
     "@systrol/types": "workspace:*",
+    "@systrol/ui": "workspace:*",
     "lucide-react": "0.475.0",
     "next": "15.5.25",
     "react": "19.0.0",

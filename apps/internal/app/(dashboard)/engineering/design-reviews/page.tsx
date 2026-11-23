@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useToast } from "@systrol/ui";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2, AlertTriangle, FileText, Download } from "lucide-react";
 
@@ -15,6 +16,7 @@ interface PendingReview {
 }
 
 export default function DesignReviewsPage() {
+  const { toast } = useToast();
   const [reviews, setReviews] = useState<PendingReview[]>([
     {
       id: "rev-1",
@@ -53,7 +55,7 @@ export default function DesignReviewsPage() {
       });
 
       setReviews(reviews.filter((r) => r.id !== id));
-      alert("Document approved successfully!");
+      toast.success("Document approved successfully!");
     } finally {
       setLoadingId(null);
     }
@@ -77,7 +79,7 @@ export default function DesignReviewsPage() {
       });
 
       setReviews(reviews.filter((r) => r.id !== id));
-      alert("Revision request sent back to engineering team.");
+      toast.success("Revision request sent back to engineering team.");
     } finally {
       setLoadingId(null);
     }

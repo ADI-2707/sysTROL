@@ -1,14 +1,23 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import type { ToastContextValue } from "./toast-types.js";
+import type { ToastContextValue, ToastOptions } from "./toast-types.js";
 
-export const ToastContext = createContext<ToastContextValue | null>(null);
+const noopToast = (title: string, options?: ToastOptions): string => "";
+noopToast.success = (title: string, options?: ToastOptions): string => "";
+noopToast.error = (title: string, options?: ToastOptions): string => "";
+noopToast.warning = (title: string, options?: ToastOptions): string => "";
+noopToast.info = (title: string, options?: ToastOptions): string => "";
+noopToast.dismiss = (id: string): void => {};
+
+export const defaultToastContextValue: ToastContextValue = {
+  toasts: [],
+  toast: noopToast,
+};
+
+export const ToastContext = createContext<ToastContextValue>(defaultToastContextValue);
 
 export function useToast(): ToastContextValue {
   const context = useContext(ToastContext);
-  if (!context) {
-    throw new Error("useToast must be used within a ToastProvider");
-  }
-  return context;
+  return context || defaultToastContextValue;
 }

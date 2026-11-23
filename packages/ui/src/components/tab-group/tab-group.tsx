@@ -26,7 +26,6 @@ export function TabGroup<T extends string = string>({
 }: TabGroupProps<T>) {
   return (
     <div
-      role="tablist"
       className={className}
       style={{
         display: "flex",
@@ -46,8 +45,6 @@ export function TabGroup<T extends string = string>({
           <button
             key={tab.id}
             type="button"
-            role="tab"
-            aria-selected={isActive}
             onClick={() => onChange(tab.id)}
             style={{
               display: "inline-flex",

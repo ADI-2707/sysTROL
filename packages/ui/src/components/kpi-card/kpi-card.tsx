@@ -5,31 +5,33 @@ import React from "react";
 export interface KpiCardProps {
   title: string;
   value: string | number;
-  subtitle?: string;
   unit?: string;
+  subtitle?: string;
   icon?: React.ReactNode;
   trend?: {
     value: string;
     isPositive: boolean;
   };
   badge?: string;
+  highlight?: "blue" | "green" | "amber" | "neutral" | string;
   variant?: "default" | "highlight" | "danger" | "success";
-  style?: React.CSSProperties;
   className?: string;
+  style?: React.CSSProperties;
   onClick?: () => void;
 }
 
 export function KpiCard({
   title,
   value,
-  subtitle,
   unit,
+  subtitle,
   icon,
   trend,
   badge,
+  highlight = "neutral",
   variant = "default",
-  style,
   className = "",
+  style,
   onClick,
 }: KpiCardProps) {
   const getCardStyle = (): React.CSSProperties => {
@@ -53,27 +55,40 @@ export function KpiCard({
   };
 
   const getIconContainerStyle = (): React.CSSProperties => {
-    switch (variant) {
+    const key = highlight || variant;
+    switch (key) {
+      case "blue":
+      case "success":
+        return {
+          backgroundColor: "var(--sys-blue-subtle)",
+          color: "var(--sys-blue-primary)",
+          border: "1px solid var(--sys-blue-border)",
+        };
+      case "green":
       case "highlight":
         return {
           backgroundColor: "var(--sys-green-subtle)",
           color: "var(--sys-green-accent)",
+          border: "1px solid var(--sys-green-border)",
+        };
+      case "amber":
+        return {
+          backgroundColor: "var(--status-warning-subtle)",
+          color: "var(--status-warning)",
+          border: "1px solid var(--status-warning-border)",
         };
       case "danger":
         return {
           backgroundColor: "var(--status-danger-subtle)",
           color: "var(--status-danger)",
+          border: "1px solid var(--status-danger-border)",
         };
-      case "success":
-        return {
-          backgroundColor: "var(--sys-blue-subtle)",
-          color: "var(--sys-blue-primary)",
-        };
-      case "default":
+      case "neutral":
       default:
         return {
           backgroundColor: "var(--bg-hover)",
           color: "var(--text-muted)",
+          border: "1px solid var(--border-subtle)",
         };
     }
   };
@@ -89,18 +104,21 @@ export function KpiCard({
         border: "1px solid var(--border-subtle)",
         borderRadius: "8px",
         padding: "18px 20px",
-        boxShadow: "var(--shadow-card)",
-        transition: "transform 0.15s ease, box-shadow 0.15s ease",
+        boxShadow: "var(--shadow-sm)",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        transition: "all 0.15s ease",
         cursor: onClick ? "pointer" : "default",
         ...getCardStyle(),
         ...style,
       }}
     >
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px" }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div>
           <span
             style={{
-              fontSize: "11px",
+              fontSize: "11.5px",
               fontWeight: 700,
               textTransform: "uppercase",
               letterSpacing: "0.05em",

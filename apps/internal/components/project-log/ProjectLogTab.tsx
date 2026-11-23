@@ -24,6 +24,7 @@ import {
 } from "@/lib/project-log-api";
 import { WeekAccordion } from "./WeekAccordion.js";
 import { PostUpdateModal } from "./PostUpdateModal.js";
+import { useToast } from "@systrol/ui";
 
 export interface ProjectLogTabProps {
   projectId: string;
@@ -38,6 +39,7 @@ export function ProjectLogTab({
   userRole = "SUPER_ADMIN",
   initialStepFilter,
 }: ProjectLogTabProps) {
+  const { toast } = useToast();
   const [weeks, setWeeks] = useState<ProjectLogWeekDto[]>([]);
   const [entries, setEntries] = useState<ProjectLogEntryDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -96,7 +98,7 @@ export function ProjectLogTab({
         )
       );
     } catch (err: any) {
-      alert(err?.message || "Failed to lock week");
+      toast.error(err?.message || "Failed to lock week");
     }
   };
 
@@ -109,7 +111,7 @@ export function ProjectLogTab({
         )
       );
     } catch (err: any) {
-      alert(err?.message || "Failed to unlock week");
+      toast.error(err?.message || "Failed to unlock week");
     }
   };
 
@@ -119,7 +121,7 @@ export function ProjectLogTab({
       await deleteLogEntry(projectId, entryId);
       setEntries((prev) => prev.filter((e) => e.id !== entryId));
     } catch (err: any) {
-      alert(err?.message || "Failed to delete entry");
+      toast.error(err?.message || "Failed to delete entry");
     }
   };
 

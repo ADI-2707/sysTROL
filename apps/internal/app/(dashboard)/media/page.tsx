@@ -20,6 +20,7 @@ import { UploadModal } from "./UploadModal";
 import { useAuth } from "@/lib/auth-context";
 import { isTokenValid } from "@/lib/token-utils";
 import { useDebounce } from "@/lib/use-debounce";
+import { useToast } from "@systrol/ui";
 
 interface MediaAsset {
   id: string;
@@ -45,6 +46,7 @@ const CATEGORIES = [
 ];
 
 export default function MediaPage() {
+  const { toast } = useToast();
   const { user } = useAuth();
   const token = user?.token;
   const [activeCategory, setActiveCategory] = useState("ALL");
@@ -138,7 +140,7 @@ export default function MediaPage() {
 
   const handleDelete = async (id: string) => {
     if (!isTokenValid(token)) {
-      window.alert("Administrative privileges required. Please log in with a valid account to delete assets.");
+      toast.warning("Administrative privileges required. Please log in with a valid account to delete assets.");
       return;
     }
     if (!window.confirm("Are you sure you want to permanently delete this media asset?")) return;
@@ -200,7 +202,7 @@ export default function MediaPage() {
             variant="accent"
             onClick={() => {
               if (!isTokenValid(token)) {
-                window.alert("Administrative privileges required. Please log in with a valid account to upload assets.");
+                toast.warning("Administrative privileges required. Please log in with a valid account to upload assets.");
                 return;
               }
               setIsUploadOpen(true);
@@ -337,7 +339,7 @@ export default function MediaPage() {
             variant="accent"
             onClick={() => {
               if (!isTokenValid(token)) {
-                window.alert("Administrative privileges required. Please log in with a valid account to upload assets.");
+                toast.warning("Administrative privileges required. Please log in with a valid account to upload assets.");
                 return;
               }
               setIsUploadOpen(true);
