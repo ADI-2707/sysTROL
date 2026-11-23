@@ -55,21 +55,8 @@ export function LatencyMonitoringBanner() {
       if (err?.status === 401 || err?.message?.includes("Unauthorized") || err?.message?.includes("Session expired")) {
         throw err;
       }
-      setLatency({
-        totalSamples: 120,
-        avgMs: 14.2,
-        medianMs: 12.0,
-        p95Ms: 32.5,
-        p99Ms: 48.0,
-        minMs: 3.1,
-        maxMs: 82.4,
-        recentSamples: [12, 14, 11, 15, 18, 22, 19, 13, 16, 25, 29, 31, 14, 15, 12, 17, 21, 19, 14, 16],
-      });
-      setCtaMetrics({
-        totalEvents: 420,
-        events24h: 88,
-        events7d: 340,
-      });
+      setLatency(null);
+      setCtaMetrics(null);
     } finally {
       setLoading(false);
     }
@@ -80,13 +67,14 @@ export function LatencyMonitoringBanner() {
     enabled: isAuthenticated,
   });
 
+  const isOffline = !latency;
   const p95 = latency?.p95Ms ?? 0;
-  const statusColor = p95 < 100 ? "var(--sys-green-accent)" : p95 < 300 ? "var(--sys-amber-accent)" : "var(--sys-red-accent, #ef4444)";
-  const statusLabel = p95 < 100 ? "Optimal SLA" : p95 < 300 ? "Nominal" : "Degraded";
+  const statusColor = isOffline ? "var(--sys-red-accent, #ef4444)" : p95 < 100 ? "var(--sys-green-accent)" : p95 < 300 ? "var(--sys-amber-accent)" : "var(--sys-red-accent, #ef4444)";
+  const statusLabel = isOffline ? "Diagnostics Offline" : p95 < 100 ? "Optimal SLA" : p95 < 300 ? "Nominal" : "Degraded";
 
   const samples = latency?.recentSamples && latency.recentSamples.length > 0
     ? latency.recentSamples.slice(-30)
-    : [10, 15, 12, 18, 14, 19, 22, 16, 14, 20];
+    : [0];
   const maxSample = Math.max(...samples, p95, 40);
   const svgWidth = 260;
   const svgHeight = 44;
