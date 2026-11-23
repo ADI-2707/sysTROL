@@ -54,16 +54,14 @@ describe("LatencyMonitoringBanner Component Tests", () => {
     });
   });
 
-  it("falls back gracefully to offline defaults when API request fails", async () => {
+  it("renders offline diagnostics state when API request fails", async () => {
     mockApiClient.mockRejectedValue(new Error("Network Error"));
 
     render(<LatencyMonitoringBanner />);
 
     await waitFor(() => {
       expect(screen.getByText("API Latency & Telemetry Diagnostics")).toBeDefined();
-      expect(screen.getByText("14.2 ms")).toBeDefined();
-      expect(screen.getByText("32.5 ms")).toBeDefined();
-      expect(screen.getByText("48.0 ms")).toBeDefined();
+      expect(screen.getByText("Diagnostics Offline")).toBeDefined();
     });
   });
 
