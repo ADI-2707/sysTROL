@@ -115,7 +115,9 @@ export function DiffViewerDrawer({ log, onClose }: DiffViewerDrawerProps) {
           >
             <div>
               <div style={{ color: "var(--text-muted)", fontSize: "11px", marginBottom: "3px" }}>Action Method & Route</div>
-              <div style={{ fontWeight: 600, color: "var(--text-heading)", fontFamily: "var(--font-mono)" }}>{log.action}</div>
+              <div style={{ fontWeight: 600, color: "var(--text-heading)", fontFamily: "var(--font-mono)" }}>
+                {log.action} {log.statusCode ? `(${log.statusCode})` : ""}
+              </div>
             </div>
             <div>
               <div style={{ color: "var(--text-muted)", fontSize: "11px", marginBottom: "3px" }}>Timestamp</div>
@@ -125,7 +127,15 @@ export function DiffViewerDrawer({ log, onClose }: DiffViewerDrawerProps) {
             </div>
             <div>
               <div style={{ color: "var(--text-muted)", fontSize: "11px", marginBottom: "3px" }}>Actor Identity</div>
-              <div style={{ fontWeight: 600, color: "var(--text-heading)", fontFamily: "var(--font-mono)" }}>{log.actorId}</div>
+              <div style={{ fontWeight: 600, color: "var(--text-heading)", fontFamily: "var(--font-mono)" }}>
+                {log.user?.employeeCode ? `[${log.user.employeeCode}] ${log.user.name}` : log.employeeCode || log.actorId}
+              </div>
+            </div>
+            <div>
+              <div style={{ color: "var(--text-muted)", fontSize: "11px", marginBottom: "3px" }}>Client IP & Origin</div>
+              <div style={{ fontWeight: 600, color: "var(--text-heading)", fontFamily: "var(--font-mono)" }}>
+                {log.clientIp || "Internal Proxy"}
+              </div>
             </div>
             <div>
               <div style={{ color: "var(--text-muted)", fontSize: "11px", marginBottom: "3px" }}>Entity Reference</div>
@@ -134,7 +144,7 @@ export function DiffViewerDrawer({ log, onClose }: DiffViewerDrawerProps) {
               </div>
             </div>
             {log.project && (
-              <div style={{ gridColumn: "1 / -1" }}>
+              <div>
                 <div style={{ color: "var(--text-muted)", fontSize: "11px", marginBottom: "3px" }}>Associated Project</div>
                 <div style={{ fontWeight: 600, color: "var(--sys-blue-primary)" }}>
                   {log.project.projectCode || log.project.code} - {log.project.name}
@@ -142,6 +152,27 @@ export function DiffViewerDrawer({ log, onClose }: DiffViewerDrawerProps) {
               </div>
             )}
           </div>
+
+          {log.diff?.changedFields && log.diff.changedFields.length > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", fontSize: "11.5px" }}>
+              <span style={{ color: "var(--text-muted)", fontWeight: 600 }}>Changed Fields:</span>
+              {log.diff.changedFields.map((field) => (
+                <span
+                  key={field}
+                  style={{
+                    padding: "2px 8px",
+                    borderRadius: "4px",
+                    backgroundColor: "rgba(245, 158, 11, 0.15)",
+                    color: "var(--sys-amber-accent, #f59e0b)",
+                    fontFamily: "var(--font-mono)",
+                    fontWeight: 600,
+                  }}
+                >
+                  {field}
+                </span>
+              ))}
+            </div>
+          )}
 
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", fontWeight: 700, color: "var(--text-heading)" }}>
@@ -170,7 +201,7 @@ export function DiffViewerDrawer({ log, onClose }: DiffViewerDrawerProps) {
                     wordBreak: "break-all",
                   }}
                 >
-                  {beforeJson || "null (New entity created)"}
+                  {beforeJson || "null (Initial state)"}
                 </pre>
               </div>
 
@@ -194,7 +225,7 @@ export function DiffViewerDrawer({ log, onClose }: DiffViewerDrawerProps) {
                     wordBreak: "break-all",
                   }}
                 >
-                  {afterJson || "null (Entity removed or empty payload)"}
+                  {afterJson || "null (Payload removed or empty)"}
                 </pre>
               </div>
             </div>
