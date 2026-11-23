@@ -44,6 +44,7 @@ function getApiVersion(): string {
 export async function buildServer() {
   const server = Fastify({
     logger: false,
+    trustProxy: true,
   });
 
   await server.register(cors, {
