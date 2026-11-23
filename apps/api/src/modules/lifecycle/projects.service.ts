@@ -490,7 +490,7 @@ export class ProjectsService {
       await fetch(`${publicUrl}/api/revalidate?${params.toString()}`, {
         method: "POST",
       });
-    } catch {}
+    } catch { }
   }
 
   static async unpublishProject(
