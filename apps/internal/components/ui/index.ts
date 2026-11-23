@@ -10,6 +10,10 @@ export {
   ToastCard,
   ToastContainer,
   ToastProgressBar,
+  Skeleton,
+  SkeletonCard,
+  SkeletonKpiCard,
+  SkeletonTableRow,
 } from "@systrol/ui";
 
 export type {
@@ -23,4 +27,8 @@ export type {
   ToastOptions,
   ToastItem,
   ToastContextValue,
+  SkeletonProps,
+  SkeletonCardProps,
+  SkeletonKpiCardProps,
+  SkeletonTableRowProps,
 } from "@systrol/ui";
