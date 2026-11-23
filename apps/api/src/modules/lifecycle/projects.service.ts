@@ -411,9 +411,13 @@ export class ProjectsService {
     dto: PublishProjectDto,
     userId: string
   ) {
-    const project = await prisma.project.findUnique({
-      where: { id },
-    });
+    const project =
+      (await prisma.project.findUnique({ where: { id } }).catch(() => null)) ||
+      (await prisma.project.findFirst({
+        where: {
+          OR: [{ id }, { projectCode: id }, { publicSlug: id }],
+        },
+      }));
 
     if (!project) {
       const error: any = new Error(`Project '${id}' not found`);
@@ -439,8 +443,9 @@ export class ProjectsService {
 
     const [updated] = await prisma.$transaction([
       prisma.project.update({
-        where: { id },
+        where: { id: project.id },
         data: {
+          name: dto.caseStudy.projectName,
           isPublished: true,
           publishedAt: new Date(),
           publishedById: userId,
@@ -450,11 +455,11 @@ export class ProjectsService {
       }),
       prisma.auditLog.create({
         data: {
-          projectId: id,
+          projectId: project.id,
           actorId: userId,
           action: "PROJECT_PUBLISHED",
           entityType: "PROJECT",
-          entityId: id,
+          entityId: project.id,
           diff: {
             slug: dto.caseStudy.slug,
             projectName: dto.caseStudy.projectName,
@@ -488,9 +493,13 @@ export class ProjectsService {
     userId: string,
     dto?: UnpublishProjectDto
   ) {
-    const project = await prisma.project.findUnique({
-      where: { id },
-    });
+    const project =
+      (await prisma.project.findUnique({ where: { id } }).catch(() => null)) ||
+      (await prisma.project.findFirst({
+        where: {
+          OR: [{ id }, { projectCode: id }, { publicSlug: id }],
+        },
+      }));
 
     if (!project) {
       const error: any = new Error(`Project '${id}' not found`);
@@ -500,18 +509,18 @@ export class ProjectsService {
 
     const [updated] = await prisma.$transaction([
       prisma.project.update({
-        where: { id },
+        where: { id: project.id },
         data: {
           isPublished: false,
         },
       }),
       prisma.auditLog.create({
         data: {
-          projectId: id,
+          projectId: project.id,
           actorId: userId,
           action: "PROJECT_UNPUBLISHED",
           entityType: "PROJECT",
-          entityId: id,
+          entityId: project.id,
           diff: {
             reason: dto?.reason || null,
           },
