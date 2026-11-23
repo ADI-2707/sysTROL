@@ -1,5 +1,11 @@
 # @systrol/internal
 
+## 2.10.4
+
+### Patch Changes
+
+- 456cc09: Implement industry-standard pre-flight proactive token resolution with 30s leeway to eliminate spurious 401 errors on idle resumption.
+
 ## 2.10.3
 
 ### Patch Changes
