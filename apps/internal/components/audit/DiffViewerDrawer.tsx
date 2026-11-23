@@ -5,13 +5,19 @@ import { X, Shield, ArrowRight } from "lucide-react";
 
 export interface AuditLogItem {
   id: string;
+  requestId?: string | null;
   actorId: string;
+  employeeCode?: string | null;
+  actorRole?: string | null;
+  clientIp?: string | null;
+  statusCode?: number | null;
   action: string;
   entityType: string;
   entityId: string;
   projectId?: string | null;
-  diff?: { before: any; after: any } | null;
+  diff?: { before: any; after: any; changedFields?: string[] } | null;
   createdAt: string;
+  user?: { id: string; employeeCode?: string | null; name: string; email: string; role: string } | null;
   project?: { id: string; projectCode?: string; code?: string; name: string } | null;
 }
 
