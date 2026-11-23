@@ -475,7 +475,12 @@ export class ProjectsService {
 
   static async triggerPublicRevalidation(slug?: string) {
     try {
-      const publicUrl = process.env.PUBLIC_SITE_URL || "http://localhost:3000";
+      const publicUrl =
+        process.env.PUBLIC_SITE_URL ||
+        process.env.PUBLIC_APP_URL ||
+        (process.env.NODE_ENV === "production"
+          ? "https://systrol.vercel.app"
+          : "http://localhost:3000");
       const secret = process.env.REVALIDATION_SECRET || "systrol-revalidate-secret-2026";
       const params = new URLSearchParams({
         secret,
