@@ -34,3 +34,14 @@ export function isTokenValid(token?: string | null): boolean {
   }
   return payload.exp * 1000 > Date.now();
 }
+
+export function isTokenExpiringSoon(token?: string | null, bufferSeconds = 30): boolean {
+  if (!token || typeof token !== "string" || token.trim() === "") {
+    return true;
+  }
+  const payload = parseJwt(token);
+  if (!payload || typeof payload.exp !== "number") {
+    return true;
+  }
+  return payload.exp * 1000 - Date.now() <= bufferSeconds * 1000;
+}
