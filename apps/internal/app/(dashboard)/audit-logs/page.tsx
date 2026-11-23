@@ -21,6 +21,7 @@ import { apiClient } from "@/lib/api-client";
 import { DiffViewerDrawer, AuditLogItem } from "@/components/audit/DiffViewerDrawer";
 import { LatencyMonitoringBanner } from "@/components/audit/LatencyMonitoringBanner";
 import { TabGroup, TabItem } from "@/components/ui/tab-group";
+import { SkeletonTableRow } from "@/components/ui";
 
 interface CtaEventItem {
   id: string;
@@ -322,10 +323,18 @@ export default function AuditLogsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {logs.length === 0 ? (
+                  {isLoading ? (
+                    <>
+                      <SkeletonTableRow columns={7} />
+                      <SkeletonTableRow columns={7} />
+                      <SkeletonTableRow columns={7} />
+                      <SkeletonTableRow columns={7} />
+                      <SkeletonTableRow columns={7} />
+                    </>
+                  ) : logs.length === 0 ? (
                     <tr>
                       <td colSpan={7} style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
-                        {isLoading ? "Loading audit records..." : "No matching audit log records found."}
+                        No matching audit log records found.
                       </td>
                     </tr>
                   ) : (
@@ -560,10 +569,18 @@ export default function AuditLogsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {ctaEvents.length === 0 ? (
+                  {isCtaLoading ? (
+                    <>
+                      <SkeletonTableRow columns={6} />
+                      <SkeletonTableRow columns={6} />
+                      <SkeletonTableRow columns={6} />
+                      <SkeletonTableRow columns={6} />
+                      <SkeletonTableRow columns={6} />
+                    </>
+                  ) : ctaEvents.length === 0 ? (
                     <tr>
                       <td colSpan={6} style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
-                        {isCtaLoading ? "Loading visitor telemetry feed..." : "No public visitor telemetry events recorded."}
+                        No public visitor telemetry events recorded.
                       </td>
                     </tr>
                   ) : (

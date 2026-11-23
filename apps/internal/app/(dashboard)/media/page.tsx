@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui";
 import { UploadModal } from "./UploadModal";
 import { useAuth } from "@/lib/auth-context";
 import { isTokenValid } from "@/lib/token-utils";
@@ -289,18 +290,30 @@ export default function MediaPage() {
       {isLoading ? (
         <div
           style={{
-            padding: "80px 20px",
-            textAlign: "center",
-            color: "var(--text-muted)",
-            fontSize: "13px",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: "10px",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+            gap: "18px",
           }}
         >
-          <RefreshCw size={24} className="animate-spin" />
-          <span>Loading media assets from cloud storage...</span>
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div
+              key={i}
+              style={{
+                backgroundColor: "var(--bg-card)",
+                border: "1px solid var(--border-subtle)",
+                borderRadius: "10px",
+                overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
+                gap: "10px",
+                padding: "12px",
+              }}
+            >
+              <Skeleton height="150px" borderRadius="6px" />
+              <Skeleton variant="text" width="60%" height="16px" />
+              <Skeleton variant="text" width="40%" height="12px" />
+            </div>
+          ))}
         </div>
       ) : assets.length === 0 ? (
         <div
