@@ -135,7 +135,7 @@ export class ProjectsService {
   }
 
   static async getProjectDocs(projectId: string) {
-    return prisma.engineeringDoc.findMany({
+    return prisma.engineeringDocument.findMany({
       where: { projectId },
       orderBy: { createdAt: "desc" },
     });
@@ -144,14 +144,14 @@ export class ProjectsService {
   static async getProjectBatches(projectId: string) {
     return prisma.manufacturingBatch.findMany({
       where: { projectId },
-      orderBy: { createdAt: "desc" },
+      orderBy: { batchCode: "desc" },
     });
   }
 
   static async getProjectShipments(projectId: string) {
     return prisma.shipment.findMany({
       where: { projectId },
-      orderBy: { createdAt: "desc" },
+      orderBy: { dispatchedAt: "desc" },
     });
   }
 
@@ -171,11 +171,20 @@ export class ProjectsService {
         currentStage: project.currentStage as LifecycleStage,
         boqItems: project.boqItems,
         purchaseOrders: project.purchaseOrders,
-        engineeringDocs: project.engineeringDocs,
-        manufacturingBatches: project.manufacturingBatches,
+        engineeringDocs: project.engineeringDocs?.map((d: any) => ({
+          id: d.id,
+          status: d.reviewStatus,
+        })),
+        manufacturingBatches: project.manufacturingBatches?.map((b: any) => ({
+          id: b.id,
+          fatPassed: Boolean(b.fatPassed),
+        })),
         shipments: project.shipments,
         steps: project.steps,
-        minutesOfMeetings: project.minutesOfMeetings,
+        minutesOfMeetings: project.minutesOfMeetings?.map((m: any) => ({
+          id: m.id,
+          signedAt: m.signedByClient ? m.meetingDate : null,
+        })),
       },
     });
 
